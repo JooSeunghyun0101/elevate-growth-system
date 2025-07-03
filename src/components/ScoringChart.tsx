@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -18,13 +19,9 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   onMethodClick,
   onScopeClick
 }) => {
-  // 기여 방식 (Y축)
   const methods = ['총괄', '리딩', '실무', '지원'];
-  
-  // 기여 범위 (X축)  
   const scopes = ['의존적', '독립적', '상호적', '전략적'];
 
-  // 점수 매트릭스 (방식 x 범위)
   const scoreMatrix = [
     [2, 3, 4, 4], // 총괄
     [1, 2, 3, 4], // 리딩
@@ -87,25 +84,14 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-1">
-          {/* Header with scope labels */}
+          {/* Header with method label only */}
           <div className="flex gap-1">
             <div className={`${getHeaderSize()} flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
-              방식/범위
+              기여방식
             </div>
-            {scopes.map((scope, index) => (
-              <div 
-                key={scope}
-                className={`
-                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
-                  ${isScopeSelected(index) 
-                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
-                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
-                  }
-                `}
-                onClick={() => handleScopeClick(index)}
-              >
-                {scope}
-              </div>
+            {/* Empty cells for alignment */}
+            {scopes.map((_, index) => (
+              <div key={index} className={`${getHeaderSize()}`}></div>
             ))}
           </div>
 
@@ -149,6 +135,34 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
               })}
             </div>
           ))}
+
+          {/* Scope header at the bottom */}
+          <div className="flex gap-1 mt-1">
+            <div className={`${getHeaderSize()}`}></div>
+            {scopes.map((scope, index) => (
+              <div 
+                key={scope}
+                className={`
+                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
+                  ${isScopeSelected(index) 
+                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
+                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
+                  }
+                `}
+                onClick={() => handleScopeClick(index)}
+              >
+                {scope}
+              </div>
+            ))}
+          </div>
+          
+          {/* Bottom label for scope */}
+          <div className="flex gap-1">
+            <div className={`${getHeaderSize()}`}></div>
+            <div className={`flex-1 flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
+              기여범위
+            </div>
+          </div>
         </div>
 
         {/* Legend */}

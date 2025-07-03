@@ -10,6 +10,14 @@ export interface Task {
   feedback?: string;
 }
 
+export interface EvaluateeInfo {
+  id: string;
+  name: string;
+  position: '사원' | '대리' | '차장' | '부장';
+  department: string;
+  growthLevel: number;
+}
+
 export interface EvaluationData {
   evaluateeId: string;
   evaluateeName: string;

@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import EvaluationHeader from '@/components/Evaluation/EvaluationHeader';
 import TaskCard from '@/components/Evaluation/TaskCard';
-import { EvaluationData, Task } from '@/types/evaluation';
+import { EvaluationData, Task, EvaluateeInfo } from '@/types/evaluation';
 
 const Evaluation = () => {
   const { id } = useParams();
@@ -13,13 +13,26 @@ const Evaluation = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Mock data with growth level
+  // Mock evaluatee data
+  const evaluateeDatabase: Record<string, EvaluateeInfo> = {
+    '1': { id: '1', name: '김민수', position: '사원', department: '마케팅팀', growthLevel: 1 },
+    '2': { id: '2', name: '이하나', position: '대리', department: '영업팀', growthLevel: 2 },
+    '3': { id: '3', name: '박철민', position: '차장', department: 'IT팀', growthLevel: 3 },
+    '4': { id: '4', name: '정수연', position: '부장', department: '인사팀', growthLevel: 4 },
+  };
+
+  const getEvaluateeInfo = (evaluateeId: string): EvaluateeInfo => {
+    return evaluateeDatabase[evaluateeId] || evaluateeDatabase['1'];
+  };
+
+  const evaluateeInfo = getEvaluateeInfo(id || '1');
+
   const [evaluationData, setEvaluationData] = useState<EvaluationData>({
-    evaluateeId: id || '1',
-    evaluateeName: '이하나',
-    evaluateePosition: '사원',
-    evaluateeDepartment: '마케팅팀',
-    growthLevel: 3,
+    evaluateeId: evaluateeInfo.id,
+    evaluateeName: evaluateeInfo.name,
+    evaluateePosition: evaluateeInfo.position,
+    evaluateeDepartment: evaluateeInfo.department,
+    growthLevel: evaluateeInfo.growthLevel,
     evaluationStatus: 'in-progress',
     lastModified: new Date().toISOString(),
     tasks: [
@@ -67,12 +80,20 @@ const Evaluation = () => {
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        setEvaluationData(parsedData);
+        // Update with current evaluatee info
+        setEvaluationData({
+          ...parsedData,
+          evaluateeId: evaluateeInfo.id,
+          evaluateeName: evaluateeInfo.name,
+          evaluateePosition: evaluateeInfo.position,
+          evaluateeDepartment: evaluateeInfo.department,
+          growthLevel: evaluateeInfo.growthLevel,
+        });
       } catch (error) {
         console.error('Failed to load saved evaluation data:', error);
       }
     }
-  }, [id]);
+  }, [id, evaluateeInfo]);
 
   const updateTask = (taskId: string, field: keyof Task, value: any) => {
     setEvaluationData(prev => ({
@@ -87,13 +108,37 @@ const Evaluation = () => {
     }));
   };
 
+  const handleWeightChange = (taskId: string, newWeight: number) => {
+    const currentTask = evaluationData.tasks.find(t => t.id === taskId);
+    if (!currentTask) return;
+
+    const otherTasksWeight = evaluationData.tasks
+      .filter(t => t.id !== taskId)
+      .reduce((sum, task) => sum + task.weight, 0);
+
+    if (otherTasksWeight + newWeight > 100) {
+      toast({
+        title: "가중치 오류",
+        description: "전체 가중치의 합이 100%를 초과할 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateTask(taskId, 'weight', newWeight);
+    
+    toast({
+      title: "가중치 변경 완료",
+      description: `가중치가 ${newWeight}%로 변경되었습니다.`,
+    });
+  };
+
   const handleMethodClick = (taskId: string, method: string) => {
     const task = evaluationData.tasks.find(t => t.id === taskId);
     if (!task) return;
 
     const updatedTask = { ...task, contributionMethod: method };
     
-    // Calculate score if both method and scope are selected
     if (updatedTask.contributionScope) {
       const methodIndex = contributionMethods.indexOf(method);
       const scopeIndex = contributionScopes.indexOf(updatedTask.contributionScope);
@@ -115,7 +160,6 @@ const Evaluation = () => {
 
     const updatedTask = { ...task, contributionScope: scope };
     
-    // Calculate score if both method and scope are selected
     if (updatedTask.contributionMethod) {
       const methodIndex = contributionMethods.indexOf(updatedTask.contributionMethod);
       const scopeIndex = contributionScopes.indexOf(scope);
@@ -170,7 +214,6 @@ const Evaluation = () => {
         description: `평가 내용이 성공적으로 저장되었습니다. ${isEvaluationComplete() ? '평가가 완료되었습니다.' : ''}`,
       });
 
-      // Navigate back to dashboard after save
       setTimeout(() => {
         navigate('/');
       }, 1500);
@@ -211,7 +254,6 @@ const Evaluation = () => {
         onSave={handleSave}
       />
 
-      {/* Tasks Evaluation */}
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         {evaluationData.tasks.map((task, index) => (
           <TaskCard
@@ -221,6 +263,7 @@ const Evaluation = () => {
             onMethodClick={handleMethodClick}
             onScopeClick={handleScopeClick}
             onFeedbackChange={handleFeedbackChange}
+            onWeightChange={handleWeightChange}
           />
         ))}
       </div>
