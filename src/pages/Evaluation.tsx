@@ -357,22 +357,9 @@ const Evaluation = () => {
                   />
                 </div>
 
-                {/* Right: Feedback Input and Score Display */}
+                {/* Right: Score Display and Feedback Input - Swapped positions */}
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
-                      피드백
-                    </Label>
-                    <Textarea
-                      id={`feedback-${task.id}`}
-                      placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
-                      value={task.feedback || ''}
-                      onChange={(e) => updateTask(task.id, 'feedback', e.target.value)}
-                      className="min-h-[200px]"
-                    />
-                  </div>
-
-                  {/* Score Display Section - Moved from left side */}
+                  {/* Score Display Section - Now at the top */}
                   {task.score && (
                     <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
                       <p className="text-sm text-gray-600 mb-1">기본 점수</p>
@@ -389,6 +376,20 @@ const Evaluation = () => {
                       )}
                     </div>
                   )}
+
+                  {/* Feedback Input - Now below score */}
+                  <div>
+                    <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
+                      피드백
+                    </Label>
+                    <Textarea
+                      id={`feedback-${task.id}`}
+                      placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
+                      value={task.feedback || ''}
+                      onChange={(e) => updateTask(task.id, 'feedback', e.target.value)}
+                      className="min-h-[200px]"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
