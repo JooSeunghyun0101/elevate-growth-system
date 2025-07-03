@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -205,25 +206,25 @@ export const EvaluatorDashboard: React.FC = () => {
 
   const myStats = [
     { 
-      label: '담당 피평가자', 
+      label: { full: '담당 피평가자', mobile: '담당자' },
       value: `${evaluatees.length}명`, 
       icon: Users, 
       color: 'text-orange-600' 
     },
     { 
-      label: '완료한 평가', 
+      label: { full: '완료한 평가', mobile: '완료' },
       value: `${evaluatees.filter(e => e.status === 'completed').length}건`, 
       icon: CheckCircle, 
       color: 'text-yellow-600' 
     },
     { 
-      label: '대기 중인 평가', 
+      label: { full: '대기 중인 평가', mobile: '대기중' },
       value: `${evaluatees.filter(e => e.status === 'in-progress').length}건`, 
       icon: Clock, 
       color: 'text-amber-600' 
     },
     { 
-      label: '작성한 피드백', 
+      label: { full: '작성한 피드백', mobile: '피드백' },
       value: `${recentFeedbacks.length}건`, 
       icon: MessageSquare, 
       color: 'text-orange-500' 
@@ -235,42 +236,64 @@ export const EvaluatorDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">평가자 대시보드</h2>
-          <p className="text-muted-foreground">담당 팀원들의 성과를 평가하고 피드백을 제공하세요</p>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+            <span className="hidden md:inline">평가자 대시보드</span>
+            <span className="inline md:hidden">평가 대시보드</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            <span className="hidden md:inline">담당 팀원들의 성과를 평가하고 피드백을 제공하세요</span>
+            <span className="inline md:hidden">담당 팀원 평가 및 피드백</span>
+          </p>
         </div>
         <Button 
-          className="ok-orange hover:opacity-90"
+          className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
           onClick={() => setShowEvaluationGuide(true)}
         >
-          <Star className="mr-2 h-4 w-4" />
-          평가 가이드
+          <Star className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">평가 가이드</span>
+          <span className="inline sm:hidden">가이드</span>
         </Button>
       </div>
 
       {/* My Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {myStats.map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <CardTitle className="text-xs sm:text-sm font-medium">
+                <span className="hidden sm:inline">{stat.label.full}</span>
+                <span className="inline sm:hidden">{stat.label.mobile}</span>
+              </CardTitle>
+              <stat.icon className={`h-3 w-3 sm:h-4 sm:w-4 ${stat.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <Tabs defaultValue="evaluatees" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="evaluatees">담당 피평가자</TabsTrigger>
-          <TabsTrigger value="pending">대기 중인 평가</TabsTrigger>
-          <TabsTrigger value="completed">완료한 평가</TabsTrigger>
-          <TabsTrigger value="feedback">피드백 내역</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="evaluatees" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">담당 피평가자</span>
+            <span className="inline sm:hidden">담당자</span>
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">대기 중인 평가</span>
+            <span className="inline sm:hidden">대기중</span>
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">완료한 평가</span>
+            <span className="inline sm:hidden">완료</span>
+          </TabsTrigger>
+          <TabsTrigger value="feedback" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">피드백 내역</span>
+            <span className="inline sm:hidden">피드백</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="evaluatees" className="space-y-4">
@@ -280,8 +303,8 @@ export const EvaluatorDashboard: React.FC = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-lg">{person.name} {person.position}</CardTitle>
-                      <CardDescription>{person.department}</CardDescription>
+                      <CardTitle className="text-base sm:text-lg">{person.name} {person.position}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">{person.department}</CardDescription>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <Badge 
@@ -300,7 +323,7 @@ export const EvaluatorDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <div className="flex justify-between text-sm mb-2">
+                    <div className="flex justify-between text-xs sm:text-sm mb-2">
                       <span>평가진행률</span>
                       <span>{person.tasksCompleted}/{person.totalTasks} ({person.progress}%)</span>
                     </div>
@@ -308,13 +331,13 @@ export const EvaluatorDashboard: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       마지막 활동: {person.lastActivity}
                     </span>
                     <Button 
                       size="sm" 
                       onClick={() => handleEvaluateClick(person.id)}
-                      className="ok-orange hover:opacity-90"
+                      className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
                     >
                       평가하기
                     </Button>
@@ -328,30 +351,31 @@ export const EvaluatorDashboard: React.FC = () => {
         <TabsContent value="pending" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>대기 중인 평가 항목</CardTitle>
-              <CardDescription>아직 완료되지 않은 평가들입니다</CardDescription>
+              <CardTitle className="text-base sm:text-lg">대기 중인 평가 항목</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">아직 완료되지 않은 평가들입니다</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {evaluatees.filter(person => person.status === 'in-progress').map((person, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={index} className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
                     <div>
-                      <p className="font-medium">{person.name} {person.position}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium text-sm sm:text-base">{person.name} {person.position}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         미완료 과업: {person.totalTasks - person.tasksCompleted}개 • 진행률: {person.progress}%
                       </p>
                     </div>
                     <Button 
                       size="sm" 
                       onClick={() => handleEvaluateClick(person.id)}
-                      className="ok-orange hover:opacity-90"
+                      className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
                     >
-                      평가 진행
+                      <span className="hidden sm:inline">평가 진행</span>
+                      <span className="inline sm:hidden">진행</span>
                     </Button>
                   </div>
                 ))}
                 {evaluatees.filter(person => person.status === 'in-progress').length === 0 && (
-                  <p className="text-center text-gray-500 py-8">대기 중인 평가가 없습니다.</p>
+                  <p className="text-center text-gray-500 py-8 text-sm">대기 중인 평가가 없습니다.</p>
                 )}
               </div>
             </CardContent>
@@ -361,32 +385,32 @@ export const EvaluatorDashboard: React.FC = () => {
         <TabsContent value="completed" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>완료한 평가</CardTitle>
-              <CardDescription>완료된 평가 결과입니다</CardDescription>
+              <CardTitle className="text-base sm:text-lg">완료한 평가</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">완료된 평가 결과입니다</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {evaluatees.filter(person => person.status === 'completed').map((person, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
+                  <div key={index} className="p-3 sm:p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="font-medium">{person.name} {person.position}</p>
-                        <p className="text-sm text-muted-foreground">{person.department}</p>
+                        <p className="font-medium text-sm sm:text-base">{person.name} {person.position}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{person.department}</p>
                       </div>
                       <div className="text-right">
-                        <Badge className="status-achieved mb-1">평가 완료</Badge>
-                        <p className="text-sm text-gray-600">
+                        <Badge className="status-achieved mb-1 text-xs">평가 완료</Badge>
+                        <p className="text-xs sm:text-sm text-gray-600">
                           총점: {person.totalScore}점 / 목표: {person.growthLevel}점
                         </p>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       완료일: {person.lastActivity} • 총 {person.totalTasks}개 과업 평가
                     </div>
                   </div>
                 ))}
                 {evaluatees.filter(person => person.status === 'completed').length === 0 && (
-                  <p className="text-center text-gray-500 py-8">완료된 평가가 없습니다.</p>
+                  <p className="text-center text-gray-500 py-8 text-sm">완료된 평가가 없습니다.</p>
                 )}
               </div>
             </CardContent>
@@ -396,22 +420,22 @@ export const EvaluatorDashboard: React.FC = () => {
         <TabsContent value="feedback" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>최근 작성한 피드백</CardTitle>
-              <CardDescription>팀원들에게 제공한 피드백 내역 (최신순)</CardDescription>
+              <CardTitle className="text-base sm:text-lg">최근 작성한 피드백</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">팀원들에게 제공한 피드백 내역 (최신순)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {recentFeedbacks.map((feedback, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
+                  <div key={index} className="p-3 sm:p-4 border rounded-lg">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="font-medium text-lg">{feedback.evaluatee}</p>
-                        <Badge variant="outline" className="mt-1">
+                        <p className="font-medium text-sm sm:text-lg">{feedback.evaluatee}</p>
+                        <Badge variant="outline" className="mt-1 text-xs">
                           {feedback.task}
                         </Badge>
                       </div>
                       <div className="text-right">
-                        <Badge variant="outline" className="border-orange-200 text-orange-700 mb-1">
+                        <Badge variant="outline" className="border-orange-200 text-orange-700 mb-1 text-xs">
                           {feedback.score}
                         </Badge>
                         <p className="text-xs text-muted-foreground">{feedback.date}</p>
@@ -419,16 +443,16 @@ export const EvaluatorDashboard: React.FC = () => {
                     </div>
                     <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">평가자: {feedback.evaluatorName || '평가자 미확인'}</span>
+                        <span className="text-xs sm:text-sm font-medium">평가자: {feedback.evaluatorName || '평가자 미확인'}</span>
                       </div>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-xs sm:text-sm text-gray-700">
                         {feedback.feedback}
                       </p>
                     </div>
                   </div>
                 ))}
                 {recentFeedbacks.length === 0 && (
-                  <p className="text-center text-gray-500 py-8">작성된 피드백이 없습니다.</p>
+                  <p className="text-center text-gray-500 py-8 text-sm">작성된 피드백이 없습니다.</p>
                 )}
               </div>
             </CardContent>
