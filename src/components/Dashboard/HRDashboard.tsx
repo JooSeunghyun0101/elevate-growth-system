@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, Target, TrendingUp, Settings, FileText, Calendar } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getOverallStats, getDepartmentStats, getRecentActivities } from '@/utils/evaluationUtils';
+import { getOverallStats, getDepartmentStats, getRecentActivities, initializeEmployeeData } from '@/utils/evaluationUtils';
 import { EvaluatorManagement } from '@/components/Settings/EvaluatorManagement';
 import { EvaluationMatrix } from '@/components/Settings/EvaluationMatrix';
 import { NotificationSettings } from '@/components/Settings/NotificationSettings';
@@ -17,6 +16,11 @@ export const HRDashboard: React.FC = () => {
   const [overallStats, setOverallStats] = useState(getOverallStats());
   const [departmentStats, setDepartmentStats] = useState(getDepartmentStats());
   const [recentActivities, setRecentActivities] = useState(getRecentActivities());
+
+  // Initialize new employee data on component mount
+  useEffect(() => {
+    initializeEmployeeData();
+  }, []);
 
   // Refresh data periodically
   useEffect(() => {

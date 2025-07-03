@@ -7,6 +7,7 @@ export interface EmployeeInfo {
   position: string;
   department: string;
   growthLevel: number;
+  evaluatorId?: string;
 }
 
 export interface DepartmentStats {
@@ -23,15 +24,39 @@ export interface ActivityRecord {
   type: 'update' | 'complete' | 'edit' | 'feedback';
 }
 
-// Get all employees from AuthContext mock data
+// Get all employees from the new employee data
 export const getAllEmployees = (): EmployeeInfo[] => {
   return [
-    { id: '1', name: '이하나', position: '사원', department: '마케팅팀', growthLevel: 1 },
-    { id: '2', name: '김대리', position: '대리', department: '개발팀', growthLevel: 2 },
-    { id: '3', name: '박차장', position: '차장', department: '영업팀', growthLevel: 3 },
-    { id: '4', name: '최부장', position: '부장', department: '기획팀', growthLevel: 4 },
-    { id: '5', name: '정사원', position: '사원', department: '디자인팀', growthLevel: 1 },
+    // 평가자들 (이중 역할)
+    { id: 'H0908033', name: '박판근', position: '팀장', department: '인사기획팀', growthLevel: 3, evaluatorId: 'H0807021' },
+    { id: 'H1310159', name: '김남엽', position: '팀장', department: '인사팀', growthLevel: 3, evaluatorId: 'H0807021' },
+    // 피평가자들
+    { id: 'H1310172', name: '이수한', position: '사원', department: '인사기획팀', growthLevel: 1, evaluatorId: 'H0908033' },
+    { id: 'H1411166', name: '주승현', position: '사원', department: '인사기획팀', growthLevel: 1, evaluatorId: 'H0908033' },
+    { id: 'H1911042', name: '김민선', position: '사원', department: '인사기획팀', growthLevel: 1, evaluatorId: 'H0908033' },
+    { id: 'H1411231', name: '최은송', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
+    { id: 'H1205006', name: '황정원', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
+    { id: 'H2301040', name: '김민영', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
+    { id: 'H1501077', name: '조혜인', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
   ];
+};
+
+// Clear old localStorage data and initialize with new structure
+export const clearOldData = () => {
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('evaluation-')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+};
+
+// Initialize with new employee data structure
+export const initializeEmployeeData = () => {
+  clearOldData();
+  console.log('기존 평가 데이터가 삭제되고 새로운 직원 데이터로 초기화되었습니다.');
 };
 
 // Load evaluation data from localStorage

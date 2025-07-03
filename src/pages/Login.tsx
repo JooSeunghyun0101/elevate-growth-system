@@ -10,7 +10,7 @@ import { User, Lock, Building2 } from 'lucide-react';
 
 const Login = () => {
   const { user, login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,10 +24,10 @@ const Login = () => {
     setIsLoading(true);
     setError('');
 
-    const success = await login(email, password);
+    const success = await login(employeeId, password);
     
     if (!success) {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      setError('사번 또는 비밀번호가 올바르지 않습니다.');
     }
     
     setIsLoading(false);
@@ -46,15 +46,15 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">이메일</Label>
+              <Label htmlFor="employeeId">사번</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="이메일을 입력하세요"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="employeeId"
+                  type="text"
+                  placeholder="사번을 입력하세요 (예: H1411166)"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
                   className="pl-10"
                   required
                 />
@@ -91,48 +91,6 @@ const Login = () => {
               {isLoading ? '로그인 중...' : '로그인'}
             </Button>
           </form>
-
-          <div className="mt-6 pt-4 border-t">
-            <p className="text-sm text-gray-600 mb-3">데모 계정:</p>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span>HR 관리자:</span>
-                <span className="font-mono">hr@company.com</span>
-              </div>
-              <div className="flex justify-between">
-                <span>평가자:</span>
-                <span className="font-mono">evaluator@company.com</span>
-              </div>
-              <div className="border-t pt-2 mt-2">
-                <p className="text-gray-600 mb-1">피평가자 계정:</p>
-                <div className="grid grid-cols-2 gap-1">
-                  <div className="text-center">
-                    <div className="text-xs">이하나 사원</div>
-                    <div className="font-mono text-xs">evaluatee1@company.com</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs">김대리</div>
-                    <div className="font-mono text-xs">evaluatee2@company.com</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs">박차장</div>
-                    <div className="font-mono text-xs">evaluatee3@company.com</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs">최부장</div>
-                    <div className="font-mono text-xs">evaluatee4@company.com</div>
-                  </div>
-                </div>
-                <div className="text-center mt-1">
-                  <div className="text-xs">정사원</div>
-                  <div className="font-mono text-xs">evaluatee5@company.com</div>
-                </div>
-              </div>
-              <div className="text-center mt-2 pt-2 border-t">
-                <span className="text-gray-500">모든 계정 비밀번호: password</span>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
