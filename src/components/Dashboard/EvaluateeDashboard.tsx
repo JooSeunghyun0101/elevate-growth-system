@@ -1,76 +1,131 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Target, TrendingUp, Calendar, Plus, Edit, MessageCircle } from 'lucide-react';
+import { Target, TrendingUp, Calendar, MessageCircle, User, Edit } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/AuthContext';
+import { EvaluationData } from '@/types/evaluation';
 
 export const EvaluateeDashboard: React.FC = () => {
-  const myStats = [
-    { label: '등록한 과업', value: '5개', icon: Target, color: 'text-blue-600' },
-    { label: '현재 진행률', value: '78%', icon: TrendingUp, color: 'text-green-600' },
-    { label: '받은 피드백', value: '8건', icon: MessageCircle, color: 'text-purple-600' },
-    { label: '평가 마감일', value: '15일', icon: Calendar, color: 'text-orange-600' },
-  ];
+  const { user } = useAuth();
+  const [evaluationData, setEvaluationData] = useState<EvaluationData | null>(null);
 
-  const myTasks = [
-    {
-      id: 1,
-      title: '브랜드 캠페인 기획 및 실행',
-      weight: 40,
-      period: '2024.03 - 2024.06',
-      status: 'completed',
-      score: 3,
-      contributionType: '실무',
-      contributionScope: '상호적',
-      feedback: '창의적이고 체계적인 접근이 인상적이었습니다. 유관부서와의 협업도 원활했습니다.',
-      evaluator: '박서준 팀장'
-    },
-    {
-      id: 2,
-      title: '고객 만족도 조사 및 분석',
-      weight: 25,
-      period: '2024.04 - 2024.05',
-      status: 'in-review',
-      score: null,
-      contributionType: null,
-      contributionScope: null,
-      feedback: null,
-      evaluator: '박서준 팀장'
-    },
-    {
-      id: 3,
-      title: '신제품 런칭 지원 업무',
-      weight: 20,
-      period: '2024.05 - 2024.07',
-      status: 'in-progress',
-      score: null,
-      contributionType: null,
-      contributionScope: null,
-      feedback: null,
-      evaluator: '최수현 팀장'
-    },
-    {
-      id: 4,
-      title: '마케팅 자료 제작 및 관리',
-      weight: 15,
-      period: '2024.01 - 2024.12',
-      status: 'ongoing',
-      score: 2,
-      contributionType: '지원',
-      contributionScope: '독립적',
-      feedback: '꾸준하고 안정적인 업무 수행이 돋보입니다.',
-      evaluator: '최수현 팀장'
+  // Load evaluation data for the current user
+  useEffect(() => {
+    if (user) {
+      loadMyEvaluationData();
+      
+      // Refresh data every 5 seconds to catch changes from evaluator
+      const interval = setInterval(loadMyEvaluationData, 5000);
+      return () => clearInterval(interval);
     }
+  }, [user]);
+
+  const loadMyEvaluationData = () => {
+    if (!user) return;
+    
+    const savedData = localStorage.getItem(`evaluation-${user.id}`);
+    if (savedData) {
+      try {
+        const parsedData: EvaluationData = JSON.parse(savedData);
+        setEvaluationData(parsedData);
+      } catch (error) {
+        console.error('Failed to load evaluation data:', error);
+      }
+    } else {
+      // Create default evaluation data if none exists
+      const defaultData: EvaluationData = {
+        evaluateeId: user.id,
+        evaluateeName: user.name,
+        evaluateePosition: user.position || '사원',
+        evaluateeDepartment: user.department,
+        growthLevel: user.growthLevel || 1,
+        evaluationStatus: 'in-progress',
+        lastModified: new Date().toISOString(),
+        tasks: [
+          {
+            id: '1',
+            title: '브랜드 캠페인 기획',
+            description: 'Q2 신제품 출시를 위한 통합 브랜드 캠페인 기획 및 실행',
+            weight: 30
+          },
+          {
+            id: '2',
+            title: '고객 만족도 조사',
+            description: '기존 고객 대상 만족도 조사 설계 및 분석',
+            weight: 25
+          },
+          {
+            id: '3',
+            title: '소셜미디어 콘텐츠 관리',
+            description: '월간 소셜미디어 콘텐츠 계획 및 게시물 관리',
+            weight: 20
+          },
+          {
+            id: '4',
+            title: '팀 프로젝트 협업',
+            description: '디자인팀과의 협업 프로젝트 진행',
+            weight: 25
+          }
+        ]
+      };
+      setEvaluationData(defaultData);
+    }
+  };
+
+  if (!user || !evaluationData) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="text-center">
+          <p className="text-gray-500">평가 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const completedTasks = evaluationData.tasks.filter(task => task.score !== undefined).length;
+  const progress = Math.round((completedTasks / evaluationData.tasks.length) * 100);
+  const totalScore = Math.floor(evaluationData.tasks.reduce((sum, task) => {
+    if (task.score) {
+      return sum + (task.score * task.weight / 100);
+    }
+    return sum;
+  }, 0));
+
+  const isAchieved = totalScore >= evaluationData.growthLevel;
+  const feedbackCount = evaluationData.tasks.filter(task => task.feedback).length;
+
+  const myStats = [
+    { 
+      label: '등록한 과업', 
+      value: `${evaluationData.tasks.length}개`, 
+      icon: Target, 
+      color: 'text-orange-600' 
+    },
+    { 
+      label: '완료된 평가', 
+      value: `${completedTasks}개`, 
+      icon: TrendingUp, 
+      color: 'text-yellow-600' 
+    },
+    { 
+      label: '받은 피드백', 
+      value: `${feedbackCount}건`, 
+      icon: MessageCircle, 
+      color: 'text-amber-600' 
+    },
+    { 
+      label: '현재 점수', 
+      value: `${totalScore}점`, 
+      icon: User, 
+      color: 'text-orange-500' 
+    },
   ];
 
-  const currentScore = 2.75; // 예시 점수
-  const targetLevel = 1; // 사원 레벨
-  const isAchieved = currentScore >= targetLevel;
-
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: 'completed' | 'in-review' | 'in-progress' | 'ongoing') => {
     switch (status) {
       case 'completed':
         return <Badge className="status-achieved">평가 완료</Badge>;
@@ -90,11 +145,13 @@ export const EvaluateeDashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">내 성과 대시보드</h2>
-          <p className="text-muted-foreground">나의 과업과 평가 결과를 확인하고 관리하세요</p>
+          <p className="text-muted-foreground">
+            {user.name} {user.position} • {user.department}
+          </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          과업 추가
+        <Button className="ok-orange hover:opacity-90">
+          <Edit className="mr-2 h-4 w-4" />
+          과업 관리
         </Button>
       </div>
 
@@ -122,21 +179,28 @@ export const EvaluateeDashboard: React.FC = () => {
         <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">{currentScore.toFixed(1)}</div>
+              <div className="text-3xl font-bold text-orange-600 mb-2">{totalScore}</div>
               <p className="text-sm text-muted-foreground">현재 점수</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">Lv.{targetLevel}</div>
-              <p className="text-sm text-muted-foreground">목표 레벨 (사원)</p>
+              <div className="text-3xl font-bold text-amber-600 mb-2">Lv.{evaluationData.growthLevel}</div>
+              <p className="text-sm text-muted-foreground">목표 레벨</p>
             </div>
             <div className="text-center">
               <Badge 
-                className={`text-lg px-4 py-2 ${isAchieved ? 'status-achieved' : 'status-not-achieved'}`}
+                className={`text-lg px-4 py-2 ${isAchieved ? 'status-achieved' : 'status-in-progress'}`}
               >
-                {isAchieved ? '목표 달성' : '목표 미달성'}
+                {isAchieved ? '목표 달성' : '진행 중'}
               </Badge>
               <p className="text-sm text-muted-foreground mt-2">현재 상태</p>
             </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex justify-between text-sm mb-2">
+              <span>전체 진행률</span>
+              <span>{progress}%</span>
+            </div>
+            <Progress value={progress} className="[&>div]:ok-orange" />
           </div>
         </CardContent>
       </Card>
@@ -155,36 +219,52 @@ export const EvaluateeDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>등록한 과업 목록</CardTitle>
-                  <CardDescription>총 가중치: {myTasks.reduce((sum, task) => sum + task.weight, 0)}%</CardDescription>
+                  <CardDescription>
+                    총 가중치: {evaluationData.tasks.reduce((sum, task) => sum + task.weight, 0)}% • 
+                    완료: {completedTasks}/{evaluationData.tasks.length}
+                  </CardDescription>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Edit className="mr-2 h-4 w-4" />
-                  가중치 수정
-                </Button>
+                <Badge 
+                  variant={evaluationData.evaluationStatus === 'completed' ? 'default' : 'secondary'}
+                  className={evaluationData.evaluationStatus === 'completed' ? 'status-achieved' : 'status-in-progress'}
+                >
+                  {evaluationData.evaluationStatus === 'completed' ? '평가 완료' : '평가 진행 중'}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {myTasks.map((task) => (
+                {evaluationData.tasks.map((task, index) => (
                   <div key={task.id} className="p-4 border rounded-lg">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="font-medium mb-1">{task.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <span>가중치: {task.weight}%</span>
-                          <span>기간: {task.period}</span>
-                          <span>평가자: {task.evaluator}</span>
+                          <span>과업 {index + 1}</span>
                         </div>
                       </div>
-                      {getStatusBadge(task.status)}
+                      <div className="text-right">
+                        {task.score !== undefined ? (
+                          <div className="space-y-1">
+                            <Badge className="status-achieved mb-1">평가 완료</Badge>
+                            <div className="text-sm text-gray-600">
+                              {task.score}점/Lv.{evaluationData.growthLevel}
+                            </div>
+                          </div>
+                        ) : (
+                          <Badge className="status-in-progress">평가 대기</Badge>
+                        )}
+                      </div>
                     </div>
 
-                    {task.score && (
-                      <div className="bg-gray-50 p-3 rounded-md">
+                    {task.contributionMethod && task.contributionScope && (
+                      <div className="ok-bright-gray p-3 rounded-md mb-2">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">평가 결과</span>
-                          <Badge variant="outline">
-                            {task.contributionScope}/{task.contributionType} (점수: {task.score})
+                          <span className="text-sm font-medium">기여 방식/범위</span>
+                          <Badge variant="outline" className="border-orange-200 text-orange-700">
+                            {task.contributionMethod}/{task.contributionScope}
                           </Badge>
                         </div>
                         {task.feedback && (
@@ -192,13 +272,6 @@ export const EvaluateeDashboard: React.FC = () => {
                         )}
                       </div>
                     )}
-
-                    <div className="flex justify-end mt-3 space-x-2">
-                      <Button variant="outline" size="sm">수정</Button>
-                      {task.status === 'in-progress' && (
-                        <Button size="sm">진행 상황 업데이트</Button>
-                      )}
-                    </div>
                   </div>
                 ))}
               </div>
@@ -210,26 +283,29 @@ export const EvaluateeDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>받은 피드백</CardTitle>
-              <CardDescription>평가자들로부터 받은 모든 피드백</CardDescription>
+              <CardDescription>평가자로부터 받은 모든 피드백</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {myTasks.filter(task => task.feedback).map((task) => (
+                {evaluationData.tasks.filter(task => task.feedback).map((task) => (
                   <div key={task.id} className="p-4 border rounded-lg">
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h4 className="font-medium">{task.title}</h4>
-                        <p className="text-sm text-muted-foreground">{task.evaluator}</p>
+                        <p className="text-sm text-muted-foreground">평가자 피드백</p>
                       </div>
-                      <Badge variant="outline">
-                        {task.contributionScope}/{task.contributionType}
+                      <Badge variant="outline" className="border-orange-200 text-orange-700">
+                        {task.score}점
                       </Badge>
                     </div>
-                    <div className="bg-blue-50 p-3 rounded-md">
+                    <div className="ok-bright-gray p-3 rounded-md">
                       <p className="text-sm">💬 {task.feedback}</p>
                     </div>
                   </div>
                 ))}
+                {evaluationData.tasks.filter(task => task.feedback).length === 0 && (
+                  <p className="text-center text-gray-500 py-8">받은 피드백이 없습니다.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -246,41 +322,24 @@ export const EvaluateeDashboard: React.FC = () => {
                 <div className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium">2024년 상반기</h4>
-                    <Badge className="status-in-progress">진행 중</Badge>
+                    <Badge className={evaluationData.evaluationStatus === 'completed' ? 'status-achieved' : 'status-in-progress'}>
+                      {evaluationData.evaluationStatus === 'completed' ? '완료' : '진행 중'}
+                    </Badge>
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <div className="text-lg font-bold text-blue-600">{currentScore.toFixed(1)}</div>
+                      <div className="text-lg font-bold text-orange-600">{totalScore}</div>
                       <p className="text-xs text-muted-foreground">현재 점수</p>
                     </div>
                     <div>
-                      <div className="text-lg font-bold">Lv.1</div>
+                      <div className="text-lg font-bold text-amber-600">Lv.{evaluationData.growthLevel}</div>
                       <p className="text-xs text-muted-foreground">목표 레벨</p>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-green-600">달성</div>
-                      <p className="text-xs text-muted-foreground">예상 결과</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 border rounded-lg opacity-75">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">2023년 연간</h4>
-                    <Badge className="status-achieved">달성</Badge>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <div className="text-lg font-bold">2.2</div>
-                      <p className="text-xs text-muted-foreground">최종 점수</p>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold">Lv.1</div>
-                      <p className="text-xs text-muted-foreground">목표 레벨</p>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-green-600">달성</div>
-                      <p className="text-xs text-muted-foreground">최종 결과</p>
+                      <div className={`text-lg font-bold ${isAchieved ? 'text-green-600' : 'text-orange-600'}`}>
+                        {isAchieved ? '달성' : '진행중'}
+                      </div>
+                      <p className="text-xs text-muted-foreground">현재 결과</p>
                     </div>
                   </div>
                 </div>
@@ -297,30 +356,18 @@ export const EvaluateeDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="p-4 ok-bright-gray rounded-lg">
                   <h4 className="font-medium mb-2">2024년 성장 목표</h4>
                   <p className="text-sm text-muted-foreground mb-3">
-                    마케팅 전문성을 높이고 프로젝트 리딩 경험을 쌓아 차년도 승진을 목표로 합니다.
+                    현재 레벨 {evaluationData.growthLevel} 달성을 목표로 하며, 
+                    총 {totalScore}점 중 {evaluationData.growthLevel}점 이상 달성이 목표입니다.
                   </p>
-                  <Progress value={65} className="mb-2" />
-                  <p className="text-xs text-muted-foreground">목표 달성률: 65%</p>
+                  <Progress value={progress} className="mb-2 [&>div]:ok-orange" />
+                  <p className="text-xs text-muted-foreground">목표 달성률: {progress}%</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="p-3 border rounded-lg">
-                    <h5 className="font-medium text-sm mb-1">전문성 향상</h5>
-                    <p className="text-xs text-muted-foreground">마케팅 자격증 취득, 외부 교육 참여</p>
-                    <Progress value={80} className="mt-2" />
-                  </div>
-                  <div className="p-3 border rounded-lg">
-                    <h5 className="font-medium text-sm mb-1">리더십 개발</h5>
-                    <p className="text-xs text-muted-foreground">프로젝트 리딩, 멘토링 활동</p>
-                    <Progress value={50} className="mt-2" />
-                  </div>
-                </div>
-
-                <Button variant="outline" className="w-full">
-                  목표 수정하기
+                <Button variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-50">
+                  목표 설정 수정하기
                 </Button>
               </div>
             </CardContent>

@@ -103,12 +103,33 @@ const Login = () => {
                 <span>평가자:</span>
                 <span className="font-mono">evaluator@company.com</span>
               </div>
-              <div className="flex justify-between">
-                <span>피평가자:</span>
-                <span className="font-mono">evaluatee@company.com</span>
+              <div className="border-t pt-2 mt-2">
+                <p className="text-gray-600 mb-1">피평가자 계정:</p>
+                <div className="grid grid-cols-2 gap-1">
+                  <div className="text-center">
+                    <div className="text-xs">이하나 사원</div>
+                    <div className="font-mono text-xs">evaluatee1@company.com</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs">김대리</div>
+                    <div className="font-mono text-xs">evaluatee2@company.com</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs">박차장</div>
+                    <div className="font-mono text-xs">evaluatee3@company.com</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs">최부장</div>
+                    <div className="font-mono text-xs">evaluatee4@company.com</div>
+                  </div>
+                </div>
+                <div className="text-center mt-1">
+                  <div className="text-xs">정사원</div>
+                  <div className="font-mono text-xs">evaluatee5@company.com</div>
+                </div>
               </div>
-              <div className="text-center mt-2">
-                <span className="text-gray-500">비밀번호: password</span>
+              <div className="text-center mt-2 pt-2 border-t">
+                <span className="text-gray-500">모든 계정 비밀번호: password</span>
               </div>
             </div>
           </div>
