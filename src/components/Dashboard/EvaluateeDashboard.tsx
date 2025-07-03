@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -196,7 +197,7 @@ export const EvaluateeDashboard: React.FC = () => {
           </div>
           <div className="mt-4">
             <div className="flex justify-between text-sm mb-2">
-              <span>전체 진행률</span>
+              <span>평가진행률</span>
               <span>{progress}%</span>
             </div>
             <Progress value={progress} className="[&>div]:ok-orange" />
@@ -391,3 +392,4 @@ export const EvaluateeDashboard: React.FC = () => {
     </div>
   );
 };
+

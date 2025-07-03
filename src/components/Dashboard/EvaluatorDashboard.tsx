@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -302,7 +301,7 @@ export const EvaluatorDashboard: React.FC = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-2">
-                      <span>과업 진행률</span>
+                      <span>평가진행률</span>
                       <span>{person.tasksCompleted}/{person.totalTasks} ({person.progress}%)</span>
                     </div>
                     <Progress value={person.progress} className="[&>div]:ok-orange" />
