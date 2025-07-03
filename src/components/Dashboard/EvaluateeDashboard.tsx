@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Target, TrendingUp, Calendar, MessageCircle, User, Edit } from 'lucide-react';
+import { Target, TrendingUp, MessageCircle, Edit } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { EvaluationData } from '@/types/evaluation';
+import TaskManagement from './TaskManagement';
 
 export const EvaluateeDashboard: React.FC = () => {
   const { user } = useAuth();
   const [evaluationData, setEvaluationData] = useState<EvaluationData | null>(null);
+  const [showTaskManagement, setShowTaskManagement] = useState(false);
 
   // Load evaluation data for the current user
   useEffect(() => {
@@ -98,6 +99,7 @@ export const EvaluateeDashboard: React.FC = () => {
   const isAchieved = totalScore >= evaluationData.growthLevel;
   const feedbackCount = evaluationData.tasks.filter(task => task.feedback).length;
 
+  // Updated stats with only 3 cards (removed current score)
   const myStats = [
     { 
       label: '등록한 과업', 
@@ -116,13 +118,7 @@ export const EvaluateeDashboard: React.FC = () => {
       value: `${feedbackCount}건`, 
       icon: MessageCircle, 
       color: 'text-amber-600' 
-    },
-    { 
-      label: '현재 점수', 
-      value: `${totalScore}점`, 
-      icon: User, 
-      color: 'text-orange-500' 
-    },
+    }
   ];
 
   const getStatusBadge = (status: 'completed' | 'in-review' | 'in-progress' | 'ongoing') => {
@@ -149,14 +145,17 @@ export const EvaluateeDashboard: React.FC = () => {
             {user.name} {user.position} • {user.department}
           </p>
         </div>
-        <Button className="ok-orange hover:opacity-90">
+        <Button 
+          className="ok-orange hover:opacity-90"
+          onClick={() => setShowTaskManagement(true)}
+        >
           <Edit className="mr-2 h-4 w-4" />
           과업 관리
         </Button>
       </div>
 
-      {/* My Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* My Stats - Updated to 3 columns */}
+      <div className="grid gap-4 md:grid-cols-3">
         {myStats.map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -170,7 +169,7 @@ export const EvaluateeDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Performance Summary */}
+      {/* Performance Summary - Updated order and text */}
       <Card>
         <CardHeader>
           <CardTitle>나의 성과 요약</CardTitle>
@@ -179,18 +178,18 @@ export const EvaluateeDashboard: React.FC = () => {
         <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">{totalScore}</div>
-              <p className="text-sm text-muted-foreground">현재 점수</p>
+              <div className="text-3xl font-bold text-amber-600 mb-2">Lv.{evaluationData.growthLevel}</div>
+              <p className="text-sm text-muted-foreground">성장 레벨</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-amber-600 mb-2">Lv.{evaluationData.growthLevel}</div>
-              <p className="text-sm text-muted-foreground">목표 레벨</p>
+              <div className="text-3xl font-bold text-orange-600 mb-2">{totalScore}</div>
+              <p className="text-sm text-muted-foreground">현재 점수</p>
             </div>
             <div className="text-center">
               <Badge 
                 className={`text-lg px-4 py-2 ${isAchieved ? 'status-achieved' : 'status-in-progress'}`}
               >
-                {isAchieved ? '목표 달성' : '진행 중'}
+                {isAchieved ? '달성' : '미달성'}
               </Badge>
               <p className="text-sm text-muted-foreground mt-2">현재 상태</p>
             </div>
@@ -260,7 +259,7 @@ export const EvaluateeDashboard: React.FC = () => {
                     </div>
 
                     {task.contributionMethod && task.contributionScope && (
-                      <div className="ok-bright-gray p-3 rounded-md mb-2">
+                      <div className="border border-orange-100 bg-white p-3 rounded-md mb-2">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium">기여 방식/범위</span>
                           <Badge variant="outline" className="border-orange-200 text-orange-700">
@@ -298,7 +297,7 @@ export const EvaluateeDashboard: React.FC = () => {
                         {task.score}점
                       </Badge>
                     </div>
-                    <div className="ok-bright-gray p-3 rounded-md">
+                    <div className="border border-orange-100 bg-white p-3 rounded-md">
                       <p className="text-sm">💬 {task.feedback}</p>
                     </div>
                   </div>
@@ -328,16 +327,16 @@ export const EvaluateeDashboard: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
+                      <div className="text-lg font-bold text-amber-600">Lv.{evaluationData.growthLevel}</div>
+                      <p className="text-xs text-muted-foreground">성장 레벨</p>
+                    </div>
+                    <div>
                       <div className="text-lg font-bold text-orange-600">{totalScore}</div>
                       <p className="text-xs text-muted-foreground">현재 점수</p>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-amber-600">Lv.{evaluationData.growthLevel}</div>
-                      <p className="text-xs text-muted-foreground">목표 레벨</p>
-                    </div>
-                    <div>
-                      <div className={`text-lg font-bold ${isAchieved ? 'text-green-600' : 'text-orange-600'}`}>
-                        {isAchieved ? '달성' : '진행중'}
+                      <div className={`text-lg font-bold ${isAchieved ? 'text-green-600' : 'text-red-600'}`}>
+                        {isAchieved ? '달성' : '미달성'}
                       </div>
                       <p className="text-xs text-muted-foreground">현재 결과</p>
                     </div>
@@ -356,7 +355,7 @@ export const EvaluateeDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 ok-bright-gray rounded-lg">
+                <div className="p-4 border border-orange-100 bg-white rounded-lg">
                   <h4 className="font-medium mb-2">2024년 성장 목표</h4>
                   <p className="text-sm text-muted-foreground mb-3">
                     현재 레벨 {evaluationData.growthLevel} 달성을 목표로 하며, 
@@ -374,6 +373,19 @@ export const EvaluateeDashboard: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Task Management Modal */}
+      {showTaskManagement && (
+        <TaskManagement
+          evaluationData={evaluationData}
+          onClose={() => setShowTaskManagement(false)}
+          onSave={(updatedData) => {
+            setEvaluationData(updatedData);
+            localStorage.setItem(`evaluation-${user.id}`, JSON.stringify(updatedData));
+            setShowTaskManagement(false);
+          }}
+        />
+      )}
     </div>
   );
 };
