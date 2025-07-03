@@ -8,6 +8,8 @@ export interface Task {
   contributionScope?: string;
   score?: number;
   feedback?: string;
+  feedbackDate?: string;
+  lastModified?: string;
 }
 
 export interface EvaluationData {

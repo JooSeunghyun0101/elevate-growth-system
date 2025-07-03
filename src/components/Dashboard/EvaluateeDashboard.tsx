@@ -259,7 +259,7 @@ export const EvaluateeDashboard: React.FC = () => {
                     </div>
 
                     {task.contributionMethod && task.contributionScope && (
-                      <div className="border border-orange-100 bg-white p-3 rounded-md mb-2">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-2">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium">기여 방식/범위</span>
                           <Badge variant="outline" className="border-orange-200 text-orange-700">
@@ -297,7 +297,7 @@ export const EvaluateeDashboard: React.FC = () => {
                         {task.score}점
                       </Badge>
                     </div>
-                    <div className="border border-orange-100 bg-white p-3 rounded-md">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
                       <p className="text-sm">💬 {task.feedback}</p>
                     </div>
                   </div>

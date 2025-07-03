@@ -177,7 +177,19 @@ const Evaluation = () => {
   };
 
   const handleFeedbackChange = (taskId: string, feedback: string) => {
-    updateTask(taskId, 'feedback', feedback);
+    setEvaluationData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(task => 
+        task.id === taskId 
+          ? { 
+              ...task, 
+              feedback,
+              feedbackDate: new Date().toISOString()
+            }
+          : task
+      ),
+      lastModified: new Date().toISOString()
+    }));
   };
 
   const calculateTotalScore = () => {

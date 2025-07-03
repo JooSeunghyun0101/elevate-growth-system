@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +25,8 @@ interface EvaluationData {
     contributionScope?: string;
     score?: number;
     feedback?: string;
+    feedbackDate?: string;
+    lastModified?: string;
   }>;
 }
 
@@ -122,22 +123,18 @@ export const EvaluatorDashboard: React.FC = () => {
             return sum;
           }, 0));
 
-          // Determine status: if any task has been modified without evaluation, mark as in-progress
-          let status = evaluationData.evaluationStatus;
-          
-          // If evaluation was completed but tasks were modified, reset to in-progress
-          if (status === 'completed' && completedTasks < evaluationData.tasks.length) {
-            status = 'in-progress';
-          }
+          // Status is now correctly managed by TaskManagement
+          const status = evaluationData.evaluationStatus;
 
-          // Extract feedback data with proper structure matching evaluatee dashboard
+          // Extract feedback data with individual timestamps
           evaluationData.tasks.forEach((task, taskIndex) => {
             if (task.feedback && task.feedback.trim()) {
               allFeedbacks.push({
                 evaluatee: `${evaluationData.evaluateeName} ${evaluationData.evaluateePosition}`,
                 task: task.title,
                 feedback: task.feedback,
-                date: evaluationData.lastModified, // Use actual timestamp for sorting
+                // Use individual task feedback date or task lastModified, fallback to evaluation lastModified
+                date: task.feedbackDate || task.lastModified || evaluationData.lastModified,
                 score: task.score ? `${task.score}점` : '평가중'
               });
             }
@@ -207,8 +204,8 @@ export const EvaluatorDashboard: React.FC = () => {
   useEffect(() => {
     loadEvaluationData();
     
-    // Refresh data every 2 seconds to catch changes more quickly
-    const interval = setInterval(loadEvaluationData, 2000);
+    // Refresh data every 1 second to catch changes more quickly
+    const interval = setInterval(loadEvaluationData, 1000);
     
     return () => clearInterval(interval);
   }, []);

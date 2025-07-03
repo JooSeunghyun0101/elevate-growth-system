@@ -29,7 +29,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       id: Date.now().toString(),
       title: '새 과업',
       description: '과업 설명을 입력하세요',
-      weight: 0
+      weight: 0,
+      lastModified: new Date().toISOString()
     };
     setTasks([...tasks, newTask]);
     setEditingTask(newTask.id);
@@ -42,7 +43,11 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 
   const updateTask = (taskId: string, updates: Partial<Task>) => {
     setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, ...updates } : task
+      task.id === taskId ? { 
+        ...task, 
+        ...updates,
+        lastModified: new Date().toISOString()
+      } : task
     ));
   };
 
@@ -50,7 +55,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     // Find original tasks to preserve evaluation data
     const originalTasksMap = new Map(evaluationData.tasks.map(task => [task.id, task]));
     
-    // Check for content changes in existing tasks
+    // Check for content changes in existing tasks (title, description, weight)
     const hasTaskContentChanges = tasks.some(task => {
       const original = originalTasksMap.get(task.id);
       if (!original) return false; // New task, not a content change
@@ -75,7 +80,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           score: originalTask.score,
           contributionMethod: originalTask.contributionMethod,
           contributionScope: originalTask.contributionScope,
-          feedback: originalTask.feedback
+          feedback: originalTask.feedback,
+          feedbackDate: originalTask.feedbackDate
         };
       } else {
         // New task - no evaluation data
@@ -87,10 +93,17 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     const completedTasks = updatedTasks.filter(task => task.score !== undefined).length;
     let evaluationStatus: 'in-progress' | 'completed' = evaluationData.evaluationStatus;
     
-    // If there are any changes (content or structural), and not all tasks are completed,
-    // reset to in-progress
-    if ((hasTaskContentChanges || hasStructuralChanges) && completedTasks < updatedTasks.length) {
-      evaluationStatus = 'in-progress';
+    // If there are content changes to existing evaluated tasks, OR structural changes,
+    // and the evaluation was previously completed, reset to in-progress
+    if ((hasTaskContentChanges || hasStructuralChanges)) {
+      if (evaluationData.evaluationStatus === 'completed') {
+        evaluationStatus = 'in-progress';
+      }
+    }
+    
+    // If all tasks are completed and no changes were made, keep as completed
+    if (completedTasks === updatedTasks.length && !hasTaskContentChanges && !hasStructuralChanges) {
+      evaluationStatus = 'completed';
     }
 
     const updatedData: EvaluationData = {
@@ -106,7 +119,15 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       completedTasks,
       totalTasks: updatedTasks.length,
       newStatus: evaluationStatus,
-      originalStatus: evaluationData.evaluationStatus
+      originalStatus: evaluationData.evaluationStatus,
+      changedTasks: tasks.filter(task => {
+        const original = originalTasksMap.get(task.id);
+        return original && (
+          original.title !== task.title || 
+          original.description !== task.description || 
+          original.weight !== task.weight
+        );
+      }).map(t => ({ id: t.id, title: t.title }))
     });
     
     onSave(updatedData);
