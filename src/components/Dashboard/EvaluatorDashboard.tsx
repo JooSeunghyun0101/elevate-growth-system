@@ -107,6 +107,14 @@ export const EvaluatorDashboard: React.FC = () => {
             return sum;
           }, 0));
 
+          // Determine status: if any task has been modified without evaluation, mark as in-progress
+          let status = evaluationData.evaluationStatus;
+          
+          // If evaluation was completed but tasks were modified, reset to in-progress
+          if (status === 'completed' && completedTasks < evaluationData.tasks.length) {
+            status = 'in-progress';
+          }
+
           return {
             id: base.id,
             name: base.name,
@@ -119,7 +127,7 @@ export const EvaluatorDashboard: React.FC = () => {
               month: 'short',
               day: 'numeric'
             }) + ' 전',
-            status: evaluationData.evaluationStatus,
+            status,
             totalScore,
             growthLevel: evaluationData.growthLevel
           };
@@ -144,17 +152,30 @@ export const EvaluatorDashboard: React.FC = () => {
       };
     });
 
+    console.log('Updated evaluatees data:', updatedEvaluatees);
     setEvaluatees(updatedEvaluatees);
   };
 
-  // Load data on mount and set up periodic refresh
+  // Load data on mount and set up more frequent refresh to catch task changes
   useEffect(() => {
     loadEvaluationData();
     
-    // Refresh data every 5 seconds to catch changes
-    const interval = setInterval(loadEvaluationData, 5000);
+    // Refresh data every 2 seconds to catch changes more quickly
+    const interval = setInterval(loadEvaluationData, 2000);
     
     return () => clearInterval(interval);
+  }, []);
+
+  // Also refresh when the component becomes visible (user switches tabs)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadEvaluationData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const myStats = [

@@ -48,11 +48,23 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   };
 
   const handleSave = () => {
+    // Create updated data with modified tasks and reset evaluation status
     const updatedData: EvaluationData = {
       ...evaluationData,
       tasks,
+      evaluationStatus: 'in-progress', // Reset to in-progress when tasks are modified
       lastModified: new Date().toISOString()
     };
+    
+    // Clear any existing scores and feedback when tasks are modified
+    updatedData.tasks = updatedData.tasks.map(task => ({
+      ...task,
+      score: undefined,
+      contributionMethod: undefined,
+      contributionScope: undefined,
+      feedback: undefined
+    }));
+    
     onSave(updatedData);
   };
 
@@ -62,10 +74,10 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
             <CardTitle className="text-2xl">과업 관리</CardTitle>
-            <CardDescription>
+            <CardDescription className="flex items-center gap-2">
               과업을 추가하거나 수정할 수 있습니다. 총 가중치: {totalWeight}%
               {totalWeight !== 100 && (
-                <Badge variant="destructive" className="ml-2">
+                <Badge variant="destructive">
                   가중치 합계가 100%가 아닙니다
                 </Badge>
               )}
