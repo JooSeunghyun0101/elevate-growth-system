@@ -16,8 +16,8 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
   isAchieved
 }) => {
   return (
-    <div className="grid md:grid-cols-5 gap-4">
-      <Card className="col-span-2">
+    <div className="grid md:grid-cols-3 gap-4">
+      <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -32,7 +32,7 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
                   <Building2 className="w-4 h-4" />
                   <span>{evaluationData.evaluateeDepartment}</span>
                 </div>
-                <div className="text-center">
+                <div className="text-right">
                   <p className="text-sm text-gray-600">성장 레벨</p>
                   <p className="text-lg font-semibold text-blue-600">Lv. {evaluationData.growthLevel}</p>
                 </div>
@@ -46,7 +46,7 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
         <CardContent className="p-4">
           <div className="text-center">
             <p className="text-sm text-gray-600">총 평가 점수</p>
-            <p className="text-lg font-bold text-orange-500">{totalScore}점</p>
+            <p className="text-2xl font-bold text-orange-500">{totalScore}점</p>
           </div>
         </CardContent>
       </Card>
