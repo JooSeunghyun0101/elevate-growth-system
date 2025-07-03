@@ -356,16 +356,9 @@ const Evaluation = () => {
                     onMethodClick={(method) => handleMethodClick(task.id, method)}
                     onScopeClick={(scope) => handleScopeClick(task.id, scope)}
                   />
-                  {task.score && (
-                    <div className="mt-4 text-center">
-                      <p className="text-sm text-gray-600">기본 점수</p>
-                      <p className="text-2xl font-bold text-orange-500">{task.score}점</p>
-                      <p className="text-sm text-gray-600 mt-1">가중치 적용: {calculateWeightedScore(task.score, task.weight)}점</p>
-                    </div>
-                  )}
                 </div>
 
-                {/* Right: Feedback Input */}
+                {/* Right: Feedback Input and Score Display */}
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
@@ -379,6 +372,15 @@ const Evaluation = () => {
                       className="min-h-[200px]"
                     />
                   </div>
+
+                  {/* Score Display Section - Moved from left side */}
+                  {task.score && (
+                    <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+                      <p className="text-sm text-gray-600 mb-1">기본 점수</p>
+                      <p className="text-2xl font-bold text-orange-500 mb-2">{task.score}점</p>
+                      <p className="text-sm text-gray-600">가중치 적용: {calculateWeightedScore(task.score, task.weight)}점</p>
+                    </div>
+                  )}
                   
                   {task.contributionMethod && task.contributionScope && (
                     <div className="p-4 bg-gray-50 rounded-lg">
