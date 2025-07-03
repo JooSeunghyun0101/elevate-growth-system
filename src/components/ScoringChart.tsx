@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -53,17 +52,6 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
       default:
         return 'w-14 h-14 text-xs';
     }
-  };
-
-  const getSelectedScore = () => {
-    if (!selectedMethod || !selectedScope) return null;
-    
-    const methodIndex = methods.indexOf(selectedMethod);
-    const scopeIndex = scopes.indexOf(selectedScope);
-    
-    if (methodIndex === -1 || scopeIndex === -1) return null;
-    
-    return scoreMatrix[methodIndex][scopeIndex];
   };
 
   const isMethodSelected = (methodIndex: number) => {
@@ -162,16 +150,6 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
             </div>
           ))}
         </div>
-
-        {/* Selected Score Display */}
-        {getSelectedScore() !== null && (
-          <div className="mt-4 text-center">
-            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-              <span className="text-sm text-green-700">선택된 점수:</span>
-              <span className="text-xl font-bold text-green-800">{getSelectedScore()}점</span>
-            </div>
-          </div>
-        )}
 
         {/* Legend */}
         <div className="mt-4 text-xs text-gray-600">
