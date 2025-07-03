@@ -1,8 +1,9 @@
 
 import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, Settings, User } from 'lucide-react';
+import { Bell, Settings, User, LogOut, Building2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
+  const { logout } = useAuth();
+
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'hr':
@@ -44,12 +47,16 @@ export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <header className="h-16 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="performance-gradient w-8 h-8 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">PM</span>
+          <div className="ok-orange w-8 h-8 rounded-lg flex items-center justify-center">
+            <Building2 className="text-white w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Performance Management</h1>
@@ -99,8 +106,9 @@ export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
                 <span>설정</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                로그아웃
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>로그아웃</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

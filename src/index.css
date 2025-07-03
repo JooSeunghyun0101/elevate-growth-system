@@ -39,15 +39,19 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Custom Performance Management Colors */
-    --performance-blue: 217 91% 60%;
-    --performance-blue-light: 217 91% 80%;
-    --performance-green: 142 76% 36%;
-    --performance-green-light: 142 76% 56%;
-    --performance-orange: 32 95% 44%;
-    --performance-orange-light: 32 95% 64%;
-    --performance-purple: 262 83% 58%;
-    --performance-purple-light: 262 83% 78%;
+    /* OK Design System Colors based on uploaded palette */
+    --ok-orange: 14 100% 56%; /* #FF5500 */
+    --ok-dark-brown: 29 25% 32%; /* #55474A */
+    --ok-yellow: 43 100% 65%; /* #FFAA00 */
+    --ok-bright-gray: 210 6% 73%; /* #E3DFDA */
+    --ok-gold: 38 33% 45%; /* #875C Pantone */
+
+    /* Performance Management Colors using OK palette */
+    --performance-primary: var(--ok-orange);
+    --performance-secondary: var(--ok-dark-brown);
+    --performance-accent: var(--ok-yellow);
+    --performance-neutral: var(--ok-bright-gray);
+    --performance-highlight: var(--ok-gold);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -111,7 +115,27 @@ All colors MUST be HSL.
 
 @layer utilities {
   .performance-gradient {
-    background: linear-gradient(135deg, hsl(var(--performance-blue)) 0%, hsl(var(--performance-green)) 100%);
+    background: linear-gradient(135deg, hsl(var(--ok-orange)) 0%, hsl(var(--ok-yellow)) 100%);
+  }
+  
+  .ok-orange {
+    background-color: hsl(var(--ok-orange));
+  }
+  
+  .ok-dark-brown {
+    background-color: hsl(var(--ok-dark-brown));
+  }
+  
+  .ok-yellow {
+    background-color: hsl(var(--ok-yellow));
+  }
+  
+  .ok-bright-gray {
+    background-color: hsl(var(--ok-bright-gray));
+  }
+  
+  .ok-gold {
+    background-color: hsl(var(--ok-gold));
   }
   
   .status-achieved {
@@ -127,14 +151,37 @@ All colors MUST be HSL.
   }
   
   .role-hr {
-    @apply bg-purple-50 text-purple-700 border-purple-200;
+    background-color: hsl(var(--ok-orange));
+    color: white;
   }
   
   .role-evaluator {
-    @apply bg-orange-50 text-orange-700 border-orange-200;
+    background-color: hsl(var(--ok-dark-brown));
+    color: white;
   }
   
   .role-evaluatee {
-    @apply bg-blue-50 text-blue-700 border-blue-200;
+    background-color: hsl(var(--ok-yellow));
+    color: hsl(var(--ok-dark-brown));
+  }
+  
+  .score-1 {
+    background-color: hsl(var(--ok-bright-gray));
+    color: hsl(var(--ok-dark-brown));
+  }
+  
+  .score-2 {
+    background-color: hsl(var(--ok-yellow) / 0.7);
+    color: hsl(var(--ok-dark-brown));
+  }
+  
+  .score-3 {
+    background-color: hsl(var(--ok-gold));
+    color: white;
+  }
+  
+  .score-4 {
+    background-color: hsl(var(--ok-orange));
+    color: white;
   }
 }
