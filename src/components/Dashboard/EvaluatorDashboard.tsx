@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,7 +45,7 @@ export const EvaluatorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [evaluatees, setEvaluatees] = useState<EvaluateeInfo[]>([]);
 
-  // Base evaluatee information
+  // Base evaluatee information - updated to match evaluation page data
   const baseEvaluatees = [
     {
       id: '1',
@@ -54,31 +53,39 @@ export const EvaluatorDashboard: React.FC = () => {
       position: '사원',
       department: '마케팅팀',
       totalTasks: 4,
-      growthLevel: 3
+      growthLevel: 1
     },
     {
       id: '2',
-      name: '김철수',
-      position: '주임',
+      name: '김대리',
+      position: '대리',
       department: '개발팀',
-      totalTasks: 5,
-      growthLevel: 4
+      totalTasks: 4,
+      growthLevel: 2
     },
     {
       id: '3',
-      name: '박영희',
-      position: '대리',
-      department: '디자인팀',
-      totalTasks: 5,
+      name: '박차장',
+      position: '차장',
+      department: '영업팀',
+      totalTasks: 4,
       growthLevel: 3
     },
     {
       id: '4',
-      name: '정민호',
+      name: '최부장',
+      position: '부장',
+      department: '기획팀',
+      totalTasks: 4,
+      growthLevel: 4
+    },
+    {
+      id: '5',
+      name: '정사원',
       position: '사원',
-      department: '마케팅팀',
-      totalTasks: 5,
-      growthLevel: 2
+      department: '디자인팀',
+      totalTasks: 4,
+      growthLevel: 1
     },
   ];
 
