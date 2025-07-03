@@ -184,7 +184,8 @@ const Evaluation = () => {
           ? { 
               ...task, 
               feedback,
-              feedbackDate: new Date().toISOString()
+              feedbackDate: new Date().toISOString(),
+              evaluatorName: user?.name || '평가자'
             }
           : task
       ),

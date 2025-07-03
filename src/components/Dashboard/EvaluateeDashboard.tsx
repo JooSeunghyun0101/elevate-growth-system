@@ -291,7 +291,9 @@ export const EvaluateeDashboard: React.FC = () => {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h4 className="font-medium">{task.title}</h4>
-                        <p className="text-sm text-muted-foreground">평가자 피드백</p>
+                        <p className="text-sm text-muted-foreground">
+                          평가자: {task.evaluatorName || '평가자 미확인'}
+                        </p>
                       </div>
                       <Badge variant="outline" className="border-orange-200 text-orange-700">
                         {task.score}점

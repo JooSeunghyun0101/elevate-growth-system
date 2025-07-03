@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -10,6 +9,7 @@ export interface Task {
   feedback?: string;
   feedbackDate?: string;
   lastModified?: string;
+  evaluatorName?: string;
 }
 
 export interface EvaluationData {

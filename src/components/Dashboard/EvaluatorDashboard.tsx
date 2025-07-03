@@ -27,6 +27,7 @@ interface EvaluationData {
     feedback?: string;
     feedbackDate?: string;
     lastModified?: string;
+    evaluatorName?: string;
   }>;
 }
 
@@ -50,6 +51,7 @@ interface RecentFeedback {
   feedback: string;
   date: string;
   score: string;
+  evaluatorName?: string;
 }
 
 export const EvaluatorDashboard: React.FC = () => {
@@ -126,7 +128,7 @@ export const EvaluatorDashboard: React.FC = () => {
           // Status is now correctly managed by TaskManagement
           const status = evaluationData.evaluationStatus;
 
-          // Extract feedback data with individual timestamps
+          // Extract feedback data with individual timestamps and evaluator names
           evaluationData.tasks.forEach((task, taskIndex) => {
             if (task.feedback && task.feedback.trim()) {
               allFeedbacks.push({
@@ -135,7 +137,8 @@ export const EvaluatorDashboard: React.FC = () => {
                 feedback: task.feedback,
                 // Use individual task feedback date or task lastModified, fallback to evaluation lastModified
                 date: task.feedbackDate || task.lastModified || evaluationData.lastModified,
-                score: task.score ? `${task.score}점` : '평가중'
+                score: task.score ? `${task.score}점` : '평가중',
+                evaluatorName: task.evaluatorName || '평가자 미확인'
               });
             }
           });
@@ -437,6 +440,9 @@ export const EvaluatorDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">평가자: {feedback.evaluatorName || '평가자 미확인'}</span>
+                      </div>
                       <p className="text-sm text-gray-700">
                         {feedback.feedback}
                       </p>
