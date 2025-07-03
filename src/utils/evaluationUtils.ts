@@ -69,9 +69,9 @@ export const getDepartmentStats = (): DepartmentStats[] => {
   });
   
   // Count completed evaluations
-  evaluations.forEach(eval => {
-    const dept = departmentMap.get(eval.evaluateeDepartment);
-    if (dept && eval.evaluationStatus === 'completed') {
+  evaluations.forEach(evaluation => {
+    const dept = departmentMap.get(evaluation.evaluateeDepartment);
+    if (dept && evaluation.evaluationStatus === 'completed') {
       dept.completed++;
     }
   });

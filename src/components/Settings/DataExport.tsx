@@ -46,16 +46,16 @@ export const DataExport: React.FC<DataExportProps> = ({ onClose }) => {
 
       if (exportOptions.evaluationData) {
         const evaluations = loadAllEvaluationData();
-        const evaluationSheet = XLSX.utils.json_to_sheet(evaluations.map(eval => ({
-          '피평가자ID': eval.evaluateeId,
-          '피평가자명': eval.evaluateeName,
-          '직급': eval.evaluateePosition,
-          '부서': eval.evaluateeDepartment,
-          '성장레벨': eval.growthLevel,
-          '평가상태': eval.evaluationStatus === 'completed' ? '완료' : '진행중',
-          '최종수정일': new Date(eval.lastModified).toLocaleDateString('ko-KR'),
-          '총점수': eval.tasks.reduce((sum, task) => sum + (task.score ? (task.score * task.weight / 100) : 0), 0).toFixed(1),
-          '달성여부': eval.tasks.reduce((sum, task) => sum + (task.score ? (task.score * task.weight / 100) : 0), 0) >= eval.growthLevel ? '달성' : '미달성'
+        const evaluationSheet = XLSX.utils.json_to_sheet(evaluations.map(evaluation => ({
+          '피평가자ID': evaluation.evaluateeId,
+          '피평가자명': evaluation.evaluateeName,
+          '직급': evaluation.evaluateePosition,
+          '부서': evaluation.evaluateeDepartment,
+          '성장레벨': evaluation.growthLevel,
+          '평가상태': evaluation.evaluationStatus === 'completed' ? '완료' : '진행중',
+          '최종수정일': new Date(evaluation.lastModified).toLocaleDateString('ko-KR'),
+          '총점수': evaluation.tasks.reduce((sum, task) => sum + (task.score ? (task.score * task.weight / 100) : 0), 0).toFixed(1),
+          '달성여부': evaluation.tasks.reduce((sum, task) => sum + (task.score ? (task.score * task.weight / 100) : 0), 0) >= evaluation.growthLevel ? '달성' : '미달성'
         })));
         XLSX.utils.book_append_sheet(wb, evaluationSheet, '평가현황');
       }
@@ -64,12 +64,12 @@ export const DataExport: React.FC<DataExportProps> = ({ onClose }) => {
         const evaluations = loadAllEvaluationData();
         const feedbacks: any[] = [];
         
-        evaluations.forEach(eval => {
-          eval.tasks.forEach(task => {
+        evaluations.forEach(evaluation => {
+          evaluation.tasks.forEach(task => {
             if (task.feedback) {
               feedbacks.push({
-                '피평가자명': eval.evaluateeName,
-                '부서': eval.evaluateeDepartment,
+                '피평가자명': evaluation.evaluateeName,
+                '부서': evaluation.evaluateeDepartment,
                 '과업명': task.title,
                 '점수': task.score || 0,
                 '가중치': task.weight,
@@ -100,9 +100,9 @@ export const DataExport: React.FC<DataExportProps> = ({ onClose }) => {
           return acc;
         }, {} as Record<string, { total: number; completed: number }>);
         
-        evaluations.forEach(eval => {
-          if (eval.evaluationStatus === 'completed') {
-            deptStats[eval.evaluateeDepartment].completed++;
+        evaluations.forEach(evaluation => {
+          if (evaluation.evaluationStatus === 'completed') {
+            deptStats[evaluation.evaluateeDepartment].completed++;
           }
         });
         
@@ -141,9 +141,9 @@ export const DataExport: React.FC<DataExportProps> = ({ onClose }) => {
       // Generate summary report data
       const totalEmployees = employees.length;
       const completedEvaluations = evaluations.filter(e => e.evaluationStatus === 'completed').length;
-      const achievedCount = evaluations.filter(eval => {
-        const totalScore = eval.tasks.reduce((sum, task) => sum + (task.score ? (task.score * task.weight / 100) : 0), 0);
-        return Math.floor(totalScore) >= eval.growthLevel;
+      const achievedCount = evaluations.filter(evaluation => {
+        const totalScore = evaluation.tasks.reduce((sum, task) => sum + (task.score ? (task.score * task.weight / 100) : 0), 0);
+        return Math.floor(totalScore) >= evaluation.growthLevel;
       }).length;
       
       const reportData = {
