@@ -6,29 +6,34 @@ import EvaluationHeader from '@/components/Evaluation/EvaluationHeader';
 import TaskCard from '@/components/Evaluation/TaskCard';
 import { EvaluationData, Task } from '@/types/evaluation';
 
+// Employee data mapping
+const employeeData: Record<string, {name: string, position: string, department: string, growthLevel: number}> = {
+  'H1310172': { name: '이수한', position: '사원', department: '인사기획팀', growthLevel: 1 },
+  'H1411166': { name: '주승현', position: '사원', department: '인사기획팀', growthLevel: 1 },
+  'H1911042': { name: '김민선', position: '사원', department: '인사기획팀', growthLevel: 1 },
+  'H1411231': { name: '최은송', position: '사원', department: '인사팀', growthLevel: 1 },
+  'H1205006': { name: '황정원', position: '사원', department: '인사팀', growthLevel: 1 },
+  'H2301040': { name: '김민영', position: '사원', department: '인사팀', growthLevel: 1 },
+  'H1501077': { name: '조혜인', position: '사원', department: '인사팀', growthLevel: 1 },
+  'H0908033': { name: '박판근', position: '팀장', department: '인사기획팀', growthLevel: 3 },
+  'H1310159': { name: '김남엽', position: '팀장', department: '인사팀', growthLevel: 3 }
+};
+
 const Evaluation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Dynamic employee data based on ID
   const getEmployeeData = (employeeId: string) => {
-    const employees = {
-      '1': { name: '이하나', position: '사원', department: '마케팅팀', growthLevel: 1 },
-      '2': { name: '김대리', position: '대리', department: '개발팀', growthLevel: 2 },
-      '3': { name: '박차장', position: '차장', department: '영업팀', growthLevel: 3 },
-      '4': { name: '최부장', position: '부장', department: '기획팀', growthLevel: 4 },
-      '5': { name: '정사원', position: '사원', department: '디자인팀', growthLevel: 1 },
-    };
-    return employees[employeeId as keyof typeof employees] || employees['1'];
+    return employeeData[employeeId] || { name: '알 수 없음', position: '사원', department: '알 수 없음', growthLevel: 1 };
   };
 
-  const employeeInfo = getEmployeeData(id || '1');
+  const employeeInfo = getEmployeeData(id || '');
 
   // Mock data with dynamic employee info
   const [evaluationData, setEvaluationData] = useState<EvaluationData>({
-    evaluateeId: id || '1',
+    evaluateeId: id || '',
     evaluateeName: employeeInfo.name,
     evaluateePosition: employeeInfo.position,
     evaluateeDepartment: employeeInfo.department,

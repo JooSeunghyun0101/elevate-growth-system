@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, Settings, User, LogOut, Building2 } from 'lucide-react';
+import { Bell, Settings, User, LogOut, Building2, RefreshCw } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
-  const { logout } = useAuth();
+  const { logout, user, switchRole, getAvailableRoles } = useAuth();
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
@@ -50,6 +50,14 @@ export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
   const handleLogout = () => {
     logout();
   };
+
+  const handleRoleSwitch = (newRole: 'hr' | 'evaluator' | 'evaluatee') => {
+    switchRole(newRole);
+    window.location.reload(); // Refresh to update dashboard
+  };
+
+  const availableRoles = user ? getAvailableRoles(user.employeeId) : [];
+  const canSwitchRoles = availableRoles.length > 1;
 
   return (
     <header className="h-16 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -97,6 +105,27 @@ export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              
+              {canSwitchRoles && (
+                <>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    역할 전환
+                  </DropdownMenuLabel>
+                  {availableRoles
+                    .filter(role => role !== userRole)
+                    .map((role) => (
+                      <DropdownMenuItem 
+                        key={role}
+                        onClick={() => handleRoleSwitch(role)}
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>{getRoleDisplay(role)}로 전환</span>
+                      </DropdownMenuItem>
+                    ))}
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
                 <span>프로필</span>

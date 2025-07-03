@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,62 +55,42 @@ interface RecentFeedback {
   evaluatorName?: string;
 }
 
+// Employee mapping - evaluator to evaluatees
+const evaluatorMapping: Record<string, Array<{id: string, name: string, position: string, department: string, growthLevel: number}>> = {
+  'H0908033': [ // 박판근
+    { id: 'H1310172', name: '이수한', position: '사원', department: '인사기획팀', growthLevel: 1 },
+    { id: 'H1411166', name: '주승현', position: '사원', department: '인사기획팀', growthLevel: 1 },
+    { id: 'H1911042', name: '김민선', position: '사원', department: '인사기획팀', growthLevel: 1 }
+  ],
+  'H1310159': [ // 김남엽
+    { id: 'H1411231', name: '최은송', position: '사원', department: '인사팀', growthLevel: 1 },
+    { id: 'H1205006', name: '황정원', position: '사원', department: '인사팀', growthLevel: 1 },
+    { id: 'H2301040', name: '김민영', position: '사원', department: '인사팀', growthLevel: 1 },
+    { id: 'H1501077', name: '조혜인', position: '사원', department: '인사팀', growthLevel: 1 }
+  ],
+  'H0807021': [ // 박준형
+    { id: 'H0908033', name: '박판근', position: '팀장', department: '인사기획팀', growthLevel: 3 },
+    { id: 'H1310159', name: '김남엽', position: '팀장', department: '인사팀', growthLevel: 3 }
+  ]
+};
+
 export const EvaluatorDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [evaluatees, setEvaluatees] = useState<EvaluateeInfo[]>([]);
   const [recentFeedbacks, setRecentFeedbacks] = useState<RecentFeedback[]>([]);
   const [showEvaluationGuide, setShowEvaluationGuide] = useState(false);
 
-  // Base evaluatee information - updated to match evaluation page data
-  const baseEvaluatees = [
-    {
-      id: '1',
-      name: '이하나',
-      position: '사원',
-      department: '마케팅팀',
-      totalTasks: 4,
-      growthLevel: 1
-    },
-    {
-      id: '2',
-      name: '김대리',
-      position: '대리',
-      department: '개발팀',
-      totalTasks: 4,
-      growthLevel: 2
-    },
-    {
-      id: '3',
-      name: '박차장',
-      position: '차장',
-      department: '영업팀',
-      totalTasks: 4,
-      growthLevel: 3
-    },
-    {
-      id: '4',
-      name: '최부장',
-      position: '부장',
-      department: '기획팀',
-      totalTasks: 4,
-      growthLevel: 4
-    },
-    {
-      id: '5',
-      name: '정사원',
-      position: '사원',
-      department: '디자인팀',
-      totalTasks: 4,
-      growthLevel: 1
-    },
-  ];
-
   const loadEvaluationData = () => {
+    if (!user) return;
+
+    // Get evaluatees for current evaluator
+    const myEvaluatees = evaluatorMapping[user.employeeId] || [];
     const updatedEvaluatees: EvaluateeInfo[] = [];
     const allFeedbacks: RecentFeedback[] = [];
 
-    baseEvaluatees.forEach(base => {
-      const savedData = localStorage.getItem(`evaluation-${base.id}`);
+    myEvaluatees.forEach(evaluatee => {
+      const savedData = localStorage.getItem(`evaluation-${evaluatee.id}`);
       
       if (savedData) {
         try {
@@ -125,29 +106,27 @@ export const EvaluatorDashboard: React.FC = () => {
             return sum;
           }, 0));
 
-          // Status is now correctly managed by TaskManagement
           const status = evaluationData.evaluationStatus;
 
-          // Extract feedback data with individual timestamps and evaluator names
-          evaluationData.tasks.forEach((task, taskIndex) => {
+          // Extract feedback data
+          evaluationData.tasks.forEach((task) => {
             if (task.feedback && task.feedback.trim()) {
               allFeedbacks.push({
                 evaluatee: `${evaluationData.evaluateeName} ${evaluationData.evaluateePosition}`,
                 task: task.title,
                 feedback: task.feedback,
-                // Use individual task feedback date or task lastModified, fallback to evaluation lastModified
                 date: task.feedbackDate || task.lastModified || evaluationData.lastModified,
                 score: task.score ? `${task.score}점` : '평가중',
-                evaluatorName: task.evaluatorName || '평가자 미확인'
+                evaluatorName: task.evaluatorName || user.name
               });
             }
           });
 
           updatedEvaluatees.push({
-            id: base.id,
-            name: base.name,
-            position: base.position,
-            department: base.department,
+            id: evaluatee.id,
+            name: evaluatee.name,
+            position: evaluatee.position,
+            department: evaluatee.department,
             progress,
             tasksCompleted: completedTasks,
             totalTasks: evaluationData.tasks.length,
@@ -160,29 +139,29 @@ export const EvaluatorDashboard: React.FC = () => {
             growthLevel: evaluationData.growthLevel
           });
         } catch (error) {
-          console.error(`Failed to parse evaluation data for ${base.id}:`, error);
+          console.error(`Failed to parse evaluation data for ${evaluatee.id}:`, error);
         }
       }
       
       // Return default data if no saved evaluation found
       if (!savedData) {
         updatedEvaluatees.push({
-          id: base.id,
-          name: base.name,
-          position: base.position,
-          department: base.department,
+          id: evaluatee.id,
+          name: evaluatee.name,
+          position: evaluatee.position,
+          department: evaluatee.department,
           progress: 0,
           tasksCompleted: 0,
-          totalTasks: base.totalTasks,
+          totalTasks: 4, // Default task count
           lastActivity: '미시작',
           status: 'in-progress' as const,
           totalScore: 0,
-          growthLevel: base.growthLevel
+          growthLevel: evaluatee.growthLevel
         });
       }
     });
 
-    // Sort feedbacks by actual date (most recent first) and take top 5
+    // Sort feedbacks by date and take top 5
     const sortedFeedbacks = allFeedbacks
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5)
@@ -203,17 +182,16 @@ export const EvaluatorDashboard: React.FC = () => {
     setRecentFeedbacks(sortedFeedbacks);
   };
 
-  // Load data on mount and set up more frequent refresh to catch task changes
+  // Load data on mount and set up refresh
   useEffect(() => {
     loadEvaluationData();
     
-    // Refresh data every 1 second to catch changes more quickly
     const interval = setInterval(loadEvaluationData, 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
-  // Also refresh when the component becomes visible (user switches tabs)
+  // Also refresh when the component becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
