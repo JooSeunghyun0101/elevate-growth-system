@@ -7,13 +7,15 @@ interface ScoringChartProps {
   selectedMethod?: string;
   title?: string;
   size?: 'small' | 'medium' | 'large';
+  onCellClick?: (method: string, scope: string, score: number) => void;
 }
 
 const ScoringChart: React.FC<ScoringChartProps> = ({ 
   selectedScope, 
   selectedMethod, 
   title = "스코어링 매트릭스",
-  size = 'medium'
+  size = 'medium',
+  onCellClick
 }) => {
   // 기여 방식 (Y축)
   const methods = ['총괄', '리딩', '실무', '지원'];
@@ -63,6 +65,15 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
     return scopes[scopeIndex] === selectedScope;
   };
 
+  const handleCellClick = (methodIndex: number, scopeIndex: number) => {
+    if (onCellClick) {
+      const method = methods[methodIndex];
+      const scope = scopes[scopeIndex];
+      const score = scoreMatrix[methodIndex][scopeIndex];
+      onCellClick(method, scope, score);
+    }
+  };
+
   return (
     <Card className="w-fit border-orange-200">
       <CardHeader className="pb-3">
@@ -72,17 +83,17 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
         <div className="flex flex-col gap-1">
           {/* Header with scope labels */}
           <div className="flex gap-1">
-            <div className={`${getHeaderSize()} flex items-center justify-center font-medium text-xs bg-amber-600 text-white rounded border`}>
+            <div className={`${getHeaderSize()} flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
               방식/범위
             </div>
             {scopes.map((scope, index) => (
               <div 
                 key={scope}
                 className={`
-                  ${getHeaderSize()} flex items-center justify-center font-medium text-xs rounded border text-center leading-tight
+                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight
                   ${isScopeSelected(index) 
-                    ? 'bg-amber-600 text-white border-orange-600 border-2 shadow-lg' 
-                    : 'bg-amber-500 text-white'
+                    ? 'bg-amber-400 text-gray-900 border-amber-500 border-2 shadow-lg' 
+                    : 'bg-amber-200 text-gray-900'
                   }
                 `}
               >
@@ -96,10 +107,10 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
             <div key={method} className="flex gap-1">
               {/* Method label */}
               <div className={`
-                ${getHeaderSize()} flex items-center justify-center font-medium text-xs rounded border
+                ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border
                 ${isMethodSelected(methodIndex) 
-                  ? 'bg-orange-600 text-white border-orange-600 border-2 shadow-lg' 
-                  : 'bg-orange-500 text-white'
+                  ? 'bg-orange-400 text-gray-900 border-orange-500 border-2 shadow-lg' 
+                  : 'bg-orange-200 text-gray-900'
                 }
               `}>
                 {method}
@@ -116,10 +127,11 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
                     className={`
                       ${getCellSize()} 
                       flex items-center justify-center 
-                      font-bold rounded border-2 transition-all
-                      bg-white text-gray-700
-                      ${selected ? 'border-orange-600 scale-110 shadow-lg ring-2 ring-orange-300' : 'border-gray-300'}
+                      font-bold rounded border-2 transition-all cursor-pointer
+                      bg-white text-gray-700 hover:bg-gray-50
+                      ${selected ? 'border-orange-600 scale-110 shadow-lg ring-2 ring-orange-300' : 'border-gray-300 hover:border-orange-300'}
                     `}
+                    onClick={() => handleCellClick(methodIndex, scopeIndex)}
                   >
                     {score}
                   </div>
@@ -134,14 +146,14 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
           <div className="flex flex-wrap gap-2 justify-center">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-white border border-gray-300 rounded"></div>
-              <span>점수 표</span>
+              <span>점수 표 (클릭 가능)</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-orange-500 rounded"></div>
+              <div className="w-3 h-3 bg-orange-200 rounded"></div>
               <span>기여방식</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-amber-500 rounded"></div>
+              <div className="w-3 h-3 bg-amber-200 rounded"></div>
               <span>기여범위</span>
             </div>
           </div>

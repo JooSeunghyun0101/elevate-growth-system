@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft, Save, User, Building2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Save, User, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoringChart from '@/components/ScoringChart';
 import { useAuth } from '@/contexts/AuthContext';
@@ -99,31 +98,42 @@ const Evaluation = () => {
       ...prev,
       tasks: prev.tasks.map(task => {
         if (task.id === taskId) {
-          const updatedTask = { ...task, [field]: value };
-          
-          // 기여 방식과 범위가 모두 선택되었을 때 점수 자동 계산
-          if (field === 'contributionMethod' || field === 'contributionScope') {
-            if (updatedTask.contributionMethod && updatedTask.contributionScope) {
-              const methodIndex = contributionMethods.indexOf(updatedTask.contributionMethod);
-              const scopeIndex = contributionScopes.indexOf(updatedTask.contributionScope);
-              updatedTask.score = scoreMatrix[methodIndex][scopeIndex];
-            }
-          }
-          
-          return updatedTask;
+          return { ...task, [field]: value };
         }
         return task;
       })
     }));
   };
 
+  const handleCellClick = (taskId: string, method: string, scope: string, score: number) => {
+    setEvaluationData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(task => {
+        if (task.id === taskId) {
+          return {
+            ...task,
+            contributionMethod: method,
+            contributionScope: scope,
+            score: score
+          };
+        }
+        return task;
+      })
+    }));
+  };
+
+  const calculateWeightedScore = (score: number, weight: number) => {
+    return ((score * weight) / 100).toFixed(1);
+  };
+
   const calculateTotalScore = () => {
-    return evaluationData.tasks.reduce((sum, task) => {
+    const totalWeightedScore = evaluationData.tasks.reduce((sum, task) => {
       if (task.score) {
-        return sum + (task.score * task.weight);
+        return sum + (task.score * task.weight / 100);
       }
       return sum;
     }, 0);
+    return Math.floor(totalWeightedScore);
   };
 
   const handleSave = () => {
@@ -140,6 +150,10 @@ const Evaluation = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleGoBack = () => {
+    navigate('/');
   };
 
   if (!user || user.role !== 'evaluator') {
@@ -163,7 +177,7 @@ const Evaluation = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => navigate(-1)}
+                onClick={handleGoBack}
                 className="border-orange-500 text-orange-500 hover:bg-orange-50"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -238,7 +252,7 @@ const Evaluation = () => {
                   </Badge>
                   {task.score && (
                     <Badge className="bg-orange-500 text-white">
-                      {task.score * task.weight}점
+                      {calculateWeightedScore(task.score, task.weight)}점
                     </Badge>
                   )}
                 </div>
@@ -248,42 +262,26 @@ const Evaluation = () => {
               
               <div className="grid md:grid-cols-2 gap-6">
                 
-                {/* Left: Selection Controls */}
+                {/* Left: Scoring Chart */}
+                <div className="flex flex-col items-center justify-start">
+                  <ScoringChart
+                    selectedMethod={task.contributionMethod}
+                    selectedScope={task.contributionScope}
+                    size="medium"
+                    title={`과업 ${index + 1} 스코어링`}
+                    onCellClick={(method, scope, score) => handleCellClick(task.id, method, scope, score)}
+                  />
+                  {task.score && (
+                    <div className="mt-4 text-center">
+                      <p className="text-sm text-gray-600">기본 점수</p>
+                      <p className="text-2xl font-bold text-orange-500">{task.score}점</p>
+                      <p className="text-sm text-gray-600 mt-1">가중치 적용: {calculateWeightedScore(task.score, task.weight)}점</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Feedback Input */}
                 <div className="space-y-4">
-                  
-                  {/* 기여 방식 선택 */}
-                  <div>
-                    <Label className="text-base font-medium mb-3 block">기여 방식</Label>
-                    <RadioGroup
-                      value={task.contributionMethod || ''}
-                      onValueChange={(value) => updateTask(task.id, 'contributionMethod', value)}
-                    >
-                      {contributionMethods.map((method) => (
-                        <div key={method} className="flex items-center space-x-2">
-                          <RadioGroupItem value={method} id={`${task.id}-method-${method}`} />
-                          <Label htmlFor={`${task.id}-method-${method}`}>{method}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-
-                  {/* 기여 범위 선택 */}
-                  <div>
-                    <Label className="text-base font-medium mb-3 block">기여 범위</Label>
-                    <RadioGroup
-                      value={task.contributionScope || ''}
-                      onValueChange={(value) => updateTask(task.id, 'contributionScope', value)}
-                    >
-                      {contributionScopes.map((scope) => (
-                        <div key={scope} className="flex items-center space-x-2">
-                          <RadioGroupItem value={scope} id={`${task.id}-scope-${scope}`} />
-                          <Label htmlFor={`${task.id}-scope-${scope}`}>{scope}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-
-                  {/* 피드백 입력 */}
                   <div>
                     <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
                       피드백
@@ -293,24 +291,22 @@ const Evaluation = () => {
                       placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
                       value={task.feedback || ''}
                       onChange={(e) => updateTask(task.id, 'feedback', e.target.value)}
-                      className="min-h-[100px]"
+                      className="min-h-[200px]"
                     />
                   </div>
-                </div>
-
-                {/* Right: Scoring Chart */}
-                <div className="flex flex-col items-center justify-start">
-                  <ScoringChart
-                    selectedMethod={task.contributionMethod}
-                    selectedScope={task.contributionScope}
-                    size="medium"
-                    title={`과업 ${index + 1} 스코어링`}
-                  />
-                  {task.score && (
-                    <div className="mt-4 text-center">
-                      <p className="text-sm text-gray-600">기본 점수</p>
-                      <p className="text-2xl font-bold text-orange-500">{task.score}점</p>
-                      <p className="text-sm text-gray-600 mt-1">가중치 적용: {task.score * task.weight}점</p>
+                  
+                  {task.contributionMethod && task.contributionScope && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium text-gray-700 mb-2">선택된 평가</h4>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">기여방식:</span> {task.contributionMethod}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">기여범위:</span> {task.contributionScope}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">점수:</span> {task.score}점
+                      </p>
                     </div>
                   )}
                 </div>
