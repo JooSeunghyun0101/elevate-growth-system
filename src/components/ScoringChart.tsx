@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -19,9 +18,13 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   onMethodClick,
   onScopeClick
 }) => {
+  // 기여 방식 (Y축)
   const methods = ['총괄', '리딩', '실무', '지원'];
+  
+  // 기여 범위 (X축)  
   const scopes = ['의존적', '독립적', '상호적', '전략적'];
 
+  // 점수 매트릭스 (방식 x 범위)
   const scoreMatrix = [
     [2, 3, 4, 4], // 총괄
     [1, 2, 3, 4], // 리딩
@@ -84,7 +87,7 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-1">
-          {/* Header row with 방식/범위 and scope headers */}
+          {/* Header with scope labels */}
           <div className="flex gap-1">
             <div className={`${getHeaderSize()} flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
               방식/범위
