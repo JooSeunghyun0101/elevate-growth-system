@@ -1,34 +1,85 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, Target, TrendingUp, Settings, FileText, Calendar } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getOverallStats, getDepartmentStats, getRecentActivities } from '@/utils/evaluationUtils';
+import { EvaluatorManagement } from '@/components/Settings/EvaluatorManagement';
+import { EvaluationMatrix } from '@/components/Settings/EvaluationMatrix';
+import { NotificationSettings } from '@/components/Settings/NotificationSettings';
+import { DataExport } from '@/components/Settings/DataExport';
 
 export const HRDashboard: React.FC = () => {
-  const overviewStats = [
-    { label: '전체 직원 수', value: '248', icon: Users, color: 'text-blue-600' },
-    { label: '평가 완료율', value: '73%', icon: Target, color: 'text-green-600' },
-    { label: '달성률', value: '82%', icon: TrendingUp, color: 'text-purple-600' },
-    { label: '평가 프로세스', value: '5개', icon: Settings, color: 'text-orange-600' },
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [overallStats, setOverallStats] = useState(getOverallStats());
+  const [departmentStats, setDepartmentStats] = useState(getDepartmentStats());
+  const [recentActivities, setRecentActivities] = useState(getRecentActivities());
+
+  // Refresh data periodically
+  useEffect(() => {
+    const refreshData = () => {
+      setOverallStats(getOverallStats());
+      setDepartmentStats(getDepartmentStats());
+      setRecentActivities(getRecentActivities());
+    };
+
+    // Refresh every 30 seconds
+    const interval = setInterval(refreshData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const overviewStatsData = [
+    { 
+      label: '전체 직원 수', 
+      value: overallStats.totalEmployees.toString(), 
+      icon: Users, 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: '평가 완료율', 
+      value: `${overallStats.completionRate}%`, 
+      icon: Target, 
+      color: 'text-green-600' 
+    },
+    { 
+      label: '달성률', 
+      value: `${overallStats.achievementRate}%`, 
+      icon: TrendingUp, 
+      color: 'text-purple-600' 
+    },
+    { 
+      label: '진행 중인 평가', 
+      value: `${overallStats.inProgressEvaluations}개`, 
+      icon: Settings, 
+      color: 'text-orange-600' 
+    },
   ];
 
-  const recentActivities = [
-    { user: '김민준 대리', action: '평가자 변경 처리', time: '2시간 전', type: 'update' },
-    { user: '박서준 팀장', action: '하반기 평가 완료', time: '4시간 전', type: 'complete' },
-    { user: '이하나 사원', action: '과업 가중치 수정', time: '6시간 전', type: 'edit' },
-    { user: '최수현 팀장', action: '피드백 작성 완료', time: '1일 전', type: 'feedback' },
-  ];
+  const handleModalOpen = (modalType: string) => {
+    setActiveModal(modalType);
+  };
 
-  const evaluationProgress = [
-    { department: '개발팀', total: 45, completed: 38, percentage: 84 },
-    { department: '마케팅팀', total: 32, completed: 28, percentage: 88 },
-    { department: '영업팀', total: 41, completed: 25, percentage: 61 },
-    { department: '디자인팀', total: 18, completed: 16, percentage: 89 },
-    { department: '인사팀', total: 12, completed: 12, percentage: 100 },
-  ];
+  const handleModalClose = () => {
+    setActiveModal(null);
+    // Refresh data when modal closes
+    setOverallStats(getOverallStats());
+    setDepartmentStats(getDepartmentStats());
+    setRecentActivities(getRecentActivities());
+  };
+
+  if (activeModal) {
+    return (
+      <div className="p-6">
+        {activeModal === 'evaluator-management' && <EvaluatorManagement onClose={handleModalClose} />}
+        {activeModal === 'evaluation-matrix' && <EvaluationMatrix onClose={handleModalClose} />}
+        {activeModal === 'notification-settings' && <NotificationSettings onClose={handleModalClose} />}
+        {activeModal === 'data-export' && <DataExport onClose={handleModalClose} />}
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -38,11 +89,11 @@ export const HRDashboard: React.FC = () => {
           <p className="text-muted-foreground">전사 성과관리 현황을 한눈에 확인하세요</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => handleModalOpen('data-export')}>
             <FileText className="mr-2 h-4 w-4" />
             보고서 생성
           </Button>
-          <Button>
+          <Button onClick={() => handleModalOpen('evaluation-matrix')}>
             <Settings className="mr-2 h-4 w-4" />
             평가 설정
           </Button>
@@ -51,7 +102,7 @@ export const HRDashboard: React.FC = () => {
 
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {overviewStats.map((stat, index) => (
+        {overviewStatsData.map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
@@ -80,7 +131,7 @@ export const HRDashboard: React.FC = () => {
                 <CardDescription>부서별 평가 완료 상황</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {evaluationProgress.map((dept, index) => (
+                {departmentStats.map((dept, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{dept.department}</span>
@@ -134,7 +185,7 @@ export const HRDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {evaluationProgress.map((dept, index) => (
+                {departmentStats.map((dept, index) => (
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold">{dept.department}</h3>
@@ -163,21 +214,27 @@ export const HRDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.type === 'complete' ? 'bg-green-500' :
-                      activity.type === 'update' ? 'bg-blue-500' :
-                      activity.type === 'edit' ? 'bg-orange-500' :
-                      'bg-purple-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="font-medium">{activity.user}</p>
-                      <p className="text-sm text-muted-foreground">{activity.action}</p>
+                {recentActivities.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    최근 활동 내역이 없습니다.
+                  </p>
+                ) : (
+                  recentActivities.map((activity, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className={`w-2 h-2 rounded-full ${
+                        activity.type === 'complete' ? 'bg-green-500' :
+                        activity.type === 'update' ? 'bg-blue-500' :
+                        activity.type === 'edit' ? 'bg-orange-500' :
+                        'bg-purple-500'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="font-medium">{activity.user}</p>
+                        <p className="text-sm text-muted-foreground">{activity.action}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{activity.time}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{activity.time}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -191,7 +248,11 @@ export const HRDashboard: React.FC = () => {
                 <CardDescription>기여 유형과 범위별 점수 설정</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleModalOpen('evaluation-matrix')}
+                >
                   매트릭스 편집
                 </Button>
               </CardContent>
@@ -203,7 +264,11 @@ export const HRDashboard: React.FC = () => {
                 <CardDescription>평가자-피평가자 매칭 관리</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleModalOpen('evaluator-management')}
+                >
                   매칭 관리
                 </Button>
               </CardContent>
@@ -215,7 +280,11 @@ export const HRDashboard: React.FC = () => {
                 <CardDescription>시스템 알림 및 마감일 설정</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleModalOpen('notification-settings')}
+                >
                   알림 설정
                 </Button>
               </CardContent>
@@ -227,7 +296,11 @@ export const HRDashboard: React.FC = () => {
                 <CardDescription>평가 데이터 백업 및 리포트</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleModalOpen('data-export')}
+                >
                   데이터 내보내기
                 </Button>
               </CardContent>
