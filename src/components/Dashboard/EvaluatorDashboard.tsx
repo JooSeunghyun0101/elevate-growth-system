@@ -280,7 +280,7 @@ export const EvaluatorDashboard: React.FC = () => {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="evaluatees" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">담당 피평가자</span>
-            <span className="inline sm:hidden">담당자</span>
+            <span className="inline sm:hidden">피평가자</span>
           </TabsTrigger>
           <TabsTrigger value="pending" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">대기 중인 평가</span>
