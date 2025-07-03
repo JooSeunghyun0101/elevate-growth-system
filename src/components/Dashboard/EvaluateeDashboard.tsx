@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,7 +80,7 @@ export const EvaluateeDashboard: React.FC = () => {
 
   if (!user || !evaluationData) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="text-center">
           <p className="text-gray-500">평가 데이터를 불러오는 중...</p>
         </div>
@@ -99,22 +100,22 @@ export const EvaluateeDashboard: React.FC = () => {
   const isAchieved = totalScore >= evaluationData.growthLevel;
   const feedbackCount = evaluationData.tasks.filter(task => task.feedback).length;
 
-  // Updated stats with only 3 cards (removed current score)
+  // Updated stats with mobile-friendly labels
   const myStats = [
     { 
-      label: '등록한 과업', 
+      label: { full: '등록한 과업', mobile: '과업' },
       value: `${evaluationData.tasks.length}개`, 
       icon: Target, 
       color: 'text-orange-600' 
     },
     { 
-      label: '완료된 평가', 
+      label: { full: '완료된 평가', mobile: '완료' },
       value: `${completedTasks}개`, 
       icon: TrendingUp, 
       color: 'text-yellow-600' 
     },
     { 
-      label: '받은 피드백', 
+      label: { full: '받은 피드백', mobile: '피드백' },
       value: `${feedbackCount}건`, 
       icon: MessageCircle, 
       color: 'text-amber-600' 
@@ -137,36 +138,41 @@ export const EvaluateeDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            <span className="hidden sm:inline">내 성과 대시보드</span>
-            <span className="inline sm:hidden">내 성과</span>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+            <span className="hidden md:inline">내 성과 대시보드</span>
+            <span className="inline md:hidden">내 성과</span>
           </h2>
-          <p className="text-muted-foreground">
-            {user.name} {user.position} • {user.department}
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            <span className="hidden md:inline">{user.name} {user.position} • {user.department}</span>
+            <span className="inline md:hidden">성과 관리 및 과업 현황</span>
           </p>
         </div>
         <Button 
-          className="ok-orange hover:opacity-90"
+          className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
           onClick={() => setShowTaskManagement(true)}
         >
-          <Edit className="mr-2 h-4 w-4" />
-          과업 관리
+          <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">과업 관리</span>
+          <span className="inline sm:hidden">관리</span>
         </Button>
       </div>
 
-      {/* My Stats - Updated to 3 columns */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* My Stats - Updated to mobile format */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
         {myStats.map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <CardTitle className="text-xs sm:text-sm font-medium">
+                <span className="hidden sm:inline">{stat.label.full}</span>
+                <span className="inline sm:hidden">{stat.label.mobile}</span>
+              </CardTitle>
+              <stat.icon className={`h-3 w-3 sm:h-4 sm:w-4 ${stat.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
             </CardContent>
           </Card>
         ))}
@@ -208,16 +214,16 @@ export const EvaluateeDashboard: React.FC = () => {
       </Card>
 
       <Tabs defaultValue="tasks" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="tasks">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">내 과업</span>
             <span className="inline sm:hidden">과업</span>
           </TabsTrigger>
-          <TabsTrigger value="feedback">
+          <TabsTrigger value="feedback" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">받은 피드백</span>
             <span className="inline sm:hidden">피드백</span>
           </TabsTrigger>
-          <TabsTrigger value="history">
+          <TabsTrigger value="history" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">평가 이력</span>
             <span className="inline sm:hidden">이력</span>
           </TabsTrigger>
