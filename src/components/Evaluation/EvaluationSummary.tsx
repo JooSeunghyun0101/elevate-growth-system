@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { User, Building2, CheckCircle, AlertCircle } from 'lucide-react';
+import { User, Building2, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { EvaluationData } from '@/types/evaluation';
 
 interface EvaluationSummaryProps {
@@ -16,7 +16,7 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
   isAchieved
 }) => {
   return (
-    <div className="grid md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-4 gap-4">
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
@@ -27,16 +27,24 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
               <h2 className="text-lg font-semibold">
                 {evaluationData.evaluateeName} {evaluationData.evaluateePosition}
               </h2>
-              <div className="flex items-center justify-between mt-1">
-                <div className="flex items-center gap-2 text-gray-600 text-sm">
-                  <Building2 className="w-4 h-4" />
-                  <span>{evaluationData.evaluateeDepartment}</span>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">성장 레벨</p>
-                  <p className="text-lg font-semibold text-blue-600">Lv. {evaluationData.growthLevel}</p>
-                </div>
+              <div className="flex items-center gap-2 text-gray-600 text-sm mt-1">
+                <Building2 className="w-4 h-4" />
+                <span>{evaluationData.evaluateeDepartment}</span>
               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="text-center flex-1">
+              <p className="text-sm text-gray-600">성장 레벨</p>
+              <p className="text-2xl font-bold text-blue-600">Lv. {evaluationData.growthLevel}</p>
             </div>
           </div>
         </CardContent>
