@@ -1,36 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, User, Building2, CheckCircle, AlertCircle, Target, TrendingUp, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import ScoringChart from '@/components/ScoringChart';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  weight: number;
-  contributionMethod?: string;
-  contributionScope?: string;
-  score?: number;
-  feedback?: string;
-}
-
-interface EvaluationData {
-  evaluateeId: string;
-  evaluateeName: string;
-  evaluateePosition: string;
-  evaluateeDepartment: string;
-  growthLevel: number;
-  evaluationStatus: 'in-progress' | 'completed';
-  lastModified: string;
-  tasks: Task[];
-}
+import EvaluationHeader from '@/components/Evaluation/EvaluationHeader';
+import TaskCard from '@/components/Evaluation/TaskCard';
+import { EvaluationData, Task } from '@/types/evaluation';
 
 const Evaluation = () => {
   const { id } = useParams();
@@ -156,8 +131,8 @@ const Evaluation = () => {
     }));
   };
 
-  const calculateWeightedScore = (score: number, weight: number) => {
-    return ((score * weight) / 100).toFixed(1);
+  const handleFeedbackChange = (taskId: string, feedback: string) => {
+    updateTask(taskId, 'feedback', feedback);
   };
 
   const calculateTotalScore = () => {
@@ -223,211 +198,30 @@ const Evaluation = () => {
     );
   }
 
+  const totalScore = calculateTotalScore();
+  const achieved = isAchieved();
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleGoBack}
-                className="border-orange-500 text-orange-500 hover:bg-orange-50"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                뒤로 가기
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">성과 평가</h1>
-                <p className="text-gray-600">팀원의 과업별 성과를 평가하세요</p>
-              </div>
-            </div>
-            <Button 
-              onClick={handleSave}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              평가 저장
-            </Button>
-          </div>
-
-          {/* Evaluatee Info & Summary */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold">{evaluationData.evaluateeName} {evaluationData.evaluateePosition}</h2>
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Building2 className="w-4 h-4" />
-                      <span>{evaluationData.evaluateeDepartment}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">총 평가 점수</p>
-                    <p className="text-2xl font-bold text-orange-500">{calculateTotalScore()}점</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600">성장 레벨</p>
-                    <p className="text-lg font-semibold text-blue-600">{evaluationData.growthLevel}점</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">달성 여부</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {isAchieved() ? (
-                        <>
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                          <span className="font-semibold text-green-700">달성</span>
-                        </>
-                      ) : (
-                        <>
-                          <AlertCircle className="w-5 h-5 text-red-500" />
-                          <span className="font-semibold text-red-700">미달성</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600">완료 과업</p>
-                    <p className="text-lg font-semibold">
-                      {evaluationData.tasks.filter(task => task.score).length}/{evaluationData.tasks.length}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+      <EvaluationHeader
+        evaluationData={evaluationData}
+        totalScore={totalScore}
+        isAchieved={achieved}
+        onGoBack={handleGoBack}
+        onSave={handleSave}
+      />
 
       {/* Tasks Evaluation */}
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         {evaluationData.tasks.map((task, index) => (
-          <Card key={task.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">{task.title}</CardTitle>
-                  <p className="text-gray-600 mt-1">{task.description}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-orange-400 text-orange-900 bg-orange-100 px-4 py-2 text-base font-bold">
-                    가중치 {task.weight}%
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              
-              <div className="grid md:grid-cols-2 gap-6 items-start">
-                
-                {/* Left: Scoring Chart */}
-                <div className="flex flex-col items-center justify-start">
-                  <ScoringChart
-                    selectedMethod={task.contributionMethod}
-                    selectedScope={task.contributionScope}
-                    size="medium"
-                    title={`과업 ${index + 1} 스코어링`}
-                    onMethodClick={(method) => handleMethodClick(task.id, method)}
-                    onScopeClick={(scope) => handleScopeClick(task.id, scope)}
-                  />
-                </div>
-
-                {/* Right: Score Display and Feedback Input - Full Height Container */}
-                <div className="flex flex-col h-full min-h-[420px]">
-                  {/* Score Display Section - Enhanced design */}
-                  {task.score ? (
-                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 p-6 mb-4 shadow-sm">
-                      <div className="space-y-4">
-                        {/* Main Score Display - Horizontal Layout */}
-                        <div className="flex items-center justify-center gap-8">
-                          {/* Basic Score */}
-                          <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 text-gray-700 text-sm font-medium mb-2">
-                              <Target className="w-4 h-4" />
-                              <span>기본 점수</span>
-                            </div>
-                            <div className="text-3xl font-bold text-orange-600">{task.score}점</div>
-                          </div>
-
-                          {/* Weighted Score */}
-                          <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-2">
-                              <Star className="w-4 h-4" />
-                              <span>가중치 적용</span>
-                            </div>
-                            <div className="text-3xl font-bold text-orange-700">
-                              {calculateWeightedScore(task.score, task.weight)}점
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Method and Scope Info */}
-                        {task.contributionMethod && task.contributionScope && (
-                          <div className="pt-3 border-t border-orange-200/50">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div className="text-center">
-                                <p className="text-gray-600 font-medium mb-1">기여방식</p>
-                                <p className="text-gray-800 font-semibold bg-white/60 rounded-lg py-1 px-2">
-                                  {task.contributionMethod}
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-gray-600 font-medium mb-1">기여범위</p>
-                                <p className="text-gray-800 font-semibold bg-white/60 rounded-lg py-1 px-2">
-                                  {task.contributionScope}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 mb-4 text-center">
-                      <div className="text-gray-500 space-y-2">
-                        <Target className="w-6 h-6 mx-auto opacity-50" />
-                        <p className="text-sm">기여방식과 범위를 선택하면<br />점수가 표시됩니다</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Feedback Input - Takes remaining space */}
-                  <div className="flex-1 flex flex-col">
-                    <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
-                      피드백
-                    </Label>
-                    <Textarea
-                      id={`feedback-${task.id}`}
-                      placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
-                      value={task.feedback || ''}
-                      onChange={(e) => updateTask(task.id, 'feedback', e.target.value)}
-                      className="flex-1 min-h-0 resize-none"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TaskCard
+            key={task.id}
+            task={task}
+            index={index}
+            onMethodClick={handleMethodClick}
+            onScopeClick={handleScopeClick}
+            onFeedbackChange={handleFeedbackChange}
+          />
         ))}
       </div>
     </div>
