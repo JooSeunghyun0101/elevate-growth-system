@@ -130,17 +130,14 @@ export const EvaluatorDashboard: React.FC = () => {
             status = 'in-progress';
           }
 
-          // Extract actual feedback data
-          evaluationData.tasks.forEach(task => {
+          // Extract feedback data with proper structure matching evaluatee dashboard
+          evaluationData.tasks.forEach((task, taskIndex) => {
             if (task.feedback && task.feedback.trim()) {
               allFeedbacks.push({
                 evaluatee: `${evaluationData.evaluateeName} ${evaluationData.evaluateePosition}`,
                 task: task.title,
                 feedback: task.feedback,
-                date: new Date(evaluationData.lastModified).toLocaleDateString('ko-KR', {
-                  month: 'short',
-                  day: 'numeric'
-                }) + ' 전',
+                date: evaluationData.lastModified, // Use actual timestamp for sorting
                 score: task.score ? `${task.score}점` : '평가중'
               });
             }
@@ -185,13 +182,22 @@ export const EvaluatorDashboard: React.FC = () => {
       }
     });
 
-    // Sort feedbacks by date (most recent first) and take top 3
+    // Sort feedbacks by actual date (most recent first) and take top 5
     const sortedFeedbacks = allFeedbacks
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 3);
+      .slice(0, 5)
+      .map(feedback => ({
+        ...feedback,
+        date: new Date(feedback.date).toLocaleDateString('ko-KR', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }));
 
     console.log('Updated evaluatees data:', updatedEvaluatees);
-    console.log('Recent feedbacks:', sortedFeedbacks);
+    console.log('Recent feedbacks (sorted):', sortedFeedbacks);
     
     setEvaluatees(updatedEvaluatees);
     setRecentFeedbacks(sortedFeedbacks);
@@ -413,25 +419,31 @@ export const EvaluatorDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>최근 작성한 피드백</CardTitle>
-              <CardDescription>팀원들에게 제공한 피드백 내역</CardDescription>
+              <CardDescription>팀원들에게 제공한 피드백 내역 (최신순)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {recentFeedbacks.map((feedback, index) => (
                   <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="font-medium">{feedback.evaluatee}</p>
-                        <p className="text-sm text-muted-foreground">{feedback.task}</p>
+                        <p className="font-medium text-lg">{feedback.evaluatee}</p>
+                        <Badge variant="outline" className="mt-1">
+                          {feedback.task}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="border-orange-200 text-orange-700">
-                        {feedback.score}
-                      </Badge>
+                      <div className="text-right">
+                        <Badge variant="outline" className="border-orange-200 text-orange-700 mb-1">
+                          {feedback.score}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground">{feedback.date}</p>
+                      </div>
                     </div>
-                    <p className="text-sm ok-bright-gray p-3 rounded-md mb-2">
-                      "{feedback.feedback}"
-                    </p>
-                    <p className="text-xs text-muted-foreground">{feedback.date}</p>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                      <p className="text-sm text-gray-700">
+                        {feedback.feedback}
+                      </p>
+                    </div>
                   </div>
                 ))}
                 {recentFeedbacks.length === 0 && (

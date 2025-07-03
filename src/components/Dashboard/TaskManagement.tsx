@@ -50,6 +50,21 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     // Find original tasks to preserve evaluation data
     const originalTasksMap = new Map(evaluationData.tasks.map(task => [task.id, task]));
     
+    // Check for content changes in existing tasks
+    const hasTaskContentChanges = tasks.some(task => {
+      const original = originalTasksMap.get(task.id);
+      if (!original) return false; // New task, not a content change
+      return (
+        original.title !== task.title || 
+        original.description !== task.description || 
+        original.weight !== task.weight
+      );
+    });
+
+    // Check for structural changes (added/removed tasks)
+    const hasStructuralChanges = tasks.length !== evaluationData.tasks.length ||
+      tasks.some(task => !originalTasksMap.has(task.id));
+
     // Preserve existing evaluation data for unchanged tasks
     const updatedTasks = tasks.map(task => {
       const originalTask = originalTasksMap.get(task.id);
@@ -68,22 +83,13 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       }
     });
 
-    // Check if there are any changes or new tasks
-    const hasChanges = tasks.length !== evaluationData.tasks.length || 
-      tasks.some(task => {
-        const original = originalTasksMap.get(task.id);
-        return !original || 
-               original.title !== task.title || 
-               original.description !== task.description || 
-               original.weight !== task.weight;
-      });
-
     // Determine evaluation status
     const completedTasks = updatedTasks.filter(task => task.score !== undefined).length;
     let evaluationStatus: 'in-progress' | 'completed' = evaluationData.evaluationStatus;
     
-    // If there are changes, reset to in-progress
-    if (hasChanges && completedTasks < updatedTasks.length) {
+    // If there are any changes (content or structural), and not all tasks are completed,
+    // reset to in-progress
+    if ((hasTaskContentChanges || hasStructuralChanges) && completedTasks < updatedTasks.length) {
       evaluationStatus = 'in-progress';
     }
 
@@ -95,10 +101,12 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     };
     
     console.log('Task management save:', {
-      hasChanges,
+      hasTaskContentChanges,
+      hasStructuralChanges,
       completedTasks,
       totalTasks: updatedTasks.length,
-      newStatus: evaluationStatus
+      newStatus: evaluationStatus,
+      originalStatus: evaluationData.evaluationStatus
     });
     
     onSave(updatedData);
