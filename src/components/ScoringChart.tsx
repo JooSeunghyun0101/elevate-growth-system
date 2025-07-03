@@ -7,7 +7,8 @@ interface ScoringChartProps {
   selectedMethod?: string;
   title?: string;
   size?: 'small' | 'medium' | 'large';
-  onCellClick?: (method: string, scope: string, score: number) => void;
+  onMethodClick?: (method: string) => void;
+  onScopeClick?: (scope: string) => void;
 }
 
 const ScoringChart: React.FC<ScoringChartProps> = ({ 
@@ -15,7 +16,8 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   selectedMethod, 
   title = "스코어링 매트릭스",
   size = 'medium',
-  onCellClick
+  onMethodClick,
+  onScopeClick
 }) => {
   // 기여 방식 (Y축)
   const methods = ['총괄', '리딩', '실무', '지원'];
@@ -53,8 +55,15 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
     }
   };
 
-  const isSelected = (methodIndex: number, scopeIndex: number) => {
-    return methods[methodIndex] === selectedMethod && scopes[scopeIndex] === selectedScope;
+  const getSelectedScore = () => {
+    if (!selectedMethod || !selectedScope) return null;
+    
+    const methodIndex = methods.indexOf(selectedMethod);
+    const scopeIndex = scopes.indexOf(selectedScope);
+    
+    if (methodIndex === -1 || scopeIndex === -1) return null;
+    
+    return scoreMatrix[methodIndex][scopeIndex];
   };
 
   const isMethodSelected = (methodIndex: number) => {
@@ -65,12 +74,21 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
     return scopes[scopeIndex] === selectedScope;
   };
 
-  const handleCellClick = (methodIndex: number, scopeIndex: number) => {
-    if (onCellClick) {
+  const isCellHighlighted = (methodIndex: number, scopeIndex: number) => {
+    return methods[methodIndex] === selectedMethod && scopes[scopeIndex] === selectedScope;
+  };
+
+  const handleMethodClick = (methodIndex: number) => {
+    if (onMethodClick) {
       const method = methods[methodIndex];
+      onMethodClick(method);
+    }
+  };
+
+  const handleScopeClick = (scopeIndex: number) => {
+    if (onScopeClick) {
       const scope = scopes[scopeIndex];
-      const score = scoreMatrix[methodIndex][scopeIndex];
-      onCellClick(method, scope, score);
+      onScopeClick(scope);
     }
   };
 
@@ -90,12 +108,13 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
               <div 
                 key={scope}
                 className={`
-                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight
+                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
                   ${isScopeSelected(index) 
-                    ? 'bg-amber-400 text-gray-900 border-amber-500 border-2 shadow-lg' 
-                    : 'bg-amber-200 text-gray-900'
+                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
+                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
                   }
                 `}
+                onClick={() => handleScopeClick(index)}
               >
                 {scope}
               </div>
@@ -107,19 +126,21 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
             <div key={method} className="flex gap-1">
               {/* Method label */}
               <div className={`
-                ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border
+                ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border cursor-pointer transition-all
                 ${isMethodSelected(methodIndex) 
-                  ? 'bg-orange-400 text-gray-900 border-orange-500 border-2 shadow-lg' 
-                  : 'bg-orange-200 text-gray-900'
+                  ? 'bg-orange-500 text-white border-orange-600 border-2 shadow-lg transform scale-105' 
+                  : 'bg-orange-200 text-gray-900 hover:bg-orange-300'
                 }
-              `}>
+              `}
+              onClick={() => handleMethodClick(methodIndex)}
+              >
                 {method}
               </div>
               
               {/* Score cells */}
               {scopes.map((scope, scopeIndex) => {
                 const score = scoreMatrix[methodIndex][scopeIndex];
-                const selected = isSelected(methodIndex, scopeIndex);
+                const highlighted = isCellHighlighted(methodIndex, scopeIndex);
                 
                 return (
                   <div
@@ -127,11 +148,12 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
                     className={`
                       ${getCellSize()} 
                       flex items-center justify-center 
-                      font-bold rounded border-2 transition-all cursor-pointer
-                      bg-white text-gray-700 hover:bg-gray-50
-                      ${selected ? 'border-orange-600 scale-110 shadow-lg ring-2 ring-orange-300' : 'border-gray-300 hover:border-orange-300'}
+                      font-bold rounded border-2 transition-all
+                      ${highlighted 
+                        ? 'bg-green-100 text-green-800 border-green-500 scale-110 shadow-lg ring-2 ring-green-300' 
+                        : 'bg-white text-gray-500 border-gray-200'
+                      }
                     `}
-                    onClick={() => handleCellClick(methodIndex, scopeIndex)}
                   >
                     {score}
                   </div>
@@ -141,20 +163,30 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
           ))}
         </div>
 
+        {/* Selected Score Display */}
+        {getSelectedScore() !== null && (
+          <div className="mt-4 text-center">
+            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+              <span className="text-sm text-green-700">선택된 점수:</span>
+              <span className="text-xl font-bold text-green-800">{getSelectedScore()}점</span>
+            </div>
+          </div>
+        )}
+
         {/* Legend */}
         <div className="mt-4 text-xs text-gray-600">
           <div className="flex flex-wrap gap-2 justify-center">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-white border border-gray-300 rounded"></div>
-              <span>점수 표 (클릭 가능)</span>
-            </div>
-            <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-orange-200 rounded"></div>
-              <span>기여방식</span>
+              <span>기여방식 (클릭)</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-amber-200 rounded"></div>
-              <span>기여범위</span>
+              <span>기여범위 (클릭)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-green-100 border border-green-500 rounded"></div>
+              <span>선택된 조합</span>
             </div>
           </div>
         </div>

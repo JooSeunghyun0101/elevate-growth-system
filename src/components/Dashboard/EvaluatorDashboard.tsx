@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,79 +8,185 @@ import { Progress } from '@/components/ui/progress';
 import { Users, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+interface EvaluationData {
+  evaluateeId: string;
+  evaluateeName: string;
+  evaluateePosition: string;
+  evaluateeDepartment: string;
+  growthLevel: number;
+  evaluationStatus: 'in-progress' | 'completed';
+  lastModified: string;
+  tasks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    weight: number;
+    contributionMethod?: string;
+    contributionScope?: string;
+    score?: number;
+    feedback?: string;
+  }>;
+}
+
+interface EvaluateeInfo {
+  id: string;
+  name: string;
+  position: string;
+  department: string;
+  progress: number;
+  tasksCompleted: number;
+  totalTasks: number;
+  lastActivity: string;
+  status: 'in-progress' | 'completed';
+  totalScore?: number;
+  growthLevel?: number;
+}
+
 export const EvaluatorDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [evaluatees, setEvaluatees] = useState<EvaluateeInfo[]>([]);
 
-  const myStats = [
-    { label: '담당 피평가자', value: '12명', icon: Users, color: 'text-orange-600' },
-    { label: '완료한 평가', value: '8건', icon: CheckCircle, color: 'text-yellow-600' },
-    { label: '대기 중인 평가', value: '4건', icon: Clock, color: 'text-amber-600' },
-    { label: '작성한 피드백', value: '15건', icon: MessageSquare, color: 'text-orange-500' },
-  ];
-
-  const myEvaluatees = [
+  // Base evaluatee information
+  const baseEvaluatees = [
     {
       id: '1',
       name: '이하나',
       position: '사원',
       department: '마케팅팀',
-      progress: 75,
-      tasksCompleted: 3,
       totalTasks: 4,
-      lastActivity: '2일 전',
-      status: 'in-progress'
+      growthLevel: 3
     },
     {
       id: '2',
       name: '김철수',
       position: '주임',
       department: '개발팀',
-      progress: 100,
-      tasksCompleted: 5,
       totalTasks: 5,
-      lastActivity: '1주 전',
-      status: 'completed'
+      growthLevel: 4
     },
     {
       id: '3',
       name: '박영희',
       position: '대리',
       department: '디자인팀',
-      progress: 40,
-      tasksCompleted: 2,
       totalTasks: 5,
-      lastActivity: '3일 전',
-      status: 'in-progress'
+      growthLevel: 3
     },
     {
       id: '4',
       name: '정민호',
       position: '사원',
       department: '마케팅팀',
-      progress: 60,
-      tasksCompleted: 3,
       totalTasks: 5,
-      lastActivity: '1일 전',
-      status: 'in-progress'
+      growthLevel: 2
     },
   ];
 
-  const recentFeedbacks = [
-    {
-      evaluatee: '이하나 사원',
-      task: '브랜드 캠페인 기획',
-      feedback: '창의적인 아이디어와 체계적인 기획이 돋보였습니다.',
-      date: '2024-06-15',
-      score: '상호적/실무'
+  const loadEvaluationData = () => {
+    const updatedEvaluatees = baseEvaluatees.map(base => {
+      const savedData = localStorage.getItem(`evaluation-${base.id}`);
+      
+      if (savedData) {
+        try {
+          const evaluationData: EvaluationData = JSON.parse(savedData);
+          const completedTasks = evaluationData.tasks.filter(task => task.score !== undefined).length;
+          const progress = Math.round((completedTasks / evaluationData.tasks.length) * 100);
+          
+          // Calculate total score
+          const totalScore = Math.floor(evaluationData.tasks.reduce((sum, task) => {
+            if (task.score) {
+              return sum + (task.score * task.weight / 100);
+            }
+            return sum;
+          }, 0));
+
+          return {
+            id: base.id,
+            name: base.name,
+            position: base.position,
+            department: base.department,
+            progress,
+            tasksCompleted: completedTasks,
+            totalTasks: evaluationData.tasks.length,
+            lastActivity: new Date(evaluationData.lastModified).toLocaleDateString('ko-KR', {
+              month: 'short',
+              day: 'numeric'
+            }) + ' 전',
+            status: evaluationData.evaluationStatus,
+            totalScore,
+            growthLevel: evaluationData.growthLevel
+          };
+        } catch (error) {
+          console.error(`Failed to parse evaluation data for ${base.id}:`, error);
+        }
+      }
+      
+      // Return default data if no saved evaluation found
+      return {
+        id: base.id,
+        name: base.name,
+        position: base.position,
+        department: base.department,
+        progress: 0,
+        tasksCompleted: 0,
+        totalTasks: base.totalTasks,
+        lastActivity: '미시작',
+        status: 'in-progress' as const,
+        totalScore: 0,
+        growthLevel: base.growthLevel
+      };
+    });
+
+    setEvaluatees(updatedEvaluatees);
+  };
+
+  // Load data on mount and set up periodic refresh
+  useEffect(() => {
+    loadEvaluationData();
+    
+    // Refresh data every 5 seconds to catch changes
+    const interval = setInterval(loadEvaluationData, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const myStats = [
+    { 
+      label: '담당 피평가자', 
+      value: `${evaluatees.length}명`, 
+      icon: Users, 
+      color: 'text-orange-600' 
     },
-    {
-      evaluatee: '김철수 주임',
-      task: '시스템 개발',
-      feedback: '기술적 완성도가 높고 일정 관리도 우수했습니다.',
-      date: '2024-06-14',
-      score: '독립적/리딩'
+    { 
+      label: '완료한 평가', 
+      value: `${evaluatees.filter(e => e.status === 'completed').length}건`, 
+      icon: CheckCircle, 
+      color: 'text-yellow-600' 
+    },
+    { 
+      label: '대기 중인 평가', 
+      value: `${evaluatees.filter(e => e.status === 'in-progress').length}건`, 
+      icon: Clock, 
+      color: 'text-amber-600' 
+    },
+    { 
+      label: '작성한 피드백', 
+      value: `${evaluatees.reduce((sum, e) => sum + e.tasksCompleted, 0)}건`, 
+      icon: MessageSquare, 
+      color: 'text-orange-500' 
     },
   ];
+
+  const recentFeedbacks = evaluatees
+    .filter(e => e.tasksCompleted > 0)
+    .slice(0, 3)
+    .map(e => ({
+      evaluatee: `${e.name} ${e.position}`,
+      task: '최근 평가 과업',
+      feedback: `${e.name}님의 성과가 우수합니다.`,
+      date: e.lastActivity,
+      score: `${e.totalScore}점/${e.growthLevel}점`
+    }));
 
   const handleEvaluateClick = (evaluateeId: string) => {
     navigate(`/evaluation/${evaluateeId}`);
@@ -124,7 +230,7 @@ export const EvaluatorDashboard: React.FC = () => {
 
         <TabsContent value="evaluatees" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {myEvaluatees.map((person, index) => (
+            {evaluatees.map((person, index) => (
               <Card key={index}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -132,12 +238,19 @@ export const EvaluatorDashboard: React.FC = () => {
                       <CardTitle className="text-lg">{person.name} {person.position}</CardTitle>
                       <CardDescription>{person.department}</CardDescription>
                     </div>
-                    <Badge 
-                      variant={person.status === 'completed' ? 'default' : 'secondary'}
-                      className={person.status === 'completed' ? 'status-achieved' : 'status-in-progress'}
-                    >
-                      {person.status === 'completed' ? '완료' : '진행 중'}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge 
+                        variant={person.status === 'completed' ? 'default' : 'secondary'}
+                        className={person.status === 'completed' ? 'status-achieved' : 'status-in-progress'}
+                      >
+                        {person.status === 'completed' ? '완료' : '진행 중'}
+                      </Badge>
+                      {person.totalScore !== undefined && person.growthLevel && (
+                        <div className="text-xs text-gray-600">
+                          {person.totalScore}점/{person.growthLevel}점
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -171,16 +284,16 @@ export const EvaluatorDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>대기 중인 평가 항목</CardTitle>
-              <CardDescription>아직 평가하지 않은 과업들입니다</CardDescription>
+              <CardDescription>아직 완료되지 않은 평가들입니다</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {myEvaluatees.filter(person => person.status === 'in-progress').map((person, index) => (
+                {evaluatees.filter(person => person.status === 'in-progress').map((person, index) => (
                   <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <p className="font-medium">{person.name} {person.position}</p>
                       <p className="text-sm text-muted-foreground">
-                        미완료 과업: {person.totalTasks - person.tasksCompleted}개
+                        미완료 과업: {person.totalTasks - person.tasksCompleted}개 • 진행률: {person.progress}%
                       </p>
                     </div>
                     <Button 
@@ -192,6 +305,9 @@ export const EvaluatorDashboard: React.FC = () => {
                     </Button>
                   </div>
                 ))}
+                {evaluatees.filter(person => person.status === 'in-progress').length === 0 && (
+                  <p className="text-center text-gray-500 py-8">대기 중인 평가가 없습니다.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -201,24 +317,32 @@ export const EvaluatorDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>완료한 평가</CardTitle>
-              <CardDescription>최근 완료한 평가 결과입니다</CardDescription>
+              <CardDescription>완료된 평가 결과입니다</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {myEvaluatees.filter(person => person.status === 'completed').map((person, index) => (
+                {evaluatees.filter(person => person.status === 'completed').map((person, index) => (
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="font-medium">{person.name} {person.position}</p>
                         <p className="text-sm text-muted-foreground">{person.department}</p>
                       </div>
-                      <Badge className="status-achieved">평가 완료</Badge>
+                      <div className="text-right">
+                        <Badge className="status-achieved mb-1">평가 완료</Badge>
+                        <p className="text-sm text-gray-600">
+                          총점: {person.totalScore}점 / 목표: {person.growthLevel}점
+                        </p>
+                      </div>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       완료일: {person.lastActivity} • 총 {person.totalTasks}개 과업 평가
                     </div>
                   </div>
                 ))}
+                {evaluatees.filter(person => person.status === 'completed').length === 0 && (
+                  <p className="text-center text-gray-500 py-8">완료된 평가가 없습니다.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -249,6 +373,9 @@ export const EvaluatorDashboard: React.FC = () => {
                     <p className="text-xs text-muted-foreground">{feedback.date}</p>
                   </div>
                 ))}
+                {recentFeedbacks.length === 0 && (
+                  <p className="text-center text-gray-500 py-8">작성된 피드백이 없습니다.</p>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, User, Building2 } from 'lucide-react';
+import { ArrowLeft, Save, User, Building2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoringChart from '@/components/ScoringChart';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +27,9 @@ interface EvaluationData {
   evaluateeName: string;
   evaluateePosition: string;
   evaluateeDepartment: string;
+  growthLevel: number;
+  evaluationStatus: 'in-progress' | 'completed';
+  lastModified: string;
   tasks: Task[];
 }
 
@@ -35,12 +39,15 @@ const Evaluation = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Mock data - 실제로는 API에서 가져올 데이터
+  // Mock data with growth level
   const [evaluationData, setEvaluationData] = useState<EvaluationData>({
     evaluateeId: id || '1',
     evaluateeName: '이하나',
     evaluateePosition: '사원',
     evaluateeDepartment: '마케팅팀',
+    growthLevel: 3,
+    evaluationStatus: 'in-progress',
+    lastModified: new Date().toISOString(),
     tasks: [
       {
         id: '1',
@@ -69,9 +76,6 @@ const Evaluation = () => {
     ]
   });
 
-  const contributionMethods = ['총괄', '리딩', '실무', '지원'];
-  const contributionScopes = ['의존적', '독립적', '상호적', '전략적'];
-
   // 점수 매트릭스 (방식 x 범위)
   const scoreMatrix = [
     [2, 3, 4, 4], // 총괄
@@ -79,6 +83,9 @@ const Evaluation = () => {
     [1, 1, 2, 3], // 실무
     [1, 1, 1, 2]  // 지원
   ];
+
+  const contributionMethods = ['총괄', '리딩', '실무', '지원'];
+  const contributionScopes = ['의존적', '독립적', '상호적', '전략적'];
 
   // Load saved data on component mount
   useEffect(() => {
@@ -101,24 +108,52 @@ const Evaluation = () => {
           return { ...task, [field]: value };
         }
         return task;
-      })
+      }),
+      lastModified: new Date().toISOString()
     }));
   };
 
-  const handleCellClick = (taskId: string, method: string, scope: string, score: number) => {
+  const handleMethodClick = (taskId: string, method: string) => {
+    const task = evaluationData.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const updatedTask = { ...task, contributionMethod: method };
+    
+    // Calculate score if both method and scope are selected
+    if (updatedTask.contributionScope) {
+      const methodIndex = contributionMethods.indexOf(method);
+      const scopeIndex = contributionScopes.indexOf(updatedTask.contributionScope);
+      if (methodIndex !== -1 && scopeIndex !== -1) {
+        updatedTask.score = scoreMatrix[methodIndex][scopeIndex];
+      }
+    }
+
     setEvaluationData(prev => ({
       ...prev,
-      tasks: prev.tasks.map(task => {
-        if (task.id === taskId) {
-          return {
-            ...task,
-            contributionMethod: method,
-            contributionScope: scope,
-            score: score
-          };
-        }
-        return task;
-      })
+      tasks: prev.tasks.map(t => t.id === taskId ? updatedTask : t),
+      lastModified: new Date().toISOString()
+    }));
+  };
+
+  const handleScopeClick = (taskId: string, scope: string) => {
+    const task = evaluationData.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const updatedTask = { ...task, contributionScope: scope };
+    
+    // Calculate score if both method and scope are selected
+    if (updatedTask.contributionMethod) {
+      const methodIndex = contributionMethods.indexOf(updatedTask.contributionMethod);
+      const scopeIndex = contributionScopes.indexOf(scope);
+      if (methodIndex !== -1 && scopeIndex !== -1) {
+        updatedTask.score = scoreMatrix[methodIndex][scopeIndex];
+      }
+    }
+
+    setEvaluationData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(t => t.id === taskId ? updatedTask : t),
+      lastModified: new Date().toISOString()
     }));
   };
 
@@ -136,13 +171,35 @@ const Evaluation = () => {
     return Math.floor(totalWeightedScore);
   };
 
+  const isEvaluationComplete = () => {
+    return evaluationData.tasks.every(task => task.score !== undefined);
+  };
+
+  const isAchieved = () => {
+    const totalScore = calculateTotalScore();
+    return totalScore >= evaluationData.growthLevel;
+  };
+
   const handleSave = () => {
     try {
-      localStorage.setItem(`evaluation-${id}`, JSON.stringify(evaluationData));
+      const updatedData = {
+        ...evaluationData,
+        evaluationStatus: isEvaluationComplete() ? 'completed' as const : 'in-progress' as const,
+        lastModified: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`evaluation-${id}`, JSON.stringify(updatedData));
+      setEvaluationData(updatedData);
+      
       toast({
         title: "평가 저장 완료",
-        description: "평가 내용이 성공적으로 저장되었습니다.",
+        description: `평가 내용이 성공적으로 저장되었습니다. ${isEvaluationComplete() ? '평가가 완료되었습니다.' : ''}`,
       });
+
+      // Navigate back to dashboard after save
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
     } catch (error) {
       toast({
         title: "저장 실패",
@@ -198,7 +255,7 @@ const Evaluation = () => {
           </div>
 
           {/* Evaluatee Info & Summary */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
@@ -222,6 +279,33 @@ const Evaluation = () => {
                   <div>
                     <p className="text-sm text-gray-600">총 평가 점수</p>
                     <p className="text-2xl font-bold text-orange-500">{calculateTotalScore()}점</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">성장 레벨</p>
+                    <p className="text-lg font-semibold text-blue-600">{evaluationData.growthLevel}점</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">달성 여부</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {isAchieved() ? (
+                        <>
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <span className="font-semibold text-green-700">달성</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                          <span className="font-semibold text-red-700">미달성</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">완료 과업</p>
@@ -269,7 +353,8 @@ const Evaluation = () => {
                     selectedScope={task.contributionScope}
                     size="medium"
                     title={`과업 ${index + 1} 스코어링`}
-                    onCellClick={(method, scope, score) => handleCellClick(task.id, method, scope, score)}
+                    onMethodClick={(method) => handleMethodClick(task.id, method)}
+                    onScopeClick={(scope) => handleScopeClick(task.id, scope)}
                   />
                   {task.score && (
                     <div className="mt-4 text-center">
