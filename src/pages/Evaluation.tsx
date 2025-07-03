@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, User, Building2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, User, Building2, CheckCircle, AlertCircle, Target, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoringChart from '@/components/ScoringChart';
 import { useAuth } from '@/contexts/AuthContext';
@@ -330,14 +330,9 @@ const Evaluation = () => {
                   <p className="text-gray-600 mt-1">{task.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-orange-200 text-orange-700">
+                  <Badge variant="outline" className="border-orange-300 text-orange-800 bg-orange-50 px-3 py-1 text-sm font-semibold">
                     가중치 {task.weight}%
                   </Badge>
-                  {task.score && (
-                    <Badge className="bg-orange-500 text-white">
-                      {calculateWeightedScore(task.score, task.weight)}점
-                    </Badge>
-                  )}
                 </div>
               </div>
             </CardHeader>
@@ -357,28 +352,64 @@ const Evaluation = () => {
                   />
                 </div>
 
-                {/* Right: Score Display and Feedback Input - Swapped positions */}
-                <div className="space-y-4">
-                  {/* Score Display Section - Now at the top */}
-                  {task.score && (
-                    <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
-                      <p className="text-sm text-gray-600 mb-1">기본 점수</p>
-                      <p className="text-2xl font-bold text-orange-500 mb-2">{task.score}점</p>
-                      <p className="text-sm text-gray-600 mb-3">가중치 적용: {calculateWeightedScore(task.score, task.weight)}점</p>
-                      
-                      {task.contributionMethod && task.contributionScope && (
-                        <div className="pt-3 border-t border-orange-200">
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <p><span className="font-medium">기여방식:</span> {task.contributionMethod}</p>
-                            <p><span className="font-medium">기여범위:</span> {task.contributionScope}</p>
+                {/* Right: Score Display and Feedback Input */}
+                <div className="flex flex-col h-full">
+                  {/* Score Display Section - Enhanced design */}
+                  {task.score ? (
+                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 p-6 mb-4 shadow-sm">
+                      <div className="text-center space-y-4">
+                        {/* Main Score Display */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-center gap-2 text-gray-700 text-sm font-medium">
+                            <Target className="w-4 h-4" />
+                            <span>기본 점수</span>
+                          </div>
+                          <div className="text-3xl font-bold text-orange-600">{task.score}점</div>
+                        </div>
+
+                        {/* Weighted Score */}
+                        <div className="pt-3 border-t border-orange-200/50">
+                          <div className="flex items-center justify-center gap-2 text-gray-600 text-sm mb-1">
+                            <TrendingUp className="w-4 h-4" />
+                            <span>가중치 적용</span>
+                          </div>
+                          <div className="text-xl font-semibold text-orange-700">
+                            {calculateWeightedScore(task.score, task.weight)}점
                           </div>
                         </div>
-                      )}
+
+                        {/* Method and Scope Info */}
+                        {task.contributionMethod && task.contributionScope && (
+                          <div className="pt-3 border-t border-orange-200/50 space-y-2">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div className="text-center">
+                                <p className="text-gray-600 font-medium mb-1">기여방식</p>
+                                <p className="text-gray-800 font-semibold bg-white/60 rounded-lg py-1 px-2">
+                                  {task.contributionMethod}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-gray-600 font-medium mb-1">기여범위</p>
+                                <p className="text-gray-800 font-semibold bg-white/60 rounded-lg py-1 px-2">
+                                  {task.contributionScope}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 mb-4 text-center">
+                      <div className="text-gray-500 space-y-2">
+                        <Target className="w-6 h-6 mx-auto opacity-50" />
+                        <p className="text-sm">기여방식과 범위를 선택하면<br />점수가 표시됩니다</p>
+                      </div>
                     </div>
                   )}
 
-                  {/* Feedback Input - Now below score */}
-                  <div>
+                  {/* Feedback Input - Adjusted height */}
+                  <div className="flex-1 flex flex-col">
                     <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
                       피드백
                     </Label>
@@ -387,7 +418,8 @@ const Evaluation = () => {
                       placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
                       value={task.feedback || ''}
                       onChange={(e) => updateTask(task.id, 'feedback', e.target.value)}
-                      className="min-h-[200px]"
+                      className="flex-1 min-h-0 resize-none"
+                      style={{ minHeight: task.score ? '160px' : '220px' }}
                     />
                   </div>
                 </div>
