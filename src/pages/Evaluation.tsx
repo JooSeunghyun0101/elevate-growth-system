@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -378,22 +377,16 @@ const Evaluation = () => {
                     <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
                       <p className="text-sm text-gray-600 mb-1">기본 점수</p>
                       <p className="text-2xl font-bold text-orange-500 mb-2">{task.score}점</p>
-                      <p className="text-sm text-gray-600">가중치 적용: {calculateWeightedScore(task.score, task.weight)}점</p>
-                    </div>
-                  )}
-                  
-                  {task.contributionMethod && task.contributionScope && (
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="font-medium text-gray-700 mb-2">선택된 평가</h4>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">기여방식:</span> {task.contributionMethod}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">기여범위:</span> {task.contributionScope}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">점수:</span> {task.score}점
-                      </p>
+                      <p className="text-sm text-gray-600 mb-3">가중치 적용: {calculateWeightedScore(task.score, task.weight)}점</p>
+                      
+                      {task.contributionMethod && task.contributionScope && (
+                        <div className="pt-3 border-t border-orange-200">
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <p><span className="font-medium">기여방식:</span> {task.contributionMethod}</p>
+                            <p><span className="font-medium">기여범위:</span> {task.contributionScope}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
