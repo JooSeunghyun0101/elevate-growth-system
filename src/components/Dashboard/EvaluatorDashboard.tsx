@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ScoringChart from '@/components/Charts/ScoringChart';
 
 export const EvaluatorDashboard: React.FC = () => {
   const myStats = [
@@ -25,11 +24,7 @@ export const EvaluatorDashboard: React.FC = () => {
       tasksCompleted: 3,
       totalTasks: 4,
       lastActivity: '2일 전',
-      status: 'in-progress',
-      currentScore: 2.5,
-      tasks: [
-        { name: '브랜드 캠페인 기획', type: '실무' as const, scope: '상호적' as const, score: 3, weight: 50 }
-      ]
+      status: 'in-progress'
     },
     {
       name: '김철수',
@@ -39,11 +34,7 @@ export const EvaluatorDashboard: React.FC = () => {
       tasksCompleted: 5,
       totalTasks: 5,
       lastActivity: '1주 전',
-      status: 'completed',
-      currentScore: 3.2,
-      tasks: [
-        { name: '시스템 개발', type: '리딩' as const, scope: '독립적' as const, score: 3, weight: 60 }
-      ]
+      status: 'completed'
     },
     {
       name: '박영희',
@@ -53,11 +44,7 @@ export const EvaluatorDashboard: React.FC = () => {
       tasksCompleted: 2,
       totalTasks: 5,
       lastActivity: '3일 전',
-      status: 'in-progress',
-      currentScore: 2.1,
-      tasks: [
-        { name: 'UI/UX 개선', type: '실무' as const, scope: '상호적' as const, score: 2, weight: 40 }
-      ]
+      status: 'in-progress'
     },
     {
       name: '정민호',
@@ -67,11 +54,7 @@ export const EvaluatorDashboard: React.FC = () => {
       tasksCompleted: 3,
       totalTasks: 5,
       lastActivity: '1일 전',
-      status: 'in-progress',
-      currentScore: 2.8,
-      tasks: [
-        { name: '고객 분석', type: '실무' as const, scope: '독립적' as const, score: 2, weight: 35 }
-      ]
+      status: 'in-progress'
     },
   ];
 
@@ -129,7 +112,7 @@ export const EvaluatorDashboard: React.FC = () => {
         </TabsList>
 
         <TabsContent value="evaluatees" className="space-y-4">
-          <div className="grid gap-6">
+          <div className="grid gap-4 md:grid-cols-2">
             {myEvaluatees.map((person, index) => (
               <Card key={index}>
                 <CardHeader>
@@ -138,20 +121,12 @@ export const EvaluatorDashboard: React.FC = () => {
                       <CardTitle className="text-lg">{person.name} {person.position}</CardTitle>
                       <CardDescription>{person.department}</CardDescription>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-blue-600">
-                          {person.currentScore}점
-                        </div>
-                        <div className="text-xs text-gray-500">현재 점수</div>
-                      </div>
-                      <Badge 
-                        variant={person.status === 'completed' ? 'default' : 'secondary'}
-                        className={person.status === 'completed' ? 'status-achieved' : 'status-in-progress'}
-                      >
-                        {person.status === 'completed' ? '완료' : '진행 중'}
-                      </Badge>
-                    </div>
+                    <Badge 
+                      variant={person.status === 'completed' ? 'default' : 'secondary'}
+                      className={person.status === 'completed' ? 'status-achieved' : 'status-in-progress'}
+                    >
+                      {person.status === 'completed' ? '완료' : '진행 중'}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -163,35 +138,11 @@ export const EvaluatorDashboard: React.FC = () => {
                     <Progress value={person.progress} />
                   </div>
                   
-                  {/* 최근 과업 스코어링 차트 */}
-                  {person.tasks.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium mb-3">최근 평가 과업</h4>
-                      <div className="grid gap-3">
-                        {person.tasks.map((task, taskIdx) => (
-                          <ScoringChart
-                            key={taskIdx}
-                            contributionType={task.type}
-                            contributionScope={task.scope}
-                            score={task.score}
-                            weight={task.weight}
-                            taskName={task.name}
-                            className="w-full"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-muted-foreground">
                       마지막 활동: {person.lastActivity}
                     </span>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => window.location.href = '/evaluation/1'}
-                    >
+                    <Button size="sm" variant="outline">
                       평가하기
                     </Button>
                   </div>
