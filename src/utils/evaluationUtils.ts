@@ -1,4 +1,3 @@
-
 import { EvaluationData } from '@/types/evaluation';
 
 export interface EmployeeInfo {
@@ -24,20 +23,22 @@ export interface ActivityRecord {
   type: 'update' | 'complete' | 'edit' | 'feedback';
 }
 
-// Get all employees from the new employee data
+// Updated employee list with new positions and growth levels (excluding directors)
 export const getAllEmployees = (): EmployeeInfo[] => {
   return [
-    // 평가자들 (이중 역할)
-    { id: 'H0908033', name: '박판근', position: '팀장', department: '인사기획팀', growthLevel: 3, evaluatorId: 'H0807021' },
-    { id: 'H1310159', name: '김남엽', position: '팀장', department: '인사팀', growthLevel: 3, evaluatorId: 'H0807021' },
-    // 피평가자들
-    { id: 'H1310172', name: '이수한', position: '사원', department: '인사기획팀', growthLevel: 1, evaluatorId: 'H0908033' },
-    { id: 'H1411166', name: '주승현', position: '사원', department: '인사기획팀', growthLevel: 1, evaluatorId: 'H0908033' },
-    { id: 'H1911042', name: '김민선', position: '사원', department: '인사기획팀', growthLevel: 1, evaluatorId: 'H0908033' },
-    { id: 'H1411231', name: '최은송', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
-    { id: 'H1205006', name: '황정원', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
+    // 차장급 - 평가자 겸 피평가자
+    { id: 'H0908033', name: '박판근', position: '차장', department: '인사기획팀', growthLevel: 3, evaluatorId: 'H0807021' },
+    { id: 'H1310159', name: '김남엽', position: '차장', department: '인사팀', growthLevel: 3, evaluatorId: 'H0807021' },
+    // 차장급 - 피평가자만
+    { id: 'H1310172', name: '이수한', position: '차장', department: '인사기획팀', growthLevel: 3, evaluatorId: 'H0908033' },
+    { id: 'H1411166', name: '주승현', position: '차장', department: '인사기획팀', growthLevel: 3, evaluatorId: 'H0908033' },
+    { id: 'H1411231', name: '최은송', position: '차장', department: '인사팀', growthLevel: 3, evaluatorId: 'H1310159' },
+    // 대리급 - 피평가자만
+    { id: 'H1911042', name: '김민선', position: '대리', department: '인사기획팀', growthLevel: 2, evaluatorId: 'H0908033' },
+    { id: 'H1205006', name: '황정원', position: '대리', department: '인사팀', growthLevel: 2, evaluatorId: 'H1310159' },
+    { id: 'H1501077', name: '조혜인', position: '대리', department: '인사팀', growthLevel: 2, evaluatorId: 'H1310159' },
+    // 사원급 - 피평가자만
     { id: 'H2301040', name: '김민영', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
-    { id: 'H1501077', name: '조혜인', position: '사원', department: '인사팀', growthLevel: 1, evaluatorId: 'H1310159' },
   ];
 };
 

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -24,20 +23,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Updated user data with multi-role support
+// Updated employee data with new positions and growth levels
 const employeeData: Record<string, Omit<User, 'role'> & { availableRoles: ('hr' | 'evaluator' | 'evaluatee')[] }> = {
-  // HR 관리자 (동시에 피평가자)
-  'H1411166': {
-    id: 'H1411166',
-    employeeId: 'H1411166',
-    name: '주승현',
-    department: '인사기획팀',
-    position: '사원',
-    growthLevel: 1,
-    evaluatorId: 'H0908033',
-    availableRoles: ['hr', 'evaluatee']
-  },
-  // 평가자들 (동시에 피평가자)
+  // 이사 - 평가자만 (성장레벨 없음)
   'H0807021': {
     id: 'H0807021',
     employeeId: 'H0807021',
@@ -46,12 +34,13 @@ const employeeData: Record<string, Omit<User, 'role'> & { availableRoles: ('hr' 
     position: '이사',
     availableRoles: ['evaluator']
   },
+  // 차장 - 평가자 겸 피평가자 (성장레벨 3)
   'H0908033': {
     id: 'H0908033',
     employeeId: 'H0908033',
     name: '박판근',
     department: '인사기획팀',
-    position: '팀장',
+    position: '차장',
     growthLevel: 3,
     evaluatorId: 'H0807021',
     availableRoles: ['evaluator', 'evaluatee']
@@ -61,29 +50,29 @@ const employeeData: Record<string, Omit<User, 'role'> & { availableRoles: ('hr' 
     employeeId: 'H1310159',
     name: '김남엽',
     department: '인사팀',
-    position: '팀장',
+    position: '차장',
     growthLevel: 3,
     evaluatorId: 'H0807021',
     availableRoles: ['evaluator', 'evaluatee']
   },
-  // 피평가자들
+  // 차장 - 피평가자만 (성장레벨 3)
   'H1310172': {
     id: 'H1310172',
     employeeId: 'H1310172',
     name: '이수한',
     department: '인사기획팀',
-    position: '사원',
-    growthLevel: 1,
+    position: '차장',
+    growthLevel: 3,
     evaluatorId: 'H0908033',
     availableRoles: ['evaluatee']
   },
-  'H1911042': {
-    id: 'H1911042',
-    employeeId: 'H1911042',
-    name: '김민선',
+  'H1411166': {
+    id: 'H1411166',
+    employeeId: 'H1411166',
+    name: '주승현',
     department: '인사기획팀',
-    position: '사원',
-    growthLevel: 1,
+    position: '차장',
+    growthLevel: 3,
     evaluatorId: 'H0908033',
     availableRoles: ['evaluatee']
   },
@@ -92,9 +81,20 @@ const employeeData: Record<string, Omit<User, 'role'> & { availableRoles: ('hr' 
     employeeId: 'H1411231',
     name: '최은송',
     department: '인사팀',
-    position: '사원',
-    growthLevel: 1,
+    position: '차장',
+    growthLevel: 3,
     evaluatorId: 'H1310159',
+    availableRoles: ['evaluatee']
+  },
+  // 대리 - 피평가자만 (성장레벨 2)
+  'H1911042': {
+    id: 'H1911042',
+    employeeId: 'H1911042',
+    name: '김민선',
+    department: '인사기획팀',
+    position: '대리',
+    growthLevel: 2,
+    evaluatorId: 'H0908033',
     availableRoles: ['evaluatee']
   },
   'H1205006': {
@@ -102,18 +102,8 @@ const employeeData: Record<string, Omit<User, 'role'> & { availableRoles: ('hr' 
     employeeId: 'H1205006',
     name: '황정원',
     department: '인사팀',
-    position: '사원',
-    growthLevel: 1,
-    evaluatorId: 'H1310159',
-    availableRoles: ['evaluatee']
-  },
-  'H2301040': {
-    id: 'H2301040',
-    employeeId: 'H2301040',
-    name: '김민영',
-    department: '인사팀',
-    position: '사원',
-    growthLevel: 1,
+    position: '대리',
+    growthLevel: 2,
     evaluatorId: 'H1310159',
     availableRoles: ['evaluatee']
   },
@@ -121,6 +111,17 @@ const employeeData: Record<string, Omit<User, 'role'> & { availableRoles: ('hr' 
     id: 'H1501077',
     employeeId: 'H1501077',
     name: '조혜인',
+    department: '인사팀',
+    position: '대리',
+    growthLevel: 2,
+    evaluatorId: 'H1310159',
+    availableRoles: ['evaluatee']
+  },
+  // 사원 - 피평가자만 (성장레벨 1)
+  'H2301040': {
+    id: 'H2301040',
+    employeeId: 'H2301040',
+    name: '김민영',
     department: '인사팀',
     position: '사원',
     growthLevel: 1,
