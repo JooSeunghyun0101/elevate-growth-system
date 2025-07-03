@@ -67,6 +67,10 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
     return methods[methodIndex] === selectedMethod && scopes[scopeIndex] === selectedScope;
   };
 
+  const isNoContributionSelected = () => {
+    return selectedMethod === '기여없음' && selectedScope === '기여없음';
+  };
+
   const handleMethodClick = (methodIndex: number) => {
     if (onMethodClick) {
       const method = methods[methodIndex];
@@ -78,6 +82,13 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
     if (onScopeClick) {
       const scope = scopes[scopeIndex];
       onScopeClick(scope);
+    }
+  };
+
+  const handleNoContributionClick = () => {
+    if (onMethodClick && onScopeClick) {
+      onMethodClick('기여없음');
+      onScopeClick('기여없음');
     }
   };
 
@@ -131,8 +142,17 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
 
           {/* Header row at bottom */}
           <div className="flex gap-1 mt-2">
-            <div className={`${getHeaderSize()} flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
-              방식/범위
+            <div 
+              className={`
+                ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border cursor-pointer transition-all text-center leading-tight
+                ${isNoContributionSelected() 
+                  ? 'bg-red-500 text-white border-red-600 border-2 shadow-lg transform scale-105' 
+                  : 'bg-red-200 text-gray-900 hover:bg-red-300'
+                }
+              `}
+              onClick={handleNoContributionClick}
+            >
+              기여없음
             </div>
             {scopes.map((scope, index) => (
               <div 
@@ -162,6 +182,10 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-amber-200 rounded"></div>
               <span>기여범위 (클릭)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-red-200 rounded"></div>
+              <span>기여없음 (클릭)</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-green-100 border border-green-500 rounded"></div>

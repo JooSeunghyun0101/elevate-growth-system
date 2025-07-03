@@ -130,8 +130,12 @@ const Evaluation = () => {
 
     const updatedTask = { ...task, contributionMethod: method };
     
-    // Calculate score if both method and scope are selected
-    if (updatedTask.contributionScope) {
+    // Handle "기여없음" case
+    if (method === '기여없음') {
+      updatedTask.contributionScope = '기여없음';
+      updatedTask.score = 0;
+    } else if (updatedTask.contributionScope && updatedTask.contributionScope !== '기여없음') {
+      // Calculate score if both method and scope are selected (and not "기여없음")
       const methodIndex = contributionMethods.indexOf(method);
       const scopeIndex = contributionScopes.indexOf(updatedTask.contributionScope);
       if (methodIndex !== -1 && scopeIndex !== -1) {
@@ -152,8 +156,12 @@ const Evaluation = () => {
 
     const updatedTask = { ...task, contributionScope: scope };
     
-    // Calculate score if both method and scope are selected
-    if (updatedTask.contributionMethod) {
+    // Handle "기여없음" case
+    if (scope === '기여없음') {
+      updatedTask.contributionMethod = '기여없음';
+      updatedTask.score = 0;
+    } else if (updatedTask.contributionMethod && updatedTask.contributionMethod !== '기여없음') {
+      // Calculate score if both method and scope are selected (and not "기여없음")
       const methodIndex = contributionMethods.indexOf(updatedTask.contributionMethod);
       const scopeIndex = contributionScopes.indexOf(scope);
       if (methodIndex !== -1 && scopeIndex !== -1) {
