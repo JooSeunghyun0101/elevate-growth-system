@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,22 +47,59 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   };
 
   const handleSave = () => {
-    // Create updated data with modified tasks and reset evaluation status
+    // Find original tasks to preserve evaluation data
+    const originalTasksMap = new Map(evaluationData.tasks.map(task => [task.id, task]));
+    
+    // Preserve existing evaluation data for unchanged tasks
+    const updatedTasks = tasks.map(task => {
+      const originalTask = originalTasksMap.get(task.id);
+      if (originalTask) {
+        // Keep existing evaluation data if task exists
+        return {
+          ...task,
+          score: originalTask.score,
+          contributionMethod: originalTask.contributionMethod,
+          contributionScope: originalTask.contributionScope,
+          feedback: originalTask.feedback
+        };
+      } else {
+        // New task - no evaluation data
+        return task;
+      }
+    });
+
+    // Check if there are any changes or new tasks
+    const hasChanges = tasks.length !== evaluationData.tasks.length || 
+      tasks.some(task => {
+        const original = originalTasksMap.get(task.id);
+        return !original || 
+               original.title !== task.title || 
+               original.description !== task.description || 
+               original.weight !== task.weight;
+      });
+
+    // Determine evaluation status
+    const completedTasks = updatedTasks.filter(task => task.score !== undefined).length;
+    let evaluationStatus: 'in-progress' | 'completed' = evaluationData.evaluationStatus;
+    
+    // If there are changes, reset to in-progress
+    if (hasChanges && completedTasks < updatedTasks.length) {
+      evaluationStatus = 'in-progress';
+    }
+
     const updatedData: EvaluationData = {
       ...evaluationData,
-      tasks,
-      evaluationStatus: 'in-progress', // Reset to in-progress when tasks are modified
+      tasks: updatedTasks,
+      evaluationStatus,
       lastModified: new Date().toISOString()
     };
     
-    // Clear any existing scores and feedback when tasks are modified
-    updatedData.tasks = updatedData.tasks.map(task => ({
-      ...task,
-      score: undefined,
-      contributionMethod: undefined,
-      contributionScope: undefined,
-      feedback: undefined
-    }));
+    console.log('Task management save:', {
+      hasChanges,
+      completedTasks,
+      totalTasks: updatedTasks.length,
+      newStatus: evaluationStatus
+    });
     
     onSave(updatedData);
   };

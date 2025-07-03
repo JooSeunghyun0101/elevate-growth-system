@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import EvaluationGuide from './EvaluationGuide';
 
 interface EvaluationData {
   evaluateeId: string;
@@ -41,9 +43,19 @@ interface EvaluateeInfo {
   growthLevel?: number;
 }
 
+interface RecentFeedback {
+  evaluatee: string;
+  task: string;
+  feedback: string;
+  date: string;
+  score: string;
+}
+
 export const EvaluatorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [evaluatees, setEvaluatees] = useState<EvaluateeInfo[]>([]);
+  const [recentFeedbacks, setRecentFeedbacks] = useState<RecentFeedback[]>([]);
+  const [showEvaluationGuide, setShowEvaluationGuide] = useState(false);
 
   // Base evaluatee information - updated to match evaluation page data
   const baseEvaluatees = [
@@ -90,7 +102,10 @@ export const EvaluatorDashboard: React.FC = () => {
   ];
 
   const loadEvaluationData = () => {
-    const updatedEvaluatees = baseEvaluatees.map(base => {
+    const updatedEvaluatees: EvaluateeInfo[] = [];
+    const allFeedbacks: RecentFeedback[] = [];
+
+    baseEvaluatees.forEach(base => {
       const savedData = localStorage.getItem(`evaluation-${base.id}`);
       
       if (savedData) {
@@ -115,7 +130,23 @@ export const EvaluatorDashboard: React.FC = () => {
             status = 'in-progress';
           }
 
-          return {
+          // Extract actual feedback data
+          evaluationData.tasks.forEach(task => {
+            if (task.feedback && task.feedback.trim()) {
+              allFeedbacks.push({
+                evaluatee: `${evaluationData.evaluateeName} ${evaluationData.evaluateePosition}`,
+                task: task.title,
+                feedback: task.feedback,
+                date: new Date(evaluationData.lastModified).toLocaleDateString('ko-KR', {
+                  month: 'short',
+                  day: 'numeric'
+                }) + ' 전',
+                score: task.score ? `${task.score}점` : '평가중'
+              });
+            }
+          });
+
+          updatedEvaluatees.push({
             id: base.id,
             name: base.name,
             position: base.position,
@@ -130,30 +161,40 @@ export const EvaluatorDashboard: React.FC = () => {
             status,
             totalScore,
             growthLevel: evaluationData.growthLevel
-          };
+          });
         } catch (error) {
           console.error(`Failed to parse evaluation data for ${base.id}:`, error);
         }
       }
       
       // Return default data if no saved evaluation found
-      return {
-        id: base.id,
-        name: base.name,
-        position: base.position,
-        department: base.department,
-        progress: 0,
-        tasksCompleted: 0,
-        totalTasks: base.totalTasks,
-        lastActivity: '미시작',
-        status: 'in-progress' as const,
-        totalScore: 0,
-        growthLevel: base.growthLevel
-      };
+      if (!savedData) {
+        updatedEvaluatees.push({
+          id: base.id,
+          name: base.name,
+          position: base.position,
+          department: base.department,
+          progress: 0,
+          tasksCompleted: 0,
+          totalTasks: base.totalTasks,
+          lastActivity: '미시작',
+          status: 'in-progress' as const,
+          totalScore: 0,
+          growthLevel: base.growthLevel
+        });
+      }
     });
 
+    // Sort feedbacks by date (most recent first) and take top 3
+    const sortedFeedbacks = allFeedbacks
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3);
+
     console.log('Updated evaluatees data:', updatedEvaluatees);
+    console.log('Recent feedbacks:', sortedFeedbacks);
+    
     setEvaluatees(updatedEvaluatees);
+    setRecentFeedbacks(sortedFeedbacks);
   };
 
   // Load data on mount and set up more frequent refresh to catch task changes
@@ -199,22 +240,11 @@ export const EvaluatorDashboard: React.FC = () => {
     },
     { 
       label: '작성한 피드백', 
-      value: `${evaluatees.reduce((sum, e) => sum + e.tasksCompleted, 0)}건`, 
+      value: `${recentFeedbacks.length}건`, 
       icon: MessageSquare, 
       color: 'text-orange-500' 
     },
   ];
-
-  const recentFeedbacks = evaluatees
-    .filter(e => e.tasksCompleted > 0)
-    .slice(0, 3)
-    .map(e => ({
-      evaluatee: `${e.name} ${e.position}`,
-      task: '최근 평가 과업',
-      feedback: `${e.name}님의 성과가 우수합니다.`,
-      date: e.lastActivity,
-      score: `${e.totalScore}점/${e.growthLevel}점`
-    }));
 
   const handleEvaluateClick = (evaluateeId: string) => {
     navigate(`/evaluation/${evaluateeId}`);
@@ -227,7 +257,10 @@ export const EvaluatorDashboard: React.FC = () => {
           <h2 className="text-3xl font-bold tracking-tight">평가자 대시보드</h2>
           <p className="text-muted-foreground">담당 팀원들의 성과를 평가하고 피드백을 제공하세요</p>
         </div>
-        <Button className="ok-orange hover:opacity-90">
+        <Button 
+          className="ok-orange hover:opacity-90"
+          onClick={() => setShowEvaluationGuide(true)}
+        >
           <Star className="mr-2 h-4 w-4" />
           평가 가이드
         </Button>
@@ -409,6 +442,11 @@ export const EvaluatorDashboard: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Evaluation Guide Modal */}
+      {showEvaluationGuide && (
+        <EvaluationGuide onClose={() => setShowEvaluationGuide(false)} />
+      )}
     </div>
   );
 };
