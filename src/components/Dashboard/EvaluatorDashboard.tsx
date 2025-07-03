@@ -247,7 +247,7 @@ export const EvaluatorDashboard: React.FC = () => {
                       </Badge>
                       {person.totalScore !== undefined && person.growthLevel && (
                         <div className="text-xs text-gray-600">
-                          {person.totalScore}점/{person.growthLevel}점
+                          {person.totalScore}점/Lv.{person.growthLevel}
                         </div>
                       )}
                     </div>
