@@ -84,14 +84,25 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-1">
-          {/* Header with method label only */}
+          {/* Header row with 방식/범위 and scope headers */}
           <div className="flex gap-1">
             <div className={`${getHeaderSize()} flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
-              기여방식
+              방식/범위
             </div>
-            {/* Empty cells for alignment */}
-            {scopes.map((_, index) => (
-              <div key={index} className={`${getHeaderSize()}`}></div>
+            {scopes.map((scope, index) => (
+              <div 
+                key={scope}
+                className={`
+                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
+                  ${isScopeSelected(index) 
+                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
+                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
+                  }
+                `}
+                onClick={() => handleScopeClick(index)}
+              >
+                {scope}
+              </div>
             ))}
           </div>
 
@@ -135,34 +146,6 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
               })}
             </div>
           ))}
-
-          {/* Scope header at the bottom */}
-          <div className="flex gap-1 mt-1">
-            <div className={`${getHeaderSize()}`}></div>
-            {scopes.map((scope, index) => (
-              <div 
-                key={scope}
-                className={`
-                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
-                  ${isScopeSelected(index) 
-                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
-                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
-                  }
-                `}
-                onClick={() => handleScopeClick(index)}
-              >
-                {scope}
-              </div>
-            ))}
-          </div>
-          
-          {/* Bottom label for scope */}
-          <div className="flex gap-1">
-            <div className={`${getHeaderSize()}`}></div>
-            <div className={`flex-1 flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
-              기여범위
-            </div>
-          </div>
         </div>
 
         {/* Legend */}
