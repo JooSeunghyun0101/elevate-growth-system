@@ -36,11 +36,22 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   const getCellSize = () => {
     switch (size) {
       case 'small':
-        return 'w-12 h-12 text-xs';
+        return 'w-10 h-10 text-xs';
       case 'large':
         return 'w-20 h-20 text-lg';
       default:
-        return 'w-16 h-16 text-sm';
+        return 'w-14 h-14 text-sm';
+    }
+  };
+
+  const getHeaderSize = () => {
+    switch (size) {
+      case 'small':
+        return 'w-10 h-10 text-xs';
+      case 'large':
+        return 'w-20 h-20 text-base';
+      default:
+        return 'w-14 h-14 text-xs';
     }
   };
 
@@ -49,21 +60,21 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   };
 
   return (
-    <Card className="w-fit">
+    <Card className="w-fit border-orange-200">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardTitle className="text-base text-center text-orange-700">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           {/* Header with scope labels */}
-          <div className="flex gap-2">
-            <div className={`${getCellSize()} flex items-center justify-center font-medium text-xs`}>
+          <div className="flex gap-1">
+            <div className={`${getHeaderSize()} flex items-center justify-center font-medium text-xs ok-bright-gray rounded border`}>
               방식/범위
             </div>
             {scopes.map((scope, index) => (
               <div 
                 key={scope}
-                className={`${getCellSize()} flex items-center justify-center font-medium text-xs ok-bright-gray`}
+                className={`${getHeaderSize()} flex items-center justify-center font-medium text-xs ok-bright-gray rounded border text-center leading-tight`}
               >
                 {scope}
               </div>
@@ -72,9 +83,9 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
 
           {/* Matrix rows */}
           {methods.map((method, methodIndex) => (
-            <div key={method} className="flex gap-2">
+            <div key={method} className="flex gap-1">
               {/* Method label */}
-              <div className={`${getCellSize()} flex items-center justify-center font-medium text-xs ok-bright-gray`}>
+              <div className={`${getHeaderSize()} flex items-center justify-center font-medium text-xs ok-bright-gray rounded border`}>
                 {method}
               </div>
               
@@ -89,9 +100,9 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
                     className={`
                       ${getCellSize()} 
                       flex items-center justify-center 
-                      font-bold rounded-lg border-2 transition-all
+                      font-bold rounded border-2 transition-all
                       ${getScoreClass(score)}
-                      ${selected ? 'border-black scale-110 shadow-lg' : 'border-transparent'}
+                      ${selected ? 'border-orange-600 scale-110 shadow-lg ring-2 ring-orange-300' : 'border-transparent'}
                     `}
                   >
                     {score}
@@ -104,21 +115,21 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
 
         {/* Legend */}
         <div className="mt-4 text-xs text-gray-600">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-center">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 score-1 rounded"></div>
+              <div className="w-3 h-3 score-1 rounded border"></div>
               <span>1점</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 score-2 rounded"></div>
+              <div className="w-3 h-3 score-2 rounded border"></div>
               <span>2점</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 score-3 rounded"></div>
+              <div className="w-3 h-3 score-3 rounded border"></div>
               <span>3점</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 score-4 rounded"></div>
+              <div className="w-3 h-3 score-4 rounded border"></div>
               <span>4점</span>
             </div>
           </div>

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,15 +9,18 @@ import { Users, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const EvaluatorDashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   const myStats = [
-    { label: '담당 피평가자', value: '12명', icon: Users, color: 'text-blue-600' },
-    { label: '완료한 평가', value: '8건', icon: CheckCircle, color: 'text-green-600' },
-    { label: '대기 중인 평가', value: '4건', icon: Clock, color: 'text-orange-600' },
-    { label: '작성한 피드백', value: '15건', icon: MessageSquare, color: 'text-purple-600' },
+    { label: '담당 피평가자', value: '12명', icon: Users, color: 'text-orange-600' },
+    { label: '완료한 평가', value: '8건', icon: CheckCircle, color: 'text-yellow-600' },
+    { label: '대기 중인 평가', value: '4건', icon: Clock, color: 'text-amber-600' },
+    { label: '작성한 피드백', value: '15건', icon: MessageSquare, color: 'text-orange-500' },
   ];
 
   const myEvaluatees = [
     {
+      id: '1',
       name: '이하나',
       position: '사원',
       department: '마케팅팀',
@@ -27,6 +31,7 @@ export const EvaluatorDashboard: React.FC = () => {
       status: 'in-progress'
     },
     {
+      id: '2',
       name: '김철수',
       position: '주임',
       department: '개발팀',
@@ -37,6 +42,7 @@ export const EvaluatorDashboard: React.FC = () => {
       status: 'completed'
     },
     {
+      id: '3',
       name: '박영희',
       position: '대리',
       department: '디자인팀',
@@ -47,6 +53,7 @@ export const EvaluatorDashboard: React.FC = () => {
       status: 'in-progress'
     },
     {
+      id: '4',
       name: '정민호',
       position: '사원',
       department: '마케팅팀',
@@ -75,6 +82,10 @@ export const EvaluatorDashboard: React.FC = () => {
     },
   ];
 
+  const handleEvaluateClick = (evaluateeId: string) => {
+    navigate(`/evaluation/${evaluateeId}`);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -82,7 +93,7 @@ export const EvaluatorDashboard: React.FC = () => {
           <h2 className="text-3xl font-bold tracking-tight">평가자 대시보드</h2>
           <p className="text-muted-foreground">담당 팀원들의 성과를 평가하고 피드백을 제공하세요</p>
         </div>
-        <Button>
+        <Button className="ok-orange hover:opacity-90">
           <Star className="mr-2 h-4 w-4" />
           평가 가이드
         </Button>
@@ -135,14 +146,18 @@ export const EvaluatorDashboard: React.FC = () => {
                       <span>과업 진행률</span>
                       <span>{person.tasksCompleted}/{person.totalTasks} ({person.progress}%)</span>
                     </div>
-                    <Progress value={person.progress} />
+                    <Progress value={person.progress} className="[&>div]:ok-orange" />
                   </div>
                   
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-muted-foreground">
                       마지막 활동: {person.lastActivity}
                     </span>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleEvaluateClick(person.id)}
+                      className="ok-orange hover:opacity-90"
+                    >
                       평가하기
                     </Button>
                   </div>
@@ -168,7 +183,13 @@ export const EvaluatorDashboard: React.FC = () => {
                         미완료 과업: {person.totalTasks - person.tasksCompleted}개
                       </p>
                     </div>
-                    <Button size="sm">평가 진행</Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleEvaluateClick(person.id)}
+                      className="ok-orange hover:opacity-90"
+                    >
+                      평가 진행
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -218,9 +239,11 @@ export const EvaluatorDashboard: React.FC = () => {
                         <p className="font-medium">{feedback.evaluatee}</p>
                         <p className="text-sm text-muted-foreground">{feedback.task}</p>
                       </div>
-                      <Badge variant="outline">{feedback.score}</Badge>
+                      <Badge variant="outline" className="border-orange-200 text-orange-700">
+                        {feedback.score}
+                      </Badge>
                     </div>
-                    <p className="text-sm bg-gray-50 p-3 rounded-md mb-2">
+                    <p className="text-sm ok-bright-gray p-3 rounded-md mb-2">
                       "{feedback.feedback}"
                     </p>
                     <p className="text-xs text-muted-foreground">{feedback.date}</p>

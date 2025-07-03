@@ -18,24 +18,24 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 217 91% 60%;
+    --primary: 14 100% 56%; /* OK Orange */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 6% 73%; /* OK Bright Gray */
+    --secondary-foreground: 29 25% 32%; /* OK Dark Brown */
 
-    --muted: 214 32% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 6% 73%; /* OK Bright Gray */
+    --muted-foreground: 29 25% 32%; /* OK Dark Brown */
 
-    --accent: 142 76% 36%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 100% 65%; /* OK Yellow */
+    --accent-foreground: 29 25% 32%; /* OK Dark Brown */
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 14 100% 56%; /* Using OK Orange for destructive actions */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    --border: 210 6% 73%; /* OK Bright Gray */
+    --input: 210 6% 73%; /* OK Bright Gray */
+    --ring: 14 100% 56%; /* OK Orange */
 
     --radius: 0.75rem;
 
@@ -73,24 +73,24 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;
+    --primary: 14 100% 56%; /* OK Orange */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 29 25% 32%; /* OK Dark Brown */
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 29 25% 32%; /* OK Dark Brown */
+    --muted-foreground: 210 6% 73%; /* OK Bright Gray */
 
-    --accent: 142 76% 36%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 100% 65%; /* OK Yellow */
+    --accent-foreground: 29 25% 32%; /* OK Dark Brown */
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 14 100% 56%; /* OK Orange */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%;
+    --border: 29 25% 32%; /* OK Dark Brown */
+    --input: 29 25% 32%; /* OK Dark Brown */
+    --ring: 14 100% 56%; /* OK Orange */
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -139,15 +139,21 @@ All colors MUST be HSL.
   }
   
   .status-achieved {
-    @apply bg-green-50 text-green-700 border-green-200;
+    background-color: hsl(var(--ok-yellow) / 0.2);
+    color: hsl(var(--ok-dark-brown));
+    border-color: hsl(var(--ok-yellow));
   }
   
   .status-not-achieved {
-    @apply bg-red-50 text-red-700 border-red-200;
+    background-color: hsl(var(--ok-orange) / 0.2);
+    color: hsl(var(--ok-dark-brown));
+    border-color: hsl(var(--ok-orange));
   }
   
   .status-in-progress {
-    @apply bg-blue-50 text-blue-700 border-blue-200;
+    background-color: hsl(var(--ok-bright-gray) / 0.5);
+    color: hsl(var(--ok-dark-brown));
+    border-color: hsl(var(--ok-gold));
   }
   
   .role-hr {
