@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -87,29 +88,7 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-1">
-          {/* Header with scope labels */}
-          <div className="flex gap-1">
-            <div className={`${getHeaderSize()} flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
-              방식/범위
-            </div>
-            {scopes.map((scope, index) => (
-              <div 
-                key={scope}
-                className={`
-                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
-                  ${isScopeSelected(index) 
-                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
-                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
-                  }
-                `}
-                onClick={() => handleScopeClick(index)}
-              >
-                {scope}
-              </div>
-            ))}
-          </div>
-
-          {/* Matrix rows */}
+          {/* Matrix rows with method labels */}
           {methods.map((method, methodIndex) => (
             <div key={method} className="flex gap-1">
               {/* Method label */}
@@ -149,6 +128,28 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
               })}
             </div>
           ))}
+
+          {/* Header row at bottom */}
+          <div className="flex gap-1 mt-2">
+            <div className={`${getHeaderSize()} flex items-center justify-center font-bold text-xs bg-gray-300 text-gray-900 rounded border`}>
+              방식/범위
+            </div>
+            {scopes.map((scope, index) => (
+              <div 
+                key={scope}
+                className={`
+                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
+                  ${isScopeSelected(index) 
+                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
+                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
+                  }
+                `}
+                onClick={() => handleScopeClick(index)}
+              >
+                {scope}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Legend */}

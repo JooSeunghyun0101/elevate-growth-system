@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Target } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Target, Edit3, Check, X } from 'lucide-react';
 import ScoringChart from '@/components/ScoringChart';
 import ScoreDisplay from './ScoreDisplay';
 import { Task } from '@/types/evaluation';
@@ -15,6 +16,7 @@ interface TaskCardProps {
   onMethodClick: (taskId: string, method: string) => void;
   onScopeClick: (taskId: string, scope: string) => void;
   onFeedbackChange: (taskId: string, feedback: string) => void;
+  onWeightChange: (taskId: string, weight: number) => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -22,8 +24,29 @@ const TaskCard: React.FC<TaskCardProps> = ({
   index,
   onMethodClick,
   onScopeClick,
-  onFeedbackChange
+  onFeedbackChange,
+  onWeightChange
 }) => {
+  const [isEditingWeight, setIsEditingWeight] = useState(false);
+  const [tempWeight, setTempWeight] = useState(task.weight);
+
+  const handleWeightEdit = () => {
+    setTempWeight(task.weight);
+    setIsEditingWeight(true);
+  };
+
+  const handleWeightSave = () => {
+    if (tempWeight >= 1 && tempWeight <= 100) {
+      onWeightChange(task.id, tempWeight);
+      setIsEditingWeight(false);
+    }
+  };
+
+  const handleWeightCancel = () => {
+    setTempWeight(task.weight);
+    setIsEditingWeight(false);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -33,9 +56,43 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <p className="text-gray-600 mt-1">{task.description}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-4 py-2 text-lg font-bold">
-              가중치 {task.weight}%
-            </Badge>
+            {isEditingWeight ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={tempWeight}
+                  onChange={(e) => setTempWeight(Number(e.target.value))}
+                  className="w-16 h-8 text-center"
+                  min="1"
+                  max="100"
+                />
+                <span className="text-sm">%</span>
+                <button
+                  onClick={handleWeightSave}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleWeightCancel}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-4 py-2 text-lg font-bold">
+                  가중치 {task.weight}%
+                </Badge>
+                <button
+                  onClick={handleWeightEdit}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -74,7 +131,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
             {/* Feedback Input - Takes remaining space */}
             <div className="flex-1 flex flex-col mt-4">
-              <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
+              <Label htmlFor={`feedback-${task.id}`} className="text-base font-bold mb-3 block text-amber-800">
                 피드백
               </Label>
               <Textarea
@@ -82,7 +139,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
                 value={task.feedback || ''}
                 onChange={(e) => onFeedbackChange(task.id, e.target.value)}
-                className="flex-1 min-h-[140px] resize-none"
+                className="flex-1 min-h-[160px] resize-none"
               />
             </div>
           </div>

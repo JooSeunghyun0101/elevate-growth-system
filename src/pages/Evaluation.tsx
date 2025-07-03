@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -13,13 +12,27 @@ const Evaluation = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Mock data with growth level
+  // Dynamic employee data based on ID
+  const getEmployeeData = (employeeId: string) => {
+    const employees = {
+      '1': { name: '이하나', position: '사원', department: '마케팅팀', growthLevel: 1 },
+      '2': { name: '김대리', position: '대리', department: '개발팀', growthLevel: 2 },
+      '3': { name: '박차장', position: '차장', department: '영업팀', growthLevel: 3 },
+      '4': { name: '최부장', position: '부장', department: '기획팀', growthLevel: 4 },
+      '5': { name: '정사원', position: '사원', department: '디자인팀', growthLevel: 1 },
+    };
+    return employees[employeeId as keyof typeof employees] || employees['1'];
+  };
+
+  const employeeInfo = getEmployeeData(id || '1');
+
+  // Mock data with dynamic employee info
   const [evaluationData, setEvaluationData] = useState<EvaluationData>({
     evaluateeId: id || '1',
-    evaluateeName: '이하나',
-    evaluateePosition: '사원',
-    evaluateeDepartment: '마케팅팀',
-    growthLevel: 3,
+    evaluateeName: employeeInfo.name,
+    evaluateePosition: employeeInfo.position,
+    evaluateeDepartment: employeeInfo.department,
+    growthLevel: employeeInfo.growthLevel,
     evaluationStatus: 'in-progress',
     lastModified: new Date().toISOString(),
     tasks: [
@@ -67,12 +80,19 @@ const Evaluation = () => {
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        setEvaluationData(parsedData);
+        // Update with current employee info but keep evaluation data
+        setEvaluationData(prev => ({
+          ...parsedData,
+          evaluateeName: employeeInfo.name,
+          evaluateePosition: employeeInfo.position,
+          evaluateeDepartment: employeeInfo.department,
+          growthLevel: employeeInfo.growthLevel,
+        }));
       } catch (error) {
         console.error('Failed to load saved evaluation data:', error);
       }
     }
-  }, [id]);
+  }, [id, employeeInfo.name, employeeInfo.position, employeeInfo.department, employeeInfo.growthLevel]);
 
   const updateTask = (taskId: string, field: keyof Task, value: any) => {
     setEvaluationData(prev => ({
@@ -85,6 +105,23 @@ const Evaluation = () => {
       }),
       lastModified: new Date().toISOString()
     }));
+  };
+
+  const handleWeightChange = (taskId: string, weight: number) => {
+    updateTask(taskId, 'weight', weight);
+    
+    // Show warning if total weight is not 100%
+    const newTotalWeight = evaluationData.tasks.reduce((sum, task) => {
+      return sum + (task.id === taskId ? weight : task.weight);
+    }, 0);
+    
+    if (newTotalWeight !== 100) {
+      toast({
+        title: "가중치 확인 필요",
+        description: `현재 총 가중치: ${newTotalWeight}% (100%가 되도록 조정해주세요)`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleMethodClick = (taskId: string, method: string) => {
@@ -221,6 +258,7 @@ const Evaluation = () => {
             onMethodClick={handleMethodClick}
             onScopeClick={handleScopeClick}
             onFeedbackChange={handleFeedbackChange}
+            onWeightChange={handleWeightChange}
           />
         ))}
       </div>
