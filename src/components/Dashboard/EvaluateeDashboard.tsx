@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -141,7 +140,10 @@ export const EvaluateeDashboard: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">내 성과 대시보드</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <span className="hidden sm:inline">내 성과 대시보드</span>
+            <span className="inline sm:hidden">내 성과</span>
+          </h2>
           <p className="text-muted-foreground">
             {user.name} {user.position} • {user.department}
           </p>
@@ -207,10 +209,18 @@ export const EvaluateeDashboard: React.FC = () => {
 
       <Tabs defaultValue="tasks" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="tasks">내 과업</TabsTrigger>
-          <TabsTrigger value="feedback">받은 피드백</TabsTrigger>
-          <TabsTrigger value="history">평가 이력</TabsTrigger>
-          <TabsTrigger value="goals">목표 설정</TabsTrigger>
+          <TabsTrigger value="tasks">
+            <span className="hidden sm:inline">내 과업</span>
+            <span className="inline sm:hidden">과업</span>
+          </TabsTrigger>
+          <TabsTrigger value="feedback">
+            <span className="hidden sm:inline">받은 피드백</span>
+            <span className="inline sm:hidden">피드백</span>
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            <span className="hidden sm:inline">평가 이력</span>
+            <span className="inline sm:hidden">이력</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tasks" className="space-y-4">
@@ -349,32 +359,6 @@ export const EvaluateeDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="goals" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>목표 설정 및 관리</CardTitle>
-              <CardDescription>개인 성장 목표와 달성 계획</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 border border-orange-100 bg-white rounded-lg">
-                  <h4 className="font-medium mb-2">2024년 성장 목표</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    현재 레벨 {evaluationData.growthLevel} 달성을 목표로 하며, 
-                    총 {totalScore}점 중 {evaluationData.growthLevel}점 이상 달성이 목표입니다.
-                  </p>
-                  <Progress value={progress} className="mb-2 [&>div]:ok-orange" />
-                  <p className="text-xs text-muted-foreground">목표 달성률: {progress}%</p>
-                </div>
-
-                <Button variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-50">
-                  목표 설정 수정하기
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* Task Management Modal */}
@@ -392,4 +376,3 @@ export const EvaluateeDashboard: React.FC = () => {
     </div>
   );
 };
-
