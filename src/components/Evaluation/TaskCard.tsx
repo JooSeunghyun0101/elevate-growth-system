@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +45,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
     setTempWeight(task.weight);
     setIsEditingWeight(false);
   };
+
+  const isNoContribution = task.contributionMethod === '기여없음' && task.contributionScope === '기여없음';
 
   return (
     <Card>
@@ -113,9 +114,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
           {/* Right: Score Display and Feedback Input */}
           <div className="flex flex-col h-full min-h-[420px]">
             {/* Score Display Section */}
-            {task.score ? (
+            {task.score !== undefined || isNoContribution ? (
               <ScoreDisplay
-                score={task.score}
+                score={isNoContribution ? 0 : task.score!}
                 weight={task.weight}
                 contributionMethod={task.contributionMethod}
                 contributionScope={task.contributionScope}
