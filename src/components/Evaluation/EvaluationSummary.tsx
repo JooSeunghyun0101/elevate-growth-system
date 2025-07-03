@@ -17,7 +17,7 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
 }) => {
   return (
     <div className="grid md:grid-cols-5 gap-4">
-      <Card className="col-span-3">
+      <Card className="col-span-2">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -32,7 +32,7 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
                   <Building2 className="w-4 h-4" />
                   <span>{evaluationData.evaluateeDepartment}</span>
                 </div>
-                <div className="text-right">
+                <div className="text-center">
                   <p className="text-sm text-gray-600">성장 레벨</p>
                   <p className="text-lg font-semibold text-blue-600">Lv. {evaluationData.growthLevel}</p>
                 </div>
