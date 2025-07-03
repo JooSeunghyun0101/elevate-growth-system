@@ -206,7 +206,7 @@ export const EvaluatorDashboard: React.FC = () => {
 
   const myStats = [
     { 
-      label: { full: '담당 피평가자', mobile: '담당자' },
+      label: { full: '담당 피평가자', mobile: '피평가자' },
       value: `${evaluatees.length}명`, 
       icon: Users, 
       color: 'text-orange-600' 
