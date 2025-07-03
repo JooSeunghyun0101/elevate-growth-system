@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, User, Building2, CheckCircle, AlertCircle, Target, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Save, User, Building2, CheckCircle, AlertCircle, Target, TrendingUp, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoringChart from '@/components/ScoringChart';
 import { useAuth } from '@/contexts/AuthContext';
@@ -330,7 +330,7 @@ const Evaluation = () => {
                   <p className="text-gray-600 mt-1">{task.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-orange-300 text-orange-800 bg-orange-50 px-3 py-1 text-sm font-semibold">
+                  <Badge variant="outline" className="border-orange-400 text-orange-900 bg-orange-100 px-4 py-2 text-base font-bold">
                     가중치 {task.weight}%
                   </Badge>
                 </div>
@@ -338,7 +338,7 @@ const Evaluation = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-6 items-start">
                 
                 {/* Left: Scoring Chart */}
                 <div className="flex flex-col items-center justify-start">
@@ -352,35 +352,38 @@ const Evaluation = () => {
                   />
                 </div>
 
-                {/* Right: Score Display and Feedback Input */}
-                <div className="flex flex-col h-full">
+                {/* Right: Score Display and Feedback Input - Full Height Container */}
+                <div className="flex flex-col h-full min-h-[420px]">
                   {/* Score Display Section - Enhanced design */}
                   {task.score ? (
                     <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 p-6 mb-4 shadow-sm">
-                      <div className="text-center space-y-4">
-                        {/* Main Score Display */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-center gap-2 text-gray-700 text-sm font-medium">
-                            <Target className="w-4 h-4" />
-                            <span>기본 점수</span>
+                      <div className="space-y-4">
+                        {/* Main Score Display - Horizontal Layout */}
+                        <div className="flex items-center justify-center gap-8">
+                          {/* Basic Score */}
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-2 text-gray-700 text-sm font-medium mb-2">
+                              <Target className="w-4 h-4" />
+                              <span>기본 점수</span>
+                            </div>
+                            <div className="text-3xl font-bold text-orange-600">{task.score}점</div>
                           </div>
-                          <div className="text-3xl font-bold text-orange-600">{task.score}점</div>
-                        </div>
 
-                        {/* Weighted Score */}
-                        <div className="pt-3 border-t border-orange-200/50">
-                          <div className="flex items-center justify-center gap-2 text-gray-600 text-sm mb-1">
-                            <TrendingUp className="w-4 h-4" />
-                            <span>가중치 적용</span>
-                          </div>
-                          <div className="text-xl font-semibold text-orange-700">
-                            {calculateWeightedScore(task.score, task.weight)}점
+                          {/* Weighted Score */}
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-2 text-gray-600 text-sm font-medium mb-2">
+                              <Star className="w-4 h-4" />
+                              <span>가중치 적용</span>
+                            </div>
+                            <div className="text-3xl font-bold text-orange-700">
+                              {calculateWeightedScore(task.score, task.weight)}점
+                            </div>
                           </div>
                         </div>
 
                         {/* Method and Scope Info */}
                         {task.contributionMethod && task.contributionScope && (
-                          <div className="pt-3 border-t border-orange-200/50 space-y-2">
+                          <div className="pt-3 border-t border-orange-200/50">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div className="text-center">
                                 <p className="text-gray-600 font-medium mb-1">기여방식</p>
@@ -408,7 +411,7 @@ const Evaluation = () => {
                     </div>
                   )}
 
-                  {/* Feedback Input - Adjusted height */}
+                  {/* Feedback Input - Takes remaining space */}
                   <div className="flex-1 flex flex-col">
                     <Label htmlFor={`feedback-${task.id}`} className="text-base font-medium mb-3 block">
                       피드백
@@ -419,7 +422,6 @@ const Evaluation = () => {
                       value={task.feedback || ''}
                       onChange={(e) => updateTask(task.id, 'feedback', e.target.value)}
                       className="flex-1 min-h-0 resize-none"
-                      style={{ minHeight: task.score ? '160px' : '220px' }}
                     />
                   </div>
                 </div>
