@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,22 +56,22 @@ interface RecentFeedback {
   evaluatorName?: string;
 }
 
-// Employee mapping - evaluator to evaluatees
+// Employee mapping - evaluator to evaluatees (updated with new positions)
 const evaluatorMapping: Record<string, Array<{id: string, name: string, position: string, department: string, growthLevel: number}>> = {
   'H0908033': [ // 박판근
-    { id: 'H1310172', name: '이수한', position: '사원', department: '인사기획팀', growthLevel: 1 },
-    { id: 'H1411166', name: '주승현', position: '사원', department: '인사기획팀', growthLevel: 1 },
-    { id: 'H1911042', name: '김민선', position: '사원', department: '인사기획팀', growthLevel: 1 }
+    { id: 'H1310172', name: '이수한', position: '차장', department: '인사기획팀', growthLevel: 3 },
+    { id: 'H1411166', name: '주승현', position: '차장', department: '인사기획팀', growthLevel: 3 },
+    { id: 'H1911042', name: '김민선', position: '대리', department: '인사기획팀', growthLevel: 2 }
   ],
   'H1310159': [ // 김남엽
-    { id: 'H1411231', name: '최은송', position: '사원', department: '인사팀', growthLevel: 1 },
-    { id: 'H1205006', name: '황정원', position: '사원', department: '인사팀', growthLevel: 1 },
+    { id: 'H1411231', name: '최은송', position: '차장', department: '인사팀', growthLevel: 3 },
+    { id: 'H1205006', name: '황정원', position: '대리', department: '인사팀', growthLevel: 2 },
     { id: 'H2301040', name: '김민영', position: '사원', department: '인사팀', growthLevel: 1 },
-    { id: 'H1501077', name: '조혜인', position: '사원', department: '인사팀', growthLevel: 1 }
+    { id: 'H1501077', name: '조혜인', position: '대리', department: '인사팀', growthLevel: 2 }
   ],
   'H0807021': [ // 박준형
-    { id: 'H0908033', name: '박판근', position: '팀장', department: '인사기획팀', growthLevel: 3 },
-    { id: 'H1310159', name: '김남엽', position: '팀장', department: '인사팀', growthLevel: 3 }
+    { id: 'H0908033', name: '박판근', position: '차장', department: '인사기획팀', growthLevel: 3 },
+    { id: 'H1310159', name: '김남엽', position: '차장', department: '인사팀', growthLevel: 3 }
   ]
 };
 
