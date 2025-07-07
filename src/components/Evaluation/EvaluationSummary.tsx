@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { User, Building2, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
@@ -7,12 +6,14 @@ import { EvaluationData } from '@/types/evaluation';
 interface EvaluationSummaryProps {
   evaluationData: EvaluationData;
   totalScore: number;
+  exactScore: number;
   isAchieved: boolean;
 }
 
 const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
   evaluationData,
   totalScore,
+  exactScore,
   isAchieved
 }) => {
   return (
@@ -54,7 +55,14 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
         <CardContent className="p-3 sm:p-4">
           <div className="text-center">
             <p className="text-xs sm:text-sm text-gray-600">총 평가 점수</p>
-            <p className="text-lg sm:text-2xl font-bold text-orange-500">{totalScore}점</p>
+            <p className="text-lg sm:text-2xl font-bold text-orange-500">
+              {totalScore}점
+              {exactScore !== totalScore && (
+                <span className="text-sm text-gray-500 ml-1">
+                  ({exactScore})
+                </span>
+              )}
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -8,6 +8,7 @@ import { EvaluationData } from '@/types/evaluation';
 interface EvaluationHeaderProps {
   evaluationData: EvaluationData;
   totalScore: number;
+  exactScore: number;
   isAchieved: boolean;
   onGoBack: () => void;
   onSave: () => void;
@@ -16,6 +17,7 @@ interface EvaluationHeaderProps {
 const EvaluationHeader: React.FC<EvaluationHeaderProps> = ({
   evaluationData,
   totalScore,
+  exactScore,
   isAchieved,
   onGoBack,
   onSave
@@ -60,6 +62,7 @@ const EvaluationHeader: React.FC<EvaluationHeaderProps> = ({
         <EvaluationSummary
           evaluationData={evaluationData}
           totalScore={totalScore}
+          exactScore={exactScore}
           isAchieved={isAchieved}
         />
       </div>

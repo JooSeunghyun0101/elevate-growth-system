@@ -208,7 +208,10 @@ const Evaluation = () => {
       }
       return sum;
     }, 0);
-    return Math.floor(totalWeightedScore);
+    return {
+      exactScore: Math.round(totalWeightedScore * 10) / 10, // 소수점 첫째자리까지
+      flooredScore: Math.floor(totalWeightedScore) // 버림한 정수
+    };
   };
 
   const isEvaluationComplete = () => {
@@ -216,8 +219,8 @@ const Evaluation = () => {
   };
 
   const isAchieved = () => {
-    const totalScore = calculateTotalScore();
-    return totalScore >= evaluationData.growthLevel;
+    const { flooredScore } = calculateTotalScore();
+    return flooredScore >= evaluationData.growthLevel;
   };
 
   const handleSave = () => {
@@ -264,14 +267,15 @@ const Evaluation = () => {
     );
   }
 
-  const totalScore = calculateTotalScore();
+  const { exactScore, flooredScore } = calculateTotalScore();
   const achieved = isAchieved();
 
   return (
     <div className="min-h-screen bg-gray-50">
       <EvaluationHeader
         evaluationData={evaluationData}
-        totalScore={totalScore}
+        totalScore={flooredScore}
+        exactScore={exactScore}
         isAchieved={achieved}
         onGoBack={handleGoBack}
         onSave={handleSave}
