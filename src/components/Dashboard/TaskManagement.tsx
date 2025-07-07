@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Trash2, Save } from 'lucide-react';
 import { EvaluationData, Task } from '@/types/evaluation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 interface TaskManagementProps {
   evaluationData: EvaluationData;
@@ -22,6 +23,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 }) => {
   const [tasks, setTasks] = useState<Task[]>(evaluationData.tasks);
   const [editingTask, setEditingTask] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { addNotification } = useNotifications();
 
   const totalWeight = tasks.reduce((sum, task) => sum + task.weight, 0);
 
@@ -130,6 +133,70 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         );
       }).map(t => ({ id: t.id, title: t.title }))
     });
+
+    // Send notifications for changes if user is evaluatee
+    if (user?.role === 'evaluatee' && (hasTaskContentChanges || hasStructuralChanges)) {
+      // Find the evaluator to send notification to
+      // For now, we'll send to a generic evaluator - in a real system, this would be the assigned evaluator
+      const evaluatorId = 'evaluator-1'; // This should come from the evaluation assignment
+
+      // Collect all changes for a comprehensive notification
+      const changes: string[] = [];
+      
+      // Check for content changes
+      const changedTasks = tasks.filter(task => {
+        const original = originalTasksMap.get(task.id);
+        return original && (
+          original.title !== task.title || 
+          original.description !== task.description || 
+          original.weight !== task.weight
+        );
+      });
+
+      changedTasks.forEach(task => {
+        const original = originalTasksMap.get(task.id);
+        if (original) {
+          if (original.title !== task.title) {
+            changes.push(`"${original.title}" 과업명 변경`);
+          }
+          if (original.description !== task.description) {
+            changes.push(`"${task.title}" 과업 설명 수정`);
+          }
+          if (original.weight !== task.weight) {
+            changes.push(`"${task.title}" 가중치 ${original.weight}% → ${task.weight}%`);
+          }
+        }
+      });
+
+      // Check for new tasks
+      const newTasks = tasks.filter(task => !originalTasksMap.has(task.id));
+      newTasks.forEach(task => {
+        changes.push(`"${task.title}" 새 과업 추가`);
+      });
+
+      // Check for deleted tasks
+      const deletedTasks = evaluationData.tasks.filter(task => !tasks.find(t => t.id === task.id));
+      deletedTasks.forEach(task => {
+        changes.push(`"${task.title}" 과업 삭제`);
+      });
+
+      if (changes.length > 0) {
+        const changeMessage = changes.length === 1 
+          ? changes[0] 
+          : `${changes.length}개 변경사항: ${changes.slice(0, 2).join(', ')}${changes.length > 2 ? ' 외' : ''}`;
+
+        addNotification({
+          recipientId: evaluatorId,
+          title: '과업 관리 변경',
+          message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다. ${changeMessage}`,
+          type: 'task_updated',
+          priority: 'medium',
+          senderId: user.id,
+          senderName: user.name,
+          relatedEvaluationId: evaluationData.evaluateeId
+        });
+      }
+    }
     
     onSave(updatedData);
   };

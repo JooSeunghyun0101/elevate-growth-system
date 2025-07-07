@@ -108,19 +108,6 @@ export const useEvaluationData = (employeeId: string) => {
         variant: "destructive",
       });
     }
-
-    // Send notification when evaluator changes weight
-    if (user?.role === 'evaluator') {
-      addNotification({
-        recipientId: employeeId,
-        title: '과업 가중치 수정',
-        message: `평가자가 과업의 가중치를 ${weight}%로 수정했습니다.`,
-        type: 'evaluation_updated',
-        priority: 'medium',
-        senderId: user.id,
-        senderName: user.name
-      });
-    }
   };
 
   const handleMethodClick = (taskId: string, method: string) => {
@@ -147,19 +134,6 @@ export const useEvaluationData = (employeeId: string) => {
       tasks: prev.tasks.map(t => t.id === taskId ? updatedTask : t),
       lastModified: new Date().toISOString()
     }));
-
-    // Send notification when evaluator changes contribution method
-    if (user?.role === 'evaluator') {
-      addNotification({
-        recipientId: employeeId,
-        title: '평가 내용 수정',
-        message: `평가자가 과업의 기여방식을 "${method}"로 수정했습니다.`,
-        type: 'evaluation_updated',
-        priority: 'medium',
-        senderId: user.id,
-        senderName: user.name
-      });
-    }
   };
 
   const handleScopeClick = (taskId: string, scope: string) => {
@@ -186,19 +160,6 @@ export const useEvaluationData = (employeeId: string) => {
       tasks: prev.tasks.map(t => t.id === taskId ? updatedTask : t),
       lastModified: new Date().toISOString()
     }));
-
-    // Send notification when evaluator changes contribution scope
-    if (user?.role === 'evaluator') {
-      addNotification({
-        recipientId: employeeId,
-        title: '평가 내용 수정',
-        message: `평가자가 과업의 기여범위를 "${scope}"로 수정했습니다.`,
-        type: 'evaluation_updated',
-        priority: 'medium',
-        senderId: user.id,
-        senderName: user.name
-      });
-    }
   };
 
   const handleFeedbackChange = (taskId: string, feedback: string) => {
@@ -216,19 +177,6 @@ export const useEvaluationData = (employeeId: string) => {
       ),
       lastModified: new Date().toISOString()
     }));
-
-    // Send notification when evaluator adds/updates feedback
-    if (user?.role === 'evaluator' && feedback.trim()) {
-      addNotification({
-        recipientId: employeeId,
-        title: '피드백 등록',
-        message: `평가자가 과업에 대한 피드백을 작성했습니다.`,
-        type: 'hr_message',
-        priority: 'medium',
-        senderId: user.id,
-        senderName: user.name
-      });
-    }
   };
 
   const calculateTotalScore = () => {
@@ -255,6 +203,18 @@ export const useEvaluationData = (employeeId: string) => {
 
   const handleSave = () => {
     try {
+      // Get the previously saved data to compare changes
+      const previousDataString = localStorage.getItem(`evaluation-${employeeId}`);
+      let previousData: EvaluationData | null = null;
+      
+      if (previousDataString) {
+        try {
+          previousData = JSON.parse(previousDataString);
+        } catch (error) {
+          console.error('Failed to parse previous data:', error);
+        }
+      }
+
       const updatedData = {
         ...evaluationData,
         evaluationStatus: isEvaluationComplete() ? 'completed' as const : 'in-progress' as const,
@@ -269,19 +229,64 @@ export const useEvaluationData = (employeeId: string) => {
         description: `평가 내용이 성공적으로 저장되었습니다. ${isEvaluationComplete() ? '평가가 완료되었습니다.' : ''}`,
       });
 
-      // Send notification when evaluation is saved/completed
-      if (user?.role === 'evaluator') {
-        addNotification({
-          recipientId: employeeId,
-          title: isEvaluationComplete() ? '평가 완료' : '평가 저장',
-          message: isEvaluationComplete() 
-            ? '평가자가 성과평가를 완료했습니다.' 
-            : '평가자가 평가 내용을 저장했습니다.',
-          type: 'evaluation_completed',
-          priority: 'high',
-          senderId: user.id,
-          senderName: user.name
+      // Send notifications only for actual changes when evaluator saves
+      if (user?.role === 'evaluator' && previousData) {
+        const changes: string[] = [];
+        
+        // Compare each task for changes
+        evaluationData.tasks.forEach(currentTask => {
+          const previousTask = previousData.tasks.find(t => t.id === currentTask.id);
+          if (!previousTask) return; // Skip new tasks
+          
+          // Check for evaluation changes
+          if (previousTask.contributionMethod !== currentTask.contributionMethod) {
+            changes.push(`"${currentTask.title}" 기여방식 변경`);
+          }
+          
+          if (previousTask.contributionScope !== currentTask.contributionScope) {
+            changes.push(`"${currentTask.title}" 기여범위 변경`);
+          }
+          
+          if (previousTask.score !== currentTask.score) {
+            changes.push(`"${currentTask.title}" 점수 변경`);
+          }
+          
+          if (previousTask.feedback !== currentTask.feedback && currentTask.feedback?.trim()) {
+            changes.push(`"${currentTask.title}" 피드백 ${previousTask.feedback ? '수정' : '추가'}`);
+          }
         });
+
+        // Send notification only if there are actual changes
+        if (changes.length > 0) {
+          const changeMessage = changes.length === 1 
+            ? changes[0] 
+            : `${changes.length}개 변경사항: ${changes.slice(0, 2).join(', ')}${changes.length > 2 ? ' 외' : ''}`;
+
+          addNotification({
+            recipientId: employeeId,
+            title: isEvaluationComplete() ? '평가 완료' : '평가 내용 수정',
+            message: isEvaluationComplete() 
+              ? `평가자가 성과평가를 완료했습니다.`
+              : `평가자가 평가 내용을 수정했습니다. ${changeMessage}`,
+            type: isEvaluationComplete() ? 'evaluation_completed' : 'evaluation_updated',
+            priority: isEvaluationComplete() ? 'high' : 'medium',
+            senderId: user.id,
+            senderName: user.name,
+            relatedEvaluationId: employeeId
+          });
+        } else if (isEvaluationComplete() && previousData.evaluationStatus !== 'completed') {
+          // Send completion notification even if no changes in current save
+          addNotification({
+            recipientId: employeeId,
+            title: '평가 완료',
+            message: '평가자가 성과평가를 완료했습니다.',
+            type: 'evaluation_completed',
+            priority: 'high',
+            senderId: user.id,
+            senderName: user.name,
+            relatedEvaluationId: employeeId
+          });
+        }
       }
 
       return true;
