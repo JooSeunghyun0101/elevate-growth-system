@@ -8,13 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { EvaluationData } from '@/types/evaluation';
 import TaskManagement from './TaskManagement';
+import TaskGanttChart from '@/components/TaskGanttChart';
+import { format } from 'date-fns';
 
 export const EvaluateeDashboard: React.FC = () => {
   const { user } = useAuth();
   const [evaluationData, setEvaluationData] = useState<EvaluationData | null>(null);
   const [showTaskManagement, setShowTaskManagement] = useState(false);
 
-  // Load evaluation data for the current user
   useEffect(() => {
     if (user) {
       loadMyEvaluationData();
@@ -51,25 +52,37 @@ export const EvaluateeDashboard: React.FC = () => {
             id: '1',
             title: '브랜드 캠페인 기획',
             description: 'Q2 신제품 출시를 위한 통합 브랜드 캠페인 기획 및 실행',
-            weight: 30
+            weight: 30,
+            startDate: '2024-01-15',
+            endDate: '2024-03-15',
+            feedbackHistory: []
           },
           {
             id: '2',
             title: '고객 만족도 조사',
             description: '기존 고객 대상 만족도 조사 설계 및 분석',
-            weight: 25
+            weight: 25,
+            startDate: '2024-02-01',
+            endDate: '2024-04-01',
+            feedbackHistory: []
           },
           {
             id: '3',
             title: '소셜미디어 콘텐츠 관리',
             description: '월간 소셜미디어 콘텐츠 계획 및 게시물 관리',
-            weight: 20
+            weight: 20,
+            startDate: '2024-01-01',
+            endDate: '2024-06-30',
+            feedbackHistory: []
           },
           {
             id: '4',
             title: '팀 프로젝트 협업',
             description: '디자인팀과의 협업 프로젝트 진행',
-            weight: 25
+            weight: 25,
+            startDate: '2024-03-01',
+            endDate: '2024-05-31',
+            feedbackHistory: []
           }
         ]
       };
@@ -100,7 +113,11 @@ export const EvaluateeDashboard: React.FC = () => {
   const flooredScore = Math.floor(exactScore);
 
   const isAchieved = flooredScore >= evaluationData.growthLevel;
-  const feedbackCount = evaluationData.tasks.filter(task => task.feedback).length;
+  
+  // Updated feedback count to include history
+  const feedbackCount = evaluationData.tasks.reduce((count, task) => {
+    return count + (task.feedbackHistory?.length || 0);
+  }, 0);
 
   // Updated stats with mobile-friendly labels
   const myStats = [
@@ -162,7 +179,6 @@ export const EvaluateeDashboard: React.FC = () => {
         </Button>
       </div>
 
-      {/* My Stats - Updated to mobile format */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
         {myStats.map((stat, index) => (
           <Card key={index}>
@@ -180,7 +196,6 @@ export const EvaluateeDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Performance Summary - Updated with decimal scores */}
       <Card>
         <CardHeader>
           <CardTitle>나의 성과 요약</CardTitle>
@@ -218,10 +233,14 @@ export const EvaluateeDashboard: React.FC = () => {
       </Card>
 
       <Tabs defaultValue="tasks" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="tasks" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">내 과업</span>
             <span className="inline sm:hidden">과업</span>
+          </TabsTrigger>
+          <TabsTrigger value="timeline" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">일정표</span>
+            <span className="inline sm:hidden">일정</span>
           </TabsTrigger>
           <TabsTrigger value="feedback" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">받은 피드백</span>
@@ -263,6 +282,11 @@ export const EvaluateeDashboard: React.FC = () => {
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <span>가중치: {task.weight}%</span>
                           <span>과업 {index + 1}</span>
+                          {task.startDate && task.endDate && (
+                            <span className="text-blue-600">
+                              {format(new Date(task.startDate), 'MM/dd')} - {format(new Date(task.endDate), 'MM/dd')}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
@@ -283,9 +307,14 @@ export const EvaluateeDashboard: React.FC = () => {
                       <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-2">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium">기여 방식/범위</span>
-                          <Badge variant="outline" className="border-orange-200 text-orange-700">
-                            {task.contributionMethod}/{task.contributionScope}
-                          </Badge>
+                          <div className="flex gap-2">
+                            <Badge variant="outline" className="border-orange-200 text-orange-700 text-sm px-3 py-1">
+                              {task.contributionMethod}
+                            </Badge>
+                            <Badge variant="outline" className="border-blue-200 text-blue-700 text-sm px-3 py-1">
+                              {task.contributionScope}
+                            </Badge>
+                          </div>
                         </div>
                         {task.feedback && (
                           <p className="text-sm text-gray-700">💬 {task.feedback}</p>
@@ -299,33 +328,64 @@ export const EvaluateeDashboard: React.FC = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="timeline" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>과업 일정표</CardTitle>
+              <CardDescription>등록된 과업들의 진행 일정</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TaskGanttChart tasks={evaluationData.tasks} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="feedback" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>받은 피드백</CardTitle>
-              <CardDescription>평가자로부터 받은 모든 피드백</CardDescription>
+              <CardDescription>평가자로부터 받은 모든 피드백 히스토리</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {evaluationData.tasks.filter(task => task.feedback).map((task) => (
-                  <div key={task.id} className="p-4 border rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h4 className="font-medium">{task.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          평가자: {task.evaluatorName || '평가자 미확인'}
-                        </p>
+                {evaluationData.tasks.map((task) => {
+                  const allFeedbacks = task.feedbackHistory || [];
+                  if (allFeedbacks.length === 0) return null;
+                  
+                  return (
+                    <div key={task.id} className="border rounded-lg">
+                      <div className="p-4 border-b bg-gray-50">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-medium">{task.title}</h4>
+                            <p className="text-sm text-muted-foreground">{allFeedbacks.length}건의 피드백</p>
+                          </div>
+                          {task.score !== undefined && (
+                            <Badge variant="outline" className="border-orange-200 text-orange-700">
+                              {task.score}점
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <Badge variant="outline" className="border-orange-200 text-orange-700">
-                        {task.score}점
-                      </Badge>
+                      <div className="p-4 space-y-3">
+                        {allFeedbacks.map((feedbackItem, index) => (
+                          <div key={feedbackItem.id} className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-xs text-gray-500">
+                                {format(new Date(feedbackItem.date), 'yyyy-MM-dd HH:mm')}
+                              </span>
+                              <span className="text-xs text-gray-600">
+                                {feedbackItem.evaluatorName}
+                              </span>
+                            </div>
+                            <p className="text-sm">💬 {feedbackItem.content}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                      <p className="text-sm">💬 {task.feedback}</p>
-                    </div>
-                  </div>
-                ))}
-                {evaluationData.tasks.filter(task => task.feedback).length === 0 && (
+                  );
+                })}
+                {evaluationData.tasks.every(task => !task.feedbackHistory?.length) && (
                   <p className="text-center text-gray-500 py-8">받은 피드백이 없습니다.</p>
                 )}
               </div>

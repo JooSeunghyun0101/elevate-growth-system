@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
-import { EvaluationData, Task } from '@/types/evaluation';
+import { EvaluationData, Task, FeedbackHistoryItem } from '@/types/evaluation';
 import { getEmployeeData } from '@/utils/employeeData';
 
 export const useEvaluationData = (employeeId: string) => {
@@ -37,25 +37,37 @@ export const useEvaluationData = (employeeId: string) => {
         id: '1',
         title: '브랜드 캠페인 기획',
         description: 'Q2 신제품 출시를 위한 통합 브랜드 캠페인 기획 및 실행',
-        weight: 30
+        weight: 30,
+        startDate: '2024-01-15',
+        endDate: '2024-03-15',
+        feedbackHistory: []
       },
       {
         id: '2',
         title: '고객 만족도 조사',
         description: '기존 고객 대상 만족도 조사 설계 및 분석',
-        weight: 25
+        weight: 25,
+        startDate: '2024-02-01',
+        endDate: '2024-04-01',
+        feedbackHistory: []
       },
       {
         id: '3',
         title: '소셜미디어 콘텐츠 관리',
         description: '월간 소셜미디어 콘텐츠 계획 및 게시물 관리',
-        weight: 20
+        weight: 20,
+        startDate: '2024-01-01',
+        endDate: '2024-06-30',
+        feedbackHistory: []
       },
       {
         id: '4',
         title: '팀 프로젝트 협업',
         description: '디자인팀과의 협업 프로젝트 진행',
-        weight: 25
+        weight: 25,
+        startDate: '2024-03-01',
+        endDate: '2024-05-31',
+        feedbackHistory: []
       }
     ]
   });
@@ -91,6 +103,47 @@ export const useEvaluationData = (employeeId: string) => {
       }),
       lastModified: new Date().toISOString()
     }));
+  };
+
+  const handleTaskUpdate = (taskId: string, updates: { title?: string; description?: string; startDate?: string; endDate?: string }) => {
+    setEvaluationData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(task => 
+        task.id === taskId 
+          ? { ...task, ...updates, lastModified: new Date().toISOString() }
+          : task
+      ),
+      lastModified: new Date().toISOString()
+    }));
+
+    // Send notification to evaluatee if evaluator made changes
+    if (user?.role === 'evaluator') {
+      const changes = Object.entries(updates)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => {
+          switch (key) {
+            case 'title': return `과업명: ${value}`;
+            case 'description': return `설명: ${value}`;
+            case 'startDate': return `시작일: ${value}`;
+            case 'endDate': return `종료일: ${value}`;
+            default: return `${key}: ${value}`;
+          }
+        });
+
+      if (changes.length > 0) {
+        const task = evaluationData.tasks.find(t => t.id === taskId);
+        addNotification({
+          recipientId: employeeId,
+          title: '과업 내용 수정',
+          message: `평가자가 "${task?.title}" 과업을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`,
+          type: 'task_updated',
+          priority: 'medium',
+          senderId: user.id,
+          senderName: user.name,
+          relatedEvaluationId: employeeId
+        });
+      }
+    }
   };
 
   const handleWeightChange = (taskId: string, weight: number) => {
@@ -163,6 +216,22 @@ export const useEvaluationData = (employeeId: string) => {
   };
 
   const handleFeedbackChange = (taskId: string, feedback: string) => {
+    const task = evaluationData.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Add to feedback history if feedback is different and not empty
+    let updatedFeedbackHistory = task.feedbackHistory || [];
+    if (feedback.trim() && feedback !== task.feedback) {
+      const newFeedbackItem: FeedbackHistoryItem = {
+        id: `feedback-${Date.now()}`,
+        content: feedback,
+        date: new Date().toISOString(),
+        evaluatorName: user?.name || '평가자',
+        evaluatorId: user?.id || 'unknown'
+      };
+      updatedFeedbackHistory = [...updatedFeedbackHistory, newFeedbackItem];
+    }
+
     setEvaluationData(prev => ({
       ...prev,
       tasks: prev.tasks.map(task => 
@@ -170,6 +239,7 @@ export const useEvaluationData = (employeeId: string) => {
           ? { 
               ...task, 
               feedback,
+              feedbackHistory: updatedFeedbackHistory,
               feedbackDate: new Date().toISOString(),
               evaluatorName: user?.name || '평가자'
             }
@@ -328,6 +398,7 @@ export const useEvaluationData = (employeeId: string) => {
     handleMethodClick,
     handleScopeClick,
     handleFeedbackChange,
+    handleTaskUpdate,
     calculateTotalScore,
     isEvaluationComplete,
     isAchieved,

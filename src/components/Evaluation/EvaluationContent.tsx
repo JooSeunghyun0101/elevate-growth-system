@@ -9,7 +9,7 @@ interface EvaluationContentProps {
   onScopeClick: (taskId: string, scope: string) => void;
   onFeedbackChange: (taskId: string, feedback: string) => void;
   onWeightChange: (taskId: string, weight: number) => void;
-  onTaskUpdate?: (taskId: string, updates: { title?: string; description?: string }) => void;
+  onTaskUpdate?: (taskId: string, updates: { title?: string; description?: string; startDate?: string; endDate?: string }) => void;
 }
 
 const EvaluationContent: React.FC<EvaluationContentProps> = ({
