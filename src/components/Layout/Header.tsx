@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationBell from '@/components/Notification/NotificationBell';
 
 interface HeaderProps {
   userRole: string;
@@ -67,6 +68,7 @@ export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4">
+          <NotificationBell />
           <div className="flex items-center space-x-2">
             <User className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700 hidden sm:inline">{userName}</span>

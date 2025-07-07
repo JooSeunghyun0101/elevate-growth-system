@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Star, Target, Users, Award } from 'lucide-react';
+import { X, Star, Target, Users, Award, CheckCircle, ArrowRight, Clock } from 'lucide-react';
 
 interface EvaluationGuideProps {
   onClose: () => void;
@@ -11,16 +11,16 @@ interface EvaluationGuideProps {
 
 const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <Card className="w-full max-w-5xl h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-4 sm:px-6 flex-shrink-0">
           <div>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Star className="h-6 w-6 text-orange-500" />
+            <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+              <Star className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
               평가 가이드
             </CardTitle>
-            <CardDescription>
-              효과적인 성과 평가를 위한 가이드라인
+            <CardDescription className="text-xs sm:text-sm">
+              효과적인 성과 평가를 위한 상세 가이드라인
             </CardDescription>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -28,115 +28,215 @@ const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
           </Button>
         </CardHeader>
         
-        <CardContent className="overflow-y-auto max-h-[70vh] space-y-6">
-          {/* 점수 체계 */}
+        <CardContent className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-4 sm:px-6">
+          {/* 평가 절차 */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Award className="h-5 w-5 text-orange-500" />
-              점수 체계
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+              평가 절차
             </h3>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">5점 (매우 우수)</span>
-                  <Badge className="bg-green-100 text-green-800">탁월</Badge>
+            <div className="grid gap-2 sm:gap-3">
+              <div className="flex items-start gap-3 p-3 border rounded-lg">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-orange-600">1</span>
                 </div>
-                <p className="text-sm text-gray-600">기대를 크게 상회하는 성과</p>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm sm:text-base mb-1">과업 검토</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">피평가자의 과업 목록과 가중치를 확인합니다. 필요시 과업 관리에서 수정할 수 있습니다.</p>
+                </div>
               </div>
-              <div className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">4점 (우수)</span>
-                  <Badge className="bg-blue-100 text-blue-800">우수</Badge>
+              <div className="flex items-start gap-3 p-3 border rounded-lg">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-orange-600">2</span>
                 </div>
-                <p className="text-sm text-gray-600">기대를 상회하는 성과</p>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm sm:text-base mb-1">기여방식 평가</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">각 과업에 대해 피평가자의 기여방식(총괄/리딩/실무/지원)을 선택합니다.</p>
+                </div>
               </div>
-              <div className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">3점 (보통)</span>
-                  <Badge className="bg-yellow-100 text-yellow-800">충족</Badge>
+              <div className="flex items-start gap-3 p-3 border rounded-lg">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-orange-600">3</span>
                 </div>
-                <p className="text-sm text-gray-600">기대 수준에 부합하는 성과</p>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm sm:text-base mb-1">기여범위 평가</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">과업의 영향 범위(의존적/독립적/상호적/전략적)를 평가합니다.</p>
+                </div>
               </div>
-              <div className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">2점 (개선필요)</span>
-                  <Badge className="bg-orange-100 text-orange-800">미흡</Badge>
+              <div className="flex items-start gap-3 p-3 border rounded-lg">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-orange-600">4</span>
                 </div>
-                <p className="text-sm text-gray-600">기대에 미치지 못하는 성과</p>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm sm:text-base mb-1">피드백 작성</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">구체적이고 건설적인 피드백을 작성하여 성장 방향을 제시합니다.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 border rounded-lg">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm sm:text-base mb-1">평가 완료</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">모든 과업 평가 완료 후 저장하여 평가를 마무리합니다.</p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* 기여방법 */}
+          {/* 점수 매트릭스 */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Target className="h-5 w-5 text-orange-500" />
-              기여방법
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <Award className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+              점수 매트릭스
             </h3>
-            <div className="grid gap-2 md:grid-cols-3">
-              <div className="p-3 border rounded-lg text-center">
-                <Badge variant="outline" className="mb-2">주도</Badge>
-                <p className="text-sm text-gray-600">업무를 주도적으로 이끌어감</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm border border-gray-200 rounded-lg">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="p-2 sm:p-3 text-left border-b">기여방식 \ 기여범위</th>
+                    <th className="p-2 sm:p-3 text-center border-b">의존적</th>
+                    <th className="p-2 sm:p-3 text-center border-b">독립적</th>
+                    <th className="p-2 sm:p-3 text-center border-b">상호적</th>
+                    <th className="p-2 sm:p-3 text-center border-b">전략적</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="p-2 sm:p-3 font-medium border-b">총괄</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-orange-50">2점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-orange-100">3점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-orange-200">4점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-orange-300">4점</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 sm:p-3 font-medium border-b">리딩</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-100">2점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-200">3점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-300">4점</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 sm:p-3 font-medium border-b">실무</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-100">2점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-200">3점</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 sm:p-3 font-medium">지원</td>
+                    <td className="p-2 sm:p-3 text-center bg-gray-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center bg-gray-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center bg-gray-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center bg-gray-100">2점</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 기여방식 상세 설명 */}
+          <div className="space-y-3">
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <Target className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+              기여방식 상세
+            </h3>
+            <div className="grid gap-2 sm:gap-3 sm:grid-cols-2">
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-orange-100 text-orange-800 text-xs">총괄</Badge>
+                  <span className="text-xs sm:text-sm font-medium">업무 전체를 책임지고 관리</span>
+                </div>
+                <p className="text-xs text-gray-600">프로젝트나 업무의 전체적인 방향을 설정하고 다른 구성원들을 이끌어 목표를 달성하는 역할</p>
               </div>
-              <div className="p-3 border rounded-lg text-center">
-                <Badge variant="outline" className="mb-2">참여</Badge>
-                <p className="text-sm text-gray-600">업무에 적극적으로 참여함</p>
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">리딩</Badge>
+                  <span className="text-xs sm:text-sm font-medium">특정 영역을 주도적으로 담당</span>
+                </div>
+                <p className="text-xs text-gray-600">업무의 특정 부분에서 주도적인 역할을 하며, 해당 영역의 성과에 직접적인 책임을 지는 역할</p>
               </div>
-              <div className="p-3 border rounded-lg text-center">
-                <Badge variant="outline" className="mb-2">지원</Badge>
-                <p className="text-sm text-gray-600">업무를 지원하고 보조함</p>
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">실무</Badge>
+                  <span className="text-xs sm:text-sm font-medium">핵심 업무를 직접 수행</span>
+                </div>
+                <p className="text-xs text-gray-600">주어진 업무를 성실히 수행하며, 업무의 질적 완성도에 기여하는 역할</p>
+              </div>
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">지원</Badge>
+                  <span className="text-xs sm:text-sm font-medium">다른 구성원을 보조하고 지원</span>
+                </div>
+                <p className="text-xs text-gray-600">주 담당자를 보조하여 업무가 원활히 진행될 수 있도록 돕는 역할</p>
               </div>
             </div>
           </div>
 
-          {/* 기여범위 */}
+          {/* 기여범위 상세 설명 */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5 text-orange-500" />
-              기여범위
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+              기여범위 상세
             </h3>
-            <div className="grid gap-2 md:grid-cols-4">
-              <div className="p-3 border rounded-lg text-center">
-                <Badge variant="outline" className="mb-2">개인</Badge>
-                <p className="text-sm text-gray-600">개인 업무 범위</p>
+            <div className="grid gap-2 sm:gap-3 sm:grid-cols-2">
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">의존적</Badge>
+                  <span className="text-xs sm:text-sm font-medium">지시받은 업무 수행</span>
+                </div>
+                <p className="text-xs text-gray-600">상급자나 동료의 지시나 가이드라인에 따라 업무를 수행하는 범위</p>
               </div>
-              <div className="p-3 border rounded-lg text-center">
-                <Badge variant="outline" className="mb-2">팀</Badge>
-                <p className="text-sm text-gray-600">팀 단위 업무</p>
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">독립적</Badge>
+                  <span className="text-xs sm:text-sm font-medium">자율적 업무 수행</span>
+                </div>
+                <p className="text-xs text-gray-600">개인의 판단과 책임 하에 독립적으로 업무를 기획하고 실행하는 범위</p>
               </div>
-              <div className="p-3 border rounded-lg text-center">
-                <Badge variant="outline" className="mb-2">부서</Badge>
-                <p className="text-sm text-gray-600">부서 단위 업무</p>
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">상호적</Badge>
+                  <span className="text-xs sm:text-sm font-medium">팀 단위 협업</span>
+                </div>
+                <p className="text-xs text-gray-600">팀 내 다른 구성원들과 긴밀히 협력하여 공동의 목표를 달성하는 범위</p>
               </div>
-              <div className="p-3 border rounded-lg text-center">
-                <Badge variant="outline" className="mb-2">전사</Badge>
-                <p className="text-sm text-gray-600">전사 단위 업무</p>
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">전략적</Badge>
+                  <span className="text-xs sm:text-sm font-medium">조직 전체에 영향</span>
+                </div>
+                <p className="text-xs text-gray-600">부서를 넘어 조직 전체의 방향성이나 성과에 영향을 미치는 범위</p>
               </div>
             </div>
           </div>
 
           {/* 평가 원칙 */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">평가 원칙</h3>
+            <h3 className="text-base sm:text-lg font-semibold">평가 원칙</h3>
             <div className="space-y-2">
               <div className="p-3 ok-bright-gray rounded-lg">
-                <p className="font-medium mb-1">🎯 객관적 평가</p>
-                <p className="text-sm text-gray-600">구체적인 사실과 결과를 바탕으로 평가합니다.</p>
+                <p className="font-medium mb-1 text-sm sm:text-base">🎯 객관적 평가</p>
+                <p className="text-xs sm:text-sm text-gray-600">구체적인 사실과 결과를 바탕으로 평가하며, 개인적인 선입견을 배제합니다.</p>
               </div>
               <div className="p-3 ok-bright-gray rounded-lg">
-                <p className="font-medium mb-1">💬 건설적 피드백</p>
-                <p className="text-sm text-gray-600">개선점과 발전 방향을 제시하는 피드백을 작성합니다.</p>
+                <p className="font-medium mb-1 text-sm sm:text-base">💬 건설적 피드백</p>
+                <p className="text-xs sm:text-sm text-gray-600">단순한 평가를 넘어 구체적인 개선점과 발전 방향을 제시합니다.</p>
               </div>
               <div className="p-3 ok-bright-gray rounded-lg">
-                <p className="font-medium mb-1">⚖️ 공정한 기준</p>
-                <p className="text-sm text-gray-600">모든 평가 대상자에게 동일한 기준을 적용합니다.</p>
+                <p className="font-medium mb-1 text-sm sm:text-base">⚖️ 공정한 기준</p>
+                <p className="text-xs sm:text-sm text-gray-600">모든 평가 대상자에게 동일한 기준과 프로세스를 적용합니다.</p>
+              </div>
+              <div className="p-3 ok-bright-gray rounded-lg">
+                <p className="font-medium mb-1 text-sm sm:text-base">🔄 지속적 개선</p>
+                <p className="text-xs sm:text-sm text-gray-600">평가는 일회성이 아닌 지속적인 성과 향상을 위한 도구로 활용합니다.</p>
               </div>
             </div>
           </div>
         </CardContent>
 
-        <div className="p-6 border-t bg-gray-50 flex justify-end">
-          <Button onClick={onClose} className="ok-orange hover:opacity-90">
+        <div className="border-t bg-gray-50 flex-shrink-0 p-4 sm:p-6">
+          <Button onClick={onClose} className="ok-orange hover:opacity-90 w-full sm:w-auto sm:ml-auto flex">
             확인
           </Button>
         </div>

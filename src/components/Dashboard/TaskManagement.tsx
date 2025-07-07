@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -134,40 +135,44 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div>
-            <CardTitle className="text-2xl">과업 관리</CardTitle>
-            <CardDescription className="flex items-center gap-2">
-              과업을 추가하거나 수정할 수 있습니다. 총 가중치: {totalWeight}%
-              {totalWeight !== 100 && (
-                <Badge variant="destructive">
-                  가중치 합계가 100%가 아닙니다
-                </Badge>
-              )}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <Card className="w-full max-w-4xl h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-4 sm:px-6 flex-shrink-0">
+          <div className="min-w-0 flex-1 mr-4">
+            <CardTitle className="text-xl sm:text-2xl">과업 관리</CardTitle>
+            <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <span>과업을 추가하거나 수정할 수 있습니다.</span>
+              <div className="flex items-center gap-2">
+                <span>총 가중치: {totalWeight}%</span>
+                {totalWeight !== 100 && (
+                  <Badge variant="destructive" className="text-xs">
+                    가중치 합계가 100%가 아닙니다
+                  </Badge>
+                )}
+              </div>
             </CardDescription>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
         
-        <CardContent className="overflow-y-auto max-h-[70vh] space-y-4">
+        <CardContent className="flex-1 overflow-y-auto space-y-4 px-4 sm:px-6">
           {tasks.map((task, index) => (
-            <div key={task.id} className="p-4 border rounded-lg space-y-3">
+            <div key={task.id} className="p-3 sm:p-4 border rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline">과업 {index + 1}</Badge>
+                  <Badge variant="outline" className="text-xs">과업 {index + 1}</Badge>
                   {task.score !== undefined && (
-                    <Badge className="status-achieved">평가됨</Badge>
+                    <Badge className="status-achieved text-xs">평가됨</Badge>
                   )}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-1 sm:space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingTask(editingTask === task.id ? null : task.id)}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
                     {editingTask === task.id ? '완료' : '편집'}
                   </Button>
@@ -175,8 +180,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     variant="destructive"
                     size="sm"
                     onClick={() => deleteTask(task.id)}
+                    className="px-2 sm:px-3"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
@@ -184,26 +190,28 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               {editingTask === task.id ? (
                 <div className="space-y-3">
                   <div>
-                    <Label htmlFor={`title-${task.id}`}>과업명</Label>
+                    <Label htmlFor={`title-${task.id}`} className="text-sm">과업명</Label>
                     <Input
                       id={`title-${task.id}`}
                       value={task.title}
                       onChange={(e) => updateTask(task.id, { title: e.target.value })}
                       placeholder="과업명을 입력하세요"
+                      className="text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`description-${task.id}`}>과업 설명</Label>
+                    <Label htmlFor={`description-${task.id}`} className="text-sm">과업 설명</Label>
                     <Textarea
                       id={`description-${task.id}`}
                       value={task.description}
                       onChange={(e) => updateTask(task.id, { description: e.target.value })}
                       placeholder="과업 설명을 입력하세요"
                       rows={3}
+                      className="text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`weight-${task.id}`}>가중치 (%)</Label>
+                    <Label htmlFor={`weight-${task.id}`} className="text-sm">가중치 (%)</Label>
                     <Input
                       id={`weight-${task.id}`}
                       type="number"
@@ -212,17 +220,18 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       value={task.weight}
                       onChange={(e) => updateTask(task.id, { weight: parseInt(e.target.value) || 0 })}
                       placeholder="가중치를 입력하세요"
+                      className="text-sm"
                     />
                   </div>
                 </div>
               ) : (
                 <div>
-                  <h3 className="font-medium mb-1">{task.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  <h3 className="font-medium mb-1 text-sm sm:text-base">{task.title}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">{task.description}</p>
+                  <div className="flex items-center space-x-4 text-xs sm:text-sm text-muted-foreground">
                     <span>가중치: {task.weight}%</span>
                     {task.contributionMethod && task.contributionScope && (
-                      <Badge variant="outline" className="border-orange-200 text-orange-700">
+                      <Badge variant="outline" className="border-orange-200 text-orange-700 text-xs">
                         {task.contributionMethod}/{task.contributionScope}
                       </Badge>
                     )}
@@ -235,29 +244,37 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           <Button
             variant="outline"
             onClick={addNewTask}
-            className="w-full border-dashed border-orange-200 text-orange-700 hover:bg-orange-50"
+            className="w-full border-dashed border-orange-200 text-orange-700 hover:bg-orange-50 text-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
             새 과업 추가
           </Button>
         </CardContent>
 
-        <div className="p-6 border-t bg-gray-50 flex justify-between">
-          <div className="text-sm text-muted-foreground">
-            총 {tasks.length}개 과업 • 가중치 합계: {totalWeight}%
-          </div>
-          <div className="space-x-2">
-            <Button variant="outline" onClick={onClose}>
-              취소
-            </Button>
-            <Button 
-              onClick={handleSave}
-              className="ok-orange hover:opacity-90"
-              disabled={totalWeight !== 100}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              저장
-            </Button>
+        <div className="border-t bg-gray-50 flex-shrink-0">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                총 {tasks.length}개 과업 • 가중치 합계: {totalWeight}%
+              </div>
+              <div className="flex space-x-2 w-full sm:w-auto">
+                <Button 
+                  variant="outline" 
+                  onClick={onClose}
+                  className="flex-1 sm:flex-none text-sm"
+                >
+                  취소
+                </Button>
+                <Button 
+                  onClick={handleSave}
+                  className="ok-orange hover:opacity-90 flex-1 sm:flex-none text-sm"
+                  disabled={totalWeight !== 100}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  저장
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </Card>
