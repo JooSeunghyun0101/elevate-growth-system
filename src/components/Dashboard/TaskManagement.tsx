@@ -16,6 +16,25 @@ interface TaskManagementProps {
   onSave: (updatedData: EvaluationData) => void;
 }
 
+// Employee mapping - evaluator to evaluatees
+const evaluatorMapping: Record<string, Array<{id: string, name: string, position: string, department: string, growthLevel: number}>> = {
+  'H0908033': [ // 박판근
+    { id: 'H1310172', name: '이수한', position: '차장', department: '인사기획팀', growthLevel: 3 },
+    { id: 'H1411166', name: '주승현', position: '차장', department: '인사기획팀', growthLevel: 3 },
+    { id: 'H1911042', name: '김민선', position: '대리', department: '인사기획팀', growthLevel: 2 }
+  ],
+  'H1310159': [ // 김남엽
+    { id: 'H1411231', name: '최은송', position: '차장', department: '인사팀', growthLevel: 3 },
+    { id: 'H1205006', name: '황정원', position: '대리', department: '인사팀', growthLevel: 2 },
+    { id: 'H2301040', name: '김민영', position: '사원', department: '인사팀', growthLevel: 1 },
+    { id: 'H1501077', name: '조혜인', position: '대리', department: '인사팀', growthLevel: 2 }
+  ],
+  'H0807021': [ // 박준형
+    { id: 'H0908033', name: '박판근', position: '차장', department: '인사기획팀', growthLevel: 3 },
+    { id: 'H1310159', name: '김남엽', position: '차장', department: '인사팀', growthLevel: 3 }
+  ]
+};
+
 const TaskManagement: React.FC<TaskManagementProps> = ({
   evaluationData,
   onClose,
@@ -27,6 +46,16 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   const { addNotification } = useNotifications();
 
   const totalWeight = tasks.reduce((sum, task) => sum + task.weight, 0);
+
+  // Function to find evaluator for a specific evaluatee
+  const findEvaluatorForEvaluatee = (evaluateeId: string): string | null => {
+    for (const [evaluatorId, evaluatees] of Object.entries(evaluatorMapping)) {
+      if (evaluatees.some(e => e.id === evaluateeId)) {
+        return evaluatorId;
+      }
+    }
+    return null;
+  };
 
   const addNewTask = () => {
     const newTask: Task = {
@@ -136,65 +165,66 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 
     // Send notifications for changes if user is evaluatee
     if (user?.role === 'evaluatee' && (hasTaskContentChanges || hasStructuralChanges)) {
-      // Find the evaluator to send notification to
-      // For now, we'll send to a generic evaluator - in a real system, this would be the assigned evaluator
-      const evaluatorId = 'evaluator-1'; // This should come from the evaluation assignment
+      // Find the evaluator for this evaluatee
+      const evaluatorId = findEvaluatorForEvaluatee(evaluationData.evaluateeId);
 
-      // Collect all changes for a comprehensive notification
-      const changes: string[] = [];
-      
-      // Check for content changes
-      const changedTasks = tasks.filter(task => {
-        const original = originalTasksMap.get(task.id);
-        return original && (
-          original.title !== task.title || 
-          original.description !== task.description || 
-          original.weight !== task.weight
-        );
-      });
-
-      changedTasks.forEach(task => {
-        const original = originalTasksMap.get(task.id);
-        if (original) {
-          if (original.title !== task.title) {
-            changes.push(`"${original.title}" 과업명 변경`);
-          }
-          if (original.description !== task.description) {
-            changes.push(`"${task.title}" 과업 설명 수정`);
-          }
-          if (original.weight !== task.weight) {
-            changes.push(`"${task.title}" 가중치 ${original.weight}% → ${task.weight}%`);
-          }
-        }
-      });
-
-      // Check for new tasks
-      const newTasks = tasks.filter(task => !originalTasksMap.has(task.id));
-      newTasks.forEach(task => {
-        changes.push(`"${task.title}" 새 과업 추가`);
-      });
-
-      // Check for deleted tasks
-      const deletedTasks = evaluationData.tasks.filter(task => !tasks.find(t => t.id === task.id));
-      deletedTasks.forEach(task => {
-        changes.push(`"${task.title}" 과업 삭제`);
-      });
-
-      if (changes.length > 0) {
-        const changeMessage = changes.length === 1 
-          ? changes[0] 
-          : `${changes.length}개 변경사항: ${changes.slice(0, 2).join(', ')}${changes.length > 2 ? ' 외' : ''}`;
-
-        addNotification({
-          recipientId: evaluatorId,
-          title: '과업 관리 변경',
-          message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다. ${changeMessage}`,
-          type: 'task_updated',
-          priority: 'medium',
-          senderId: user.id,
-          senderName: user.name,
-          relatedEvaluationId: evaluationData.evaluateeId
+      if (evaluatorId) {
+        // Collect all changes for a comprehensive notification
+        const changes: string[] = [];
+        
+        // Check for content changes
+        const changedTasks = tasks.filter(task => {
+          const original = originalTasksMap.get(task.id);
+          return original && (
+            original.title !== task.title || 
+            original.description !== task.description || 
+            original.weight !== task.weight
+          );
         });
+
+        changedTasks.forEach(task => {
+          const original = originalTasksMap.get(task.id);
+          if (original) {
+            if (original.title !== task.title) {
+              changes.push(`"${original.title}" 과업명 변경`);
+            }
+            if (original.description !== task.description) {
+              changes.push(`"${task.title}" 과업 설명 수정`);
+            }
+            if (original.weight !== task.weight) {
+              changes.push(`"${task.title}" 가중치 ${original.weight}% → ${task.weight}%`);
+            }
+          }
+        });
+
+        // Check for new tasks
+        const newTasks = tasks.filter(task => !originalTasksMap.has(task.id));
+        newTasks.forEach(task => {
+          changes.push(`"${task.title}" 새 과업 추가`);
+        });
+
+        // Check for deleted tasks
+        const deletedTasks = evaluationData.tasks.filter(task => !tasks.find(t => t.id === task.id));
+        deletedTasks.forEach(task => {
+          changes.push(`"${task.title}" 과업 삭제`);
+        });
+
+        if (changes.length > 0) {
+          const changeMessage = changes.length === 1 
+            ? changes[0] 
+            : `${changes.length}개 변경사항: ${changes.slice(0, 2).join(', ')}${changes.length > 2 ? ' 외' : ''}`;
+
+          addNotification({
+            recipientId: evaluatorId,
+            title: '과업 관리 변경',
+            message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다. ${changeMessage}`,
+            type: 'task_updated',
+            priority: 'medium',
+            senderId: user.id,
+            senderName: user.name,
+            relatedEvaluationId: evaluationData.evaluateeId
+          });
+        }
       }
     }
     

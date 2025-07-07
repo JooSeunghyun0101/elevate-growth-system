@@ -9,6 +9,7 @@ import { Target, Edit3, Check, X } from 'lucide-react';
 import ScoringChart from '@/components/ScoringChart';
 import ScoreDisplay from './ScoreDisplay';
 import { Task } from '@/types/evaluation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TaskCardProps {
   task: Task;
@@ -17,6 +18,7 @@ interface TaskCardProps {
   onScopeClick: (taskId: string, scope: string) => void;
   onFeedbackChange: (taskId: string, feedback: string) => void;
   onWeightChange: (taskId: string, weight: number) => void;
+  onTaskUpdate?: (taskId: string, updates: { title?: string; description?: string }) => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -25,10 +27,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onMethodClick,
   onScopeClick,
   onFeedbackChange,
-  onWeightChange
+  onWeightChange,
+  onTaskUpdate
 }) => {
+  const { user } = useAuth();
   const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [tempWeight, setTempWeight] = useState(task.weight);
+  const [isEditingTask, setIsEditingTask] = useState(false);
+  const [tempTitle, setTempTitle] = useState(task.title);
+  const [tempDescription, setTempDescription] = useState(task.description);
 
   const handleWeightEdit = () => {
     setTempWeight(task.weight);
@@ -47,15 +54,82 @@ const TaskCard: React.FC<TaskCardProps> = ({
     setIsEditingWeight(false);
   };
 
+  const handleTaskEdit = () => {
+    setTempTitle(task.title);
+    setTempDescription(task.description);
+    setIsEditingTask(true);
+  };
+
+  const handleTaskSave = () => {
+    if (onTaskUpdate && (tempTitle.trim() !== task.title || tempDescription.trim() !== task.description)) {
+      onTaskUpdate(task.id, {
+        title: tempTitle.trim(),
+        description: tempDescription.trim()
+      });
+    }
+    setIsEditingTask(false);
+  };
+
+  const handleTaskCancel = () => {
+    setTempTitle(task.title);
+    setTempDescription(task.description);
+    setIsEditingTask(false);
+  };
+
   const isNoContribution = task.contributionMethod === '기여없음' && task.contributionScope === '기여없음';
+  const canEditTask = user?.role === 'evaluator' && onTaskUpdate;
 
   return (
     <Card>
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base sm:text-lg truncate">{task.title}</CardTitle>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+            {isEditingTask ? (
+              <div className="space-y-2">
+                <Input
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  className="text-base sm:text-lg font-semibold"
+                  placeholder="과업명을 입력하세요"
+                />
+                <Textarea
+                  value={tempDescription}
+                  onChange={(e) => setTempDescription(e.target.value)}
+                  className="text-xs sm:text-sm resize-none"
+                  rows={2}
+                  placeholder="과업 설명을 입력하세요"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleTaskSave}
+                    className="text-green-600 hover:text-green-800"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleTaskCancel}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-base sm:text-lg truncate">{task.title}</CardTitle>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                </div>
+                {canEditTask && (
+                  <button
+                    onClick={handleTaskEdit}
+                    className="text-gray-500 hover:text-gray-700 flex-shrink-0"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {isEditingWeight ? (

@@ -252,7 +252,8 @@ export const EvaluatorDashboard: React.FC = () => {
           </p>
         </div>
         <Button 
-          className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
+          variant="outline"
+          className="text-xs sm:text-sm px-2 sm:px-4"
           onClick={() => setShowEvaluationGuide(true)}
         >
           <Star className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -261,7 +262,6 @@ export const EvaluatorDashboard: React.FC = () => {
         </Button>
       </div>
 
-      {/* My Stats */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {myStats.map((stat, index) => (
           <Card key={index}>
