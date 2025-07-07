@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,14 +89,17 @@ export const EvaluateeDashboard: React.FC = () => {
 
   const completedTasks = evaluationData.tasks.filter(task => task.score !== undefined).length;
   const progress = Math.round((completedTasks / evaluationData.tasks.length) * 100);
-  const totalScore = Math.floor(evaluationData.tasks.reduce((sum, task) => {
+  
+  // Calculate both exact and floored scores
+  const exactScore = Math.round(evaluationData.tasks.reduce((sum, task) => {
     if (task.score) {
       return sum + (task.score * task.weight / 100);
     }
     return sum;
-  }, 0));
+  }, 0) * 10) / 10;
+  const flooredScore = Math.floor(exactScore);
 
-  const isAchieved = totalScore >= evaluationData.growthLevel;
+  const isAchieved = flooredScore >= evaluationData.growthLevel;
   const feedbackCount = evaluationData.tasks.filter(task => task.feedback).length;
 
   // Updated stats with mobile-friendly labels
@@ -178,7 +180,7 @@ export const EvaluateeDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Performance Summary - Updated order and text */}
+      {/* Performance Summary - Updated with decimal scores */}
       <Card>
         <CardHeader>
           <CardTitle>나의 성과 요약</CardTitle>
@@ -191,7 +193,9 @@ export const EvaluateeDashboard: React.FC = () => {
               <p className="text-sm text-muted-foreground">성장 레벨</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">{totalScore}</div>
+              <div className="text-3xl font-bold text-orange-600 mb-2">
+                {exactScore !== flooredScore ? `${flooredScore}점(${exactScore})` : `${flooredScore}점`}
+              </div>
               <p className="text-sm text-muted-foreground">현재 점수</p>
             </div>
             <div className="text-center">
@@ -350,7 +354,9 @@ export const EvaluateeDashboard: React.FC = () => {
                       <p className="text-xs text-muted-foreground">성장 레벨</p>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-orange-600">{totalScore}</div>
+                      <div className="text-lg font-bold text-orange-600">
+                        {exactScore !== flooredScore ? `${flooredScore}점(${exactScore})` : `${flooredScore}점`}
+                      </div>
                       <p className="text-xs text-muted-foreground">현재 점수</p>
                     </div>
                     <div>

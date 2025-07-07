@@ -232,44 +232,66 @@ export const useEvaluationData = (employeeId: string) => {
       // Send notifications only for actual changes when evaluator saves
       if (user?.role === 'evaluator' && previousData) {
         const changes: string[] = [];
+        const taskChanges: string[] = [];
         
         // Compare each task for changes
         evaluationData.tasks.forEach(currentTask => {
           const previousTask = previousData.tasks.find(t => t.id === currentTask.id);
           if (!previousTask) return; // Skip new tasks
           
+          const taskChangesForThisTask: string[] = [];
+          
           // Check for evaluation changes
           if (previousTask.contributionMethod !== currentTask.contributionMethod) {
-            changes.push(`"${currentTask.title}" 기여방식 변경`);
+            const methodText = currentTask.contributionMethod === '기여없음' ? '기여없음' : `${currentTask.contributionMethod} 방식`;
+            taskChangesForThisTask.push(`기여방식: ${methodText}`);
           }
           
           if (previousTask.contributionScope !== currentTask.contributionScope) {
-            changes.push(`"${currentTask.title}" 기여범위 변경`);
+            const scopeText = currentTask.contributionScope === '기여없음' ? '기여없음' : `${currentTask.contributionScope} 범위`;
+            taskChangesForThisTask.push(`기여범위: ${scopeText}`);
           }
           
           if (previousTask.score !== currentTask.score) {
-            changes.push(`"${currentTask.title}" 점수 변경`);
+            taskChangesForThisTask.push(`점수: ${currentTask.score || 0}점`);
           }
           
           if (previousTask.feedback !== currentTask.feedback && currentTask.feedback?.trim()) {
-            changes.push(`"${currentTask.title}" 피드백 ${previousTask.feedback ? '수정' : '추가'}`);
+            taskChangesForThisTask.push(`피드백 ${previousTask.feedback ? '수정' : '추가'}`);
+          }
+
+          // If there are changes for this task, add them to overall changes
+          if (taskChangesForThisTask.length > 0) {
+            changes.push(`"${currentTask.title}": ${taskChangesForThisTask.join(', ')}`);
+            taskChanges.push(currentTask.title);
           }
         });
 
         // Send notification only if there are actual changes
         if (changes.length > 0) {
-          const changeMessage = changes.length === 1 
-            ? changes[0] 
-            : `${changes.length}개 변경사항: ${changes.slice(0, 2).join(', ')}${changes.length > 2 ? ' 외' : ''}`;
+          const isCompleted = isEvaluationComplete();
+          const wasCompleted = previousData.evaluationStatus === 'completed';
+          
+          let title = '';
+          let message = '';
+          
+          if (isCompleted && !wasCompleted) {
+            title = '평가 완료';
+            message = `평가자가 성과평가를 완료했습니다.\n\n변경된 내용:\n${changes.join('\n')}`;
+          } else if (isCompleted && wasCompleted) {
+            title = '평가 내용 수정';
+            message = `평가자가 완료된 평가 내용을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`;
+          } else {
+            title = '평가 내용 수정';
+            message = `평가자가 평가 내용을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`;
+          }
 
           addNotification({
             recipientId: employeeId,
-            title: isEvaluationComplete() ? '평가 완료' : '평가 내용 수정',
-            message: isEvaluationComplete() 
-              ? `평가자가 성과평가를 완료했습니다.`
-              : `평가자가 평가 내용을 수정했습니다. ${changeMessage}`,
-            type: isEvaluationComplete() ? 'evaluation_completed' : 'evaluation_updated',
-            priority: isEvaluationComplete() ? 'high' : 'medium',
+            title,
+            message,
+            type: isCompleted ? 'evaluation_completed' : 'evaluation_updated',
+            priority: isCompleted ? 'high' : 'medium',
             senderId: user.id,
             senderName: user.name,
             relatedEvaluationId: employeeId

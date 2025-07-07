@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,6 +43,7 @@ interface EvaluateeInfo {
   lastActivity: string;
   status: 'in-progress' | 'completed';
   totalScore?: number;
+  exactScore?: number;
   growthLevel?: number;
 }
 
@@ -99,13 +99,14 @@ export const EvaluatorDashboard: React.FC = () => {
           const completedTasks = evaluationData.tasks.filter(task => task.score !== undefined).length;
           const progress = Math.round((completedTasks / evaluationData.tasks.length) * 100);
           
-          // Calculate total score
-          const totalScore = Math.floor(evaluationData.tasks.reduce((sum, task) => {
+          // Calculate exact and floored scores
+          const exactScore = Math.round(evaluationData.tasks.reduce((sum, task) => {
             if (task.score) {
               return sum + (task.score * task.weight / 100);
             }
             return sum;
-          }, 0));
+          }, 0) * 10) / 10;
+          const flooredScore = Math.floor(exactScore);
 
           const status = evaluationData.evaluationStatus;
 
@@ -136,7 +137,8 @@ export const EvaluatorDashboard: React.FC = () => {
               day: 'numeric'
             }) + ' 전',
             status,
-            totalScore,
+            totalScore: flooredScore,
+            exactScore: exactScore,
             growthLevel: evaluationData.growthLevel
           });
         } catch (error) {
@@ -157,6 +159,7 @@ export const EvaluatorDashboard: React.FC = () => {
           lastActivity: '미시작',
           status: 'in-progress' as const,
           totalScore: 0,
+          exactScore: 0,
           growthLevel: evaluatee.growthLevel
         });
       }
@@ -315,7 +318,10 @@ export const EvaluatorDashboard: React.FC = () => {
                       </Badge>
                       {person.totalScore !== undefined && person.growthLevel && (
                         <div className="text-xs text-gray-600">
-                          {person.totalScore}점/Lv.{person.growthLevel}
+                          {person.exactScore && person.exactScore !== person.totalScore 
+                            ? `${person.totalScore}점(${person.exactScore})/Lv.${person.growthLevel}`
+                            : `${person.totalScore}점/Lv.${person.growthLevel}`
+                          }
                         </div>
                       )}
                     </div>
@@ -400,7 +406,10 @@ export const EvaluatorDashboard: React.FC = () => {
                       <div className="text-right">
                         <Badge className="status-achieved mb-1 text-xs">평가 완료</Badge>
                         <p className="text-xs sm:text-sm text-gray-600">
-                          총점: {person.totalScore}점 / 목표: {person.growthLevel}점
+                          총점: {person.exactScore && person.exactScore !== person.totalScore 
+                            ? `${person.totalScore}점(${person.exactScore})`
+                            : `${person.totalScore}점`
+                          } / 목표: {person.growthLevel}점
                         </p>
                       </div>
                     </div>
