@@ -15,7 +15,7 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   selectedScope, 
   selectedMethod, 
   title = "스코어링 매트릭스",
-  size = 'small',
+  size = 'medium',
   onMethodClick,
   onScopeClick
 }) => {
@@ -40,7 +40,7 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
       case 'large':
         return 'w-20 h-20 text-lg';
       default:
-        return 'w-12 h-12 text-sm';
+        return 'w-14 h-14 text-sm';
     }
   };
 
@@ -51,7 +51,7 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
       case 'large':
         return 'w-20 h-20 text-base';
       default:
-        return 'w-12 h-12 text-xs';
+        return 'w-14 h-14 text-xs';
     }
   };
 

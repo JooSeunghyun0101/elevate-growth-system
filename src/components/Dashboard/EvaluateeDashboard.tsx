@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Target, CheckCircle, Clock, MessageSquare, TrendingUp, ChevronDown, ChevronUp, Settings, PieChart, Award } from 'lucide-react';
+import { Target, CheckCircle, Clock, MessageSquare, TrendingUp, ChevronDown, ChevronUp, Settings, PieChart, Award, Calendar as CalendarIcon } from 'lucide-react';
 import TaskGanttChart from '@/components/TaskGanttChart';
 import TaskManagement from '@/components/Dashboard/TaskManagement';
 import { Task, FeedbackHistoryItem, EvaluationData } from '@/types/evaluation';
@@ -211,19 +211,73 @@ export const EvaluateeDashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* Performance Summary Section */}
+      {completedTasks > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">나의 성과 요약</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">전체 과업 평가 결과를 기반으로 한 성과 분석입니다</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Overall Score */}
+              <div className="text-center p-6 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
+                <div className="flex items-center justify-center mb-4">
+                  <Award className={`w-8 h-8 mr-2 ${isAchieved ? 'text-green-600' : 'text-orange-600'}`} />
+                  <h3 className="text-xl font-bold">종합 점수</h3>
+                </div>
+                <div className="text-3xl font-bold mb-2">
+                  {flooredScore}점
+                </div>
+                <div className="text-sm text-gray-600 mb-4">
+                  목표 레벨: {evaluationData.growthLevel}점
+                </div>
+                <Badge 
+                  className={isAchieved ? 'status-achieved' : 'bg-orange-100 text-orange-800 border-orange-200'}
+                >
+                  {isAchieved ? '목표 달성' : '목표 미달성'}
+                </Badge>
+              </div>
+
+              {/* Evaluation Progress */}
+              <div className="p-4 border rounded-lg bg-gray-50">
+                <h4 className="font-medium text-sm mb-2">평가 진행 상황</h4>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">{completedTasks}</div>
+                    <div className="text-xs text-gray-600">완료된 평가</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-orange-600">{inProgressTasks}</div>
+                    <div className="text-xs text-gray-600">진행 중인 평가</div>
+                  </div>
+                </div>
+                <Progress 
+                  value={(completedTasks / totalTasks) * 100} 
+                  className="mt-3 [&>div]:ok-green" 
+                />
+                <div className="text-xs text-gray-600 text-center mt-2">
+                  전체 진행률: {Math.round((completedTasks / totalTasks) * 100)}%
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="tasks" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="tasks" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">내 과업</span>
             <span className="inline sm:hidden">과업</span>
           </TabsTrigger>
+          <TabsTrigger value="schedule" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">과업 일정</span>
+            <span className="inline sm:hidden">일정</span>
+          </TabsTrigger>
           <TabsTrigger value="feedback" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">피드백 이력</span>
             <span className="inline sm:hidden">피드백</span>
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">성과 분석</span>
-            <span className="inline sm:hidden">성과</span>
           </TabsTrigger>
         </TabsList>
 
@@ -279,12 +333,21 @@ export const EvaluateeDashboard: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              {/* Task Schedule Gantt Chart */}
-              <div className="mt-6">
-                <h4 className="font-medium text-sm sm:text-base mb-3">과업 일정</h4>
-                <TaskGanttChart tasks={evaluationData.tasks} />
-              </div>
+        <TabsContent value="schedule" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg flex items-center">
+                <CalendarIcon className="w-5 h-5 mr-2 text-blue-600" />
+                과업 일정표
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">내 과업들의 전체 일정을 간트차트로 확인하세요</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TaskGanttChart tasks={evaluationData.tasks} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -359,106 +422,6 @@ export const EvaluateeDashboard: React.FC = () => {
                   })
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="performance" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">나의 성과 요약</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">전체 과업 평가 결과를 기반으로 한 성과 분석입니다</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {completedTasks === 0 ? (
-                <div className="text-center py-12">
-                  <TrendingUp className="w-10 h-10 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm">
-                    아직 평가가 완료되지 않았습니다.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Overall Score */}
-                  <div className="text-center p-6 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
-                    <div className="flex items-center justify-center mb-4">
-                      <Award className={`w-8 h-8 mr-2 ${isAchieved ? 'text-green-600' : 'text-orange-600'}`} />
-                      <h3 className="text-xl font-bold">종합 점수</h3>
-                    </div>
-                    <div className="text-3xl font-bold mb-2">
-                      {flooredScore}점
-                    </div>
-                    <div className="text-sm text-gray-600 mb-4">
-                      목표 레벨: {evaluationData.growthLevel}점
-                    </div>
-                    <Badge 
-                      className={isAchieved ? 'status-achieved' : 'bg-orange-100 text-orange-800 border-orange-200'}
-                    >
-                      {isAchieved ? '목표 달성' : '목표 미달성'}
-                    </Badge>
-                  </div>
-
-                  {/* Task Progress */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-sm sm:text-base flex items-center">
-                      <PieChart className="w-5 h-5 mr-2 text-blue-600" />
-                      과업별 성과
-                    </h4>
-                    <div className="space-y-3">
-                      {evaluationData.tasks.map((task) => (
-                        <div key={task.id} className="p-3 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex-1 min-w-0">
-                              <h5 className="font-medium text-sm truncate">{task.title}</h5>
-                              <div className="text-xs text-gray-500">가중치: {task.weight}%</div>
-                            </div>
-                            {task.score !== undefined ? (
-                              <div className="text-right">
-                                <Badge className="status-achieved text-xs mb-1">
-                                  {task.score}점
-                                </Badge>
-                                <div className="text-xs text-gray-600">
-                                  기여도: {((task.score * task.weight) / 100).toFixed(1)}점
-                                </div>
-                              </div>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">
-                                평가 대기
-                              </Badge>
-                            )}
-                          </div>
-                          <Progress 
-                            value={task.score !== undefined ? (task.score / 4) * 100 : 0} 
-                            className="[&>div]:ok-green" 
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Evaluation Status */}
-                  <div className="p-4 border rounded-lg bg-gray-50">
-                    <h4 className="font-medium text-sm mb-2">평가 진행 상황</h4>
-                    <div className="grid grid-cols-2 gap-4 text-center">
-                      <div>
-                        <div className="text-2xl font-bold text-green-600">{completedTasks}</div>
-                        <div className="text-xs text-gray-600">완료된 평가</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-orange-600">{inProgressTasks}</div>
-                        <div className="text-xs text-gray-600">진행 중인 평가</div>
-                      </div>
-                    </div>
-                    <Progress 
-                      value={(completedTasks / totalTasks) * 100} 
-                      className="mt-3 [&>div]:ok-green" 
-                    />
-                    <div className="text-xs text-gray-600 text-center mt-2">
-                      전체 진행률: {Math.round((completedTasks / totalTasks) * 100)}%
-                    </div>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

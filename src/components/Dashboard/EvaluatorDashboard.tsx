@@ -33,6 +33,12 @@ interface EvaluationData {
     evaluatorName?: string;
     startDate?: string;
     endDate?: string;
+    feedbackHistory?: Array<{
+      id: string;
+      content: string;
+      date: string;
+      evaluatorName: string;
+    }>;
   }>;
 }
 
@@ -123,13 +129,17 @@ export const EvaluatorDashboard: React.FC = () => {
 
           const status = evaluationData.evaluationStatus;
 
-          // Extract feedback data grouped by task
+          // Extract feedback data grouped by task - improved to include all feedback history
           evaluationData.tasks.forEach((task) => {
+            const taskKey = `${evaluationData.evaluateeName}: ${task.title}`;
+            
+            // Initialize feedback array for this task if it doesn't exist
+            if (!feedbacksByTask[taskKey]) {
+              feedbacksByTask[taskKey] = [];
+            }
+
+            // Add current feedback if exists
             if (task.feedback && task.feedback.trim()) {
-              const taskKey = `${evaluationData.evaluateeName}: ${task.title}`;
-              if (!feedbacksByTask[taskKey]) {
-                feedbacksByTask[taskKey] = [];
-              }
               feedbacksByTask[taskKey].push({
                 evaluatee: `${evaluationData.evaluateeName} ${evaluationData.evaluateePosition}`,
                 task: task.title,
@@ -137,6 +147,20 @@ export const EvaluatorDashboard: React.FC = () => {
                 date: task.feedbackDate || task.lastModified || evaluationData.lastModified,
                 score: task.score ? `${task.score}점` : '평가중',
                 evaluatorName: task.evaluatorName || user.name
+              });
+            }
+
+            // Add all feedback history if exists
+            if (task.feedbackHistory && task.feedbackHistory.length > 0) {
+              task.feedbackHistory.forEach(historyItem => {
+                feedbacksByTask[taskKey].push({
+                  evaluatee: `${evaluationData.evaluateeName} ${evaluationData.evaluateePosition}`,
+                  task: task.title,
+                  feedback: historyItem.content,
+                  date: historyItem.date,
+                  score: task.score ? `${task.score}점` : '평가중',
+                  evaluatorName: historyItem.evaluatorName
+                });
               });
             }
           });
@@ -194,7 +218,7 @@ export const EvaluatorDashboard: React.FC = () => {
       }
     });
 
-    // Sort feedbacks by date within each task group
+    // Sort feedbacks by date within each task group (most recent first)
     Object.keys(feedbacksByTask).forEach(taskKey => {
       feedbacksByTask[taskKey].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       feedbacksByTask[taskKey] = feedbacksByTask[taskKey].map(feedback => ({
@@ -500,7 +524,7 @@ export const EvaluatorDashboard: React.FC = () => {
                       </Badge>
                     </div>
                     
-                    {/* Show latest feedback */}
+                    {/* Show latest feedback only initially */}
                     {feedbacks.length > 0 && (
                       <div className="space-y-3">
                         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">

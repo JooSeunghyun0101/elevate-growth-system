@@ -205,47 +205,32 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="flex items-start gap-2">
-                  {/* Edit buttons on the left */}
-                  <div className="flex flex-col gap-1 mr-2">
-                    {canEditTask && (
-                      <button
-                        onClick={handleTaskEdit}
-                        className="text-gray-500 hover:text-gray-700 flex-shrink-0"
-                        title="과업 내용 수정"
-                      >
-                        <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </button>
-                    )}
-                    {user?.role === 'evaluator' && (
-                      <button
-                        onClick={handleWeightEdit}
-                        className="text-gray-500 hover:text-gray-700 flex-shrink-0"
-                        title="가중치 수정"
-                      >
-                        <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base sm:text-lg">{task.title}</CardTitle>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
-                    {task.startDate && task.endDate && (
-                      <div className="flex items-center gap-1 mt-2">
-                        <Calendar className="w-3 h-3 text-gray-500" />
-                        <span className="text-xs text-gray-500">
-                          {task.startDate} ~ {task.endDate}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                <div className="relative">
+                  <CardTitle className="text-base sm:text-lg">{task.title}</CardTitle>
+                  {canEditTask && (
+                    <button
+                      onClick={handleTaskEdit}
+                      className="absolute -left-6 top-1 text-gray-500 hover:text-gray-700"
+                      title="과업 내용 수정"
+                    >
+                      <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </button>
+                  )}
                 </div>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                {task.startDate && task.endDate && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <Calendar className="w-3 h-3 text-gray-500" />
+                    <span className="text-xs text-gray-500">
+                      {task.startDate} ~ {task.endDate}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
           
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 relative">
             {isEditingWeight ? (
               <div className="flex items-center gap-2">
                 <Input
@@ -271,10 +256,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </button>
               </div>
             ) : (
-              <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-lg font-bold">
-                <span className="hidden sm:inline">가중치 {task.weight}%</span>
-                <span className="inline sm:hidden">{task.weight}%</span>
-              </Badge>
+              <>
+                {user?.role === 'evaluator' && (
+                  <button
+                    onClick={handleWeightEdit}
+                    className="absolute -left-6 top-1 text-gray-500 hover:text-gray-700"
+                    title="가중치 수정"
+                  >
+                    <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </button>
+                )}
+                <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-lg font-bold">
+                  <span className="hidden sm:inline">가중치 {task.weight}%</span>
+                  <span className="inline sm:hidden">{task.weight}%</span>
+                </Badge>
+              </>
             )}
           </div>
         </div>
@@ -282,12 +278,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
       <CardContent className="p-4 sm:p-6 pt-0 space-y-4 sm:space-y-6">
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
           {/* Scoring Chart - Adjusted container */}
-          <div className="flex flex-col min-h-[350px] sm:min-h-[400px]">
+          <div className="flex flex-col min-h-[450px] sm:min-h-[500px]">
             <div className="flex-1 flex items-center justify-center">
               <ScoringChart
                 selectedMethod={task.contributionMethod}
                 selectedScope={task.contributionScope}
-                size="small"
+                size="medium"
                 title={`과업 ${index + 1} 스코어링`}
                 onMethodClick={(method) => onMethodClick(task.id, method)}
                 onScopeClick={(scope) => onScopeClick(task.id, scope)}
@@ -296,7 +292,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
 
           {/* Score Display and Feedback Input - Adjusted container */}
-          <div className="flex flex-col min-h-[350px] sm:min-h-[400px]">
+          <div className="flex flex-col min-h-[450px] sm:min-h-[500px]">
             {/* Score Display Section */}
             {task.score !== undefined || isNoContribution ? (
               <ScoreDisplay
@@ -324,7 +320,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
                 value={task.feedback || ''}
                 onChange={(e) => onFeedbackChange(task.id, e.target.value)}
-                className="flex-1 min-h-[100px] sm:min-h-[120px] resize-none text-xs sm:text-sm"
+                className="flex-1 min-h-[150px] sm:min-h-[180px] resize-none text-xs sm:text-sm"
               />
             </div>
           </div>
