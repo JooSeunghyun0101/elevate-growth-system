@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Target, Edit3, Check, X } from 'lucide-react';
+import { Target, Edit3, Check, X, Calendar } from 'lucide-react';
 import ScoringChart from '@/components/ScoringChart';
 import ScoreDisplay from './ScoreDisplay';
 import { Task } from '@/types/evaluation';
@@ -18,7 +18,7 @@ interface TaskCardProps {
   onScopeClick: (taskId: string, scope: string) => void;
   onFeedbackChange: (taskId: string, feedback: string) => void;
   onWeightChange: (taskId: string, weight: number) => void;
-  onTaskUpdate?: (taskId: string, updates: { title?: string; description?: string }) => void;
+  onTaskUpdate?: (taskId: string, updates: { title?: string; description?: string; startDate?: string; endDate?: string }) => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -36,6 +36,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [tempTitle, setTempTitle] = useState(task.title);
   const [tempDescription, setTempDescription] = useState(task.description);
+  const [tempStartDate, setTempStartDate] = useState(task.startDate || '');
+  const [tempEndDate, setTempEndDate] = useState(task.endDate || '');
 
   const handleWeightEdit = () => {
     setTempWeight(task.weight);
@@ -57,15 +59,31 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const handleTaskEdit = () => {
     setTempTitle(task.title);
     setTempDescription(task.description);
+    setTempStartDate(task.startDate || '');
+    setTempEndDate(task.endDate || '');
     setIsEditingTask(true);
   };
 
   const handleTaskSave = () => {
-    if (onTaskUpdate && (tempTitle.trim() !== task.title || tempDescription.trim() !== task.description)) {
-      onTaskUpdate(task.id, {
-        title: tempTitle.trim(),
-        description: tempDescription.trim()
-      });
+    if (onTaskUpdate) {
+      const updates: { title?: string; description?: string; startDate?: string; endDate?: string } = {};
+      
+      if (tempTitle.trim() !== task.title) {
+        updates.title = tempTitle.trim();
+      }
+      if (tempDescription.trim() !== task.description) {
+        updates.description = tempDescription.trim();
+      }
+      if (tempStartDate !== (task.startDate || '')) {
+        updates.startDate = tempStartDate;
+      }
+      if (tempEndDate !== (task.endDate || '')) {
+        updates.endDate = tempEndDate;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        onTaskUpdate(task.id, updates);
+      }
     }
     setIsEditingTask(false);
   };
@@ -73,6 +91,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const handleTaskCancel = () => {
     setTempTitle(task.title);
     setTempDescription(task.description);
+    setTempStartDate(task.startDate || '');
+    setTempEndDate(task.endDate || '');
     setIsEditingTask(false);
   };
 
@@ -85,7 +105,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex-1 min-w-0">
             {isEditingTask ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Input
                   value={tempTitle}
                   onChange={(e) => setTempTitle(e.target.value)}
@@ -99,6 +119,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   rows={2}
                   placeholder="과업 설명을 입력하세요"
                 />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-600">시작일</label>
+                    <Input
+                      type="date"
+                      value={tempStartDate}
+                      onChange={(e) => setTempStartDate(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">종료일</label>
+                    <Input
+                      type="date"
+                      value={tempEndDate}
+                      onChange={(e) => setTempEndDate(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleTaskSave}
@@ -119,6 +159,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-base sm:text-lg truncate">{task.title}</CardTitle>
                   <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                  {task.startDate && task.endDate && (
+                    <div className="flex items-center gap-1 mt-2">
+                      <Calendar className="w-3 h-3 text-gray-500" />
+                      <span className="text-xs text-gray-500">
+                        {task.startDate} ~ {task.endDate}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {canEditTask && (
                   <button
@@ -162,12 +210,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   <span className="hidden sm:inline">가중치 {task.weight}%</span>
                   <span className="inline sm:hidden">{task.weight}%</span>
                 </Badge>
-                <button
-                  onClick={handleWeightEdit}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
+                {user?.role === 'evaluator' && (
+                  <button
+                    onClick={handleWeightEdit}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </button>
+                )}
               </div>
             )}
           </div>

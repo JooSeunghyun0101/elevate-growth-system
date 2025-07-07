@@ -17,7 +17,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   notifications,
   onClose
 }) => {
-  const { markAllAsRead } = useNotifications();
+  const { markAllAsRead, markAsRead, deleteNotification } = useNotifications();
 
   const handleMarkAllAsRead = () => {
     markAllAsRead();
@@ -63,6 +63,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   <NotificationItem
                     key={notification.id}
                     notification={notification}
+                    onMarkAsRead={markAsRead}
+                    onDelete={deleteNotification}
                   />
                 ))}
               </div>

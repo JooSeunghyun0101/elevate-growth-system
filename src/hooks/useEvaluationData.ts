@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -118,12 +119,15 @@ export const useEvaluationData = (employeeId: string) => {
   };
 
   const handleTaskUpdate = (taskId: string, updates: { title?: string; description?: string; startDate?: string; endDate?: string }) => {
+    const task = evaluationData.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
     setEvaluationData(prev => ({
       ...prev,
-      tasks: prev.tasks.map(task => 
-        task.id === taskId 
-          ? { ...task, ...updates, lastModified: new Date().toISOString() }
-          : task
+      tasks: prev.tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, ...updates, lastModified: new Date().toISOString() }
+          : t
       ),
       lastModified: new Date().toISOString()
     }));
@@ -131,7 +135,7 @@ export const useEvaluationData = (employeeId: string) => {
     // Send notification to evaluatee if evaluator made changes
     if (user?.role === 'evaluator') {
       const changes = Object.entries(updates)
-        .filter(([_, value]) => value !== undefined)
+        .filter(([_, value]) => value !== undefined && value !== task[_ as keyof Task])
         .map(([key, value]) => {
           switch (key) {
             case 'title': return `과업명: ${value}`;
@@ -143,27 +147,45 @@ export const useEvaluationData = (employeeId: string) => {
         });
 
       if (changes.length > 0) {
-        const task = evaluationData.tasks.find(t => t.id === taskId);
         addNotification({
           recipientId: employeeId,
           title: '과업 내용 변경',
-          message: `평가자가 "${task?.title}" 과업을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`,
+          message: `평가자가 "${task.title}" 과업을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`,
           type: 'task_content_changed',
           priority: 'medium',
           senderId: user.id,
           senderName: user.name,
-          relatedEvaluationId: employeeId
+          relatedEvaluationId: employeeId,
+          relatedTaskId: taskId
         });
       }
     }
   };
 
   const handleWeightChange = (taskId: string, weight: number) => {
+    const task = evaluationData.tasks.find(t => t.id === taskId);
+    const previousWeight = task?.weight;
+    
     updateTask(taskId, 'weight', weight);
     
+    // Send weight change notification
+    if (user?.role === 'evaluator' && task && previousWeight !== weight) {
+      addNotification({
+        recipientId: employeeId,
+        title: '과업 가중치 변경',
+        message: `"${task.title}" 과업의 가중치가 변경되었습니다.\n${previousWeight}% → ${weight}%`,
+        type: 'task_content_changed',
+        priority: 'medium',
+        senderId: user.id,
+        senderName: user.name,
+        relatedEvaluationId: employeeId,
+        relatedTaskId: taskId
+      });
+    }
+    
     // Show warning if total weight is not 100%
-    const newTotalWeight = evaluationData.tasks.reduce((sum, task) => {
-      return sum + (task.id === taskId ? weight : task.weight);
+    const newTotalWeight = evaluationData.tasks.reduce((sum, t) => {
+      return sum + (t.id === taskId ? weight : t.weight);
     }, 0);
     
     if (newTotalWeight !== 100) {
@@ -180,6 +202,7 @@ export const useEvaluationData = (employeeId: string) => {
     if (!task) return;
 
     const previousScore = task.score;
+    const previousMethod = task.contributionMethod;
     const updatedTask = { ...task, contributionMethod: method };
     
     // Handle "기여없음" case
@@ -201,18 +224,37 @@ export const useEvaluationData = (employeeId: string) => {
       lastModified: new Date().toISOString()
     }));
 
-    // Send score change notification if score actually changed
-    if (user?.role === 'evaluator' && previousScore !== updatedTask.score) {
-      addNotification({
-        recipientId: employeeId,
-        title: '평가 점수 변경',
-        message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
-        type: 'score_changed',
-        priority: 'high',
-        senderId: user.id,
-        senderName: user.name,
-        relatedEvaluationId: employeeId
-      });
+    // Send notifications to evaluatee if evaluator made changes
+    if (user?.role === 'evaluator') {
+      // Send method change notification
+      if (previousMethod !== method) {
+        addNotification({
+          recipientId: employeeId,
+          title: '평가 내용 변경',
+          message: `"${task.title}" 과업의 기여방식이 변경되었습니다.\n${previousMethod || '미설정'} → ${method}`,
+          type: 'task_content_changed',
+          priority: 'medium',
+          senderId: user.id,
+          senderName: user.name,
+          relatedEvaluationId: employeeId,
+          relatedTaskId: taskId
+        });
+      }
+
+      // Send score change notification if score actually changed
+      if (previousScore !== updatedTask.score) {
+        addNotification({
+          recipientId: employeeId,
+          title: '평가 점수 변경',
+          message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
+          type: 'score_changed',
+          priority: 'high',
+          senderId: user.id,
+          senderName: user.name,
+          relatedEvaluationId: employeeId,
+          relatedTaskId: taskId
+        });
+      }
     }
   };
 
@@ -221,6 +263,7 @@ export const useEvaluationData = (employeeId: string) => {
     if (!task) return;
 
     const previousScore = task.score;
+    const previousScope = task.contributionScope;
     const updatedTask = { ...task, contributionScope: scope };
     
     // Handle "기여없음" case
@@ -242,18 +285,37 @@ export const useEvaluationData = (employeeId: string) => {
       lastModified: new Date().toISOString()
     }));
 
-    // Send score change notification if score actually changed
-    if (user?.role === 'evaluator' && previousScore !== updatedTask.score) {
-      addNotification({
-        recipientId: employeeId,
-        title: '평가 점수 변경',
-        message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
-        type: 'score_changed',
-        priority: 'high',
-        senderId: user.id,
-        senderName: user.name,
-        relatedEvaluationId: employeeId
-      });
+    // Send notifications to evaluatee if evaluator made changes
+    if (user?.role === 'evaluator') {
+      // Send scope change notification
+      if (previousScope !== scope) {
+        addNotification({
+          recipientId: employeeId,
+          title: '평가 내용 변경',
+          message: `"${task.title}" 과업의 기여범위가 변경되었습니다.\n${previousScope || '미설정'} → ${scope}`,
+          type: 'task_content_changed',
+          priority: 'medium',
+          senderId: user.id,
+          senderName: user.name,
+          relatedEvaluationId: employeeId,
+          relatedTaskId: taskId
+        });
+      }
+
+      // Send score change notification if score actually changed
+      if (previousScore !== updatedTask.score) {
+        addNotification({
+          recipientId: employeeId,
+          title: '평가 점수 변경',
+          message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
+          type: 'score_changed',
+          priority: 'high',
+          senderId: user.id,
+          senderName: user.name,
+          relatedEvaluationId: employeeId,
+          relatedTaskId: taskId
+        });
+      }
     }
   };
 
@@ -341,7 +403,8 @@ export const useEvaluationData = (employeeId: string) => {
               priority: 'medium',
               senderId: user.id,
               senderName: user.name,
-              relatedEvaluationId: employeeId
+              relatedEvaluationId: employeeId,
+              relatedTaskId: task.id
             });
           }
         }

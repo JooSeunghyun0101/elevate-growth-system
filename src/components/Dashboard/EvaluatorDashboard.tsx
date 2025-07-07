@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Users, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EvaluationGuide from './EvaluationGuide';
 import TaskGanttChart from '@/components/TaskGanttChart';
+import MiniGanttChart from '@/components/MiniGanttChart';
 import { Task } from '@/types/evaluation';
 
 interface EvaluationData {
@@ -87,6 +86,7 @@ export const EvaluatorDashboard: React.FC = () => {
   const [recentFeedbacks, setRecentFeedbacks] = useState<RecentFeedback[]>([]);
   const [showEvaluationGuide, setShowEvaluationGuide] = useState(false);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [evaluateeTasks, setEvaluateeTasks] = useState<Record<string, Task[]>>({});
 
   const loadEvaluationData = () => {
     if (!user) return;
@@ -96,6 +96,7 @@ export const EvaluatorDashboard: React.FC = () => {
     const updatedEvaluatees: EvaluateeInfo[] = [];
     const allFeedbacks: RecentFeedback[] = [];
     const combinedTasks: Task[] = [];
+    const tasksByEvaluatee: Record<string, Task[]> = {};
 
     myEvaluatees.forEach(evaluatee => {
       const savedData = localStorage.getItem(`evaluation-${evaluatee.id}`);
@@ -131,17 +132,16 @@ export const EvaluatorDashboard: React.FC = () => {
             }
           });
 
-          // Add tasks to combined list with evaluatee info
-          evaluationData.tasks.forEach(task => {
-            if (task.startDate && task.endDate) {
-              combinedTasks.push({
-                ...task,
-                title: `${evaluatee.name}: ${task.title}`, // Add evaluatee name to task title
-                evaluateeId: evaluatee.id,
-                evaluateeName: evaluatee.name
-              } as Task & { evaluateeId: string; evaluateeName: string });
-            }
-          });
+          // Add tasks to combined list and individual evaluatee list
+          const evaluateeTasks = evaluationData.tasks.map(task => ({
+            ...task,
+            title: `${evaluatee.name}: ${task.title}`,
+            evaluateeId: evaluatee.id,
+            evaluateeName: evaluatee.name
+          } as Task & { evaluateeId: string; evaluateeName: string }));
+
+          combinedTasks.push(...evaluateeTasks);
+          tasksByEvaluatee[evaluatee.id] = evaluationData.tasks;
 
           updatedEvaluatees.push({
             id: evaluatee.id,
@@ -174,13 +174,14 @@ export const EvaluatorDashboard: React.FC = () => {
           department: evaluatee.department,
           progress: 0,
           tasksCompleted: 0,
-          totalTasks: 4, // Default task count
+          totalTasks: 4,
           lastActivity: '미시작',
           status: 'in-progress' as const,
           totalScore: 0,
           exactScore: 0,
           growthLevel: evaluatee.growthLevel
         });
+        tasksByEvaluatee[evaluatee.id] = [];
       }
     });
 
@@ -205,6 +206,7 @@ export const EvaluatorDashboard: React.FC = () => {
     setEvaluatees(updatedEvaluatees);
     setRecentFeedbacks(sortedFeedbacks);
     setAllTasks(combinedTasks);
+    setEvaluateeTasks(tasksByEvaluatee);
   };
 
   // Load data on mount and set up refresh
@@ -355,10 +357,10 @@ export const EvaluatorDashboard: React.FC = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <div className="flex justify-between text-xs sm:text-sm mb-2">
-                      <span>평가진행률</span>
-                      <span>{person.tasksCompleted}/{person.totalTasks} ({person.progress}%)</span>
+                      <span>과업 일정</span>
+                      <span>{person.tasksCompleted}/{person.totalTasks} 완료</span>
                     </div>
-                    <Progress value={person.progress} className="[&>div]:ok-orange" />
+                    <MiniGanttChart tasks={evaluateeTasks[person.id] || []} />
                   </div>
                   
                   <div className="flex items-center justify-between pt-2">

@@ -1,51 +1,70 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Target, TrendingUp, MessageCircle, Edit } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { EvaluationData } from '@/types/evaluation';
-import TaskManagement from './TaskManagement';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Target, CheckCircle, Clock, MessageSquare, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import TaskGanttChart from '@/components/TaskGanttChart';
-import { format } from 'date-fns';
+import { Task, FeedbackHistoryItem } from '@/types/evaluation';
+import { getEmployeeData } from '@/utils/employeeData';
+
+interface EvaluationData {
+  evaluateeId: string;
+  evaluateeName: string;
+  evaluateePosition: string;
+  evaluateeDepartment: string;
+  growthLevel: number;
+  evaluationStatus: 'in-progress' | 'completed';
+  lastModified: string;
+  tasks: Task[];
+}
 
 export const EvaluateeDashboard: React.FC = () => {
   const { user } = useAuth();
   const [evaluationData, setEvaluationData] = useState<EvaluationData | null>(null);
-  const [showTaskManagement, setShowTaskManagement] = useState(false);
+  const [allFeedbacks, setAllFeedbacks] = useState<(FeedbackHistoryItem & { taskTitle: string })[]>([]);
+  const [showAllFeedbacks, setShowAllFeedbacks] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadMyEvaluationData();
-      
-      // Refresh data every 5 seconds to catch changes from evaluator
-      const interval = setInterval(loadMyEvaluationData, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  const loadMyEvaluationData = () => {
     if (!user) return;
+
+    const employeeInfo = getEmployeeData(user.employeeId);
+    const savedData = localStorage.getItem(`evaluation-${user.employeeId}`);
     
-    const savedData = localStorage.getItem(`evaluation-${user.id}`);
     if (savedData) {
       try {
-        const parsedData: EvaluationData = JSON.parse(savedData);
-        setEvaluationData(parsedData);
+        const data: EvaluationData = JSON.parse(savedData);
+        setEvaluationData(data);
+
+        // Collect all feedback history items with task titles
+        const feedbackItems: (FeedbackHistoryItem & { taskTitle: string })[] = [];
+        data.tasks.forEach(task => {
+          if (task.feedbackHistory && task.feedbackHistory.length > 0) {
+            task.feedbackHistory.forEach(feedback => {
+              feedbackItems.push({
+                ...feedback,
+                taskTitle: task.title
+              });
+            });
+          }
+        });
+
+        // Sort by date (most recent first)
+        feedbackItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setAllFeedbacks(feedbackItems);
       } catch (error) {
-        console.error('Failed to load evaluation data:', error);
+        console.error('Failed to parse evaluation data:', error);
       }
     } else {
-      // Create default evaluation data if none exists
-      const defaultData: EvaluationData = {
-        evaluateeId: user.id,
-        evaluateeName: user.name,
-        evaluateePosition: user.position || '사원',
-        evaluateeDepartment: user.department,
-        growthLevel: user.growthLevel || 1,
+      // Create default data if no saved evaluation found
+      setEvaluationData({
+        evaluateeId: user.employeeId,
+        evaluateeName: employeeInfo.name,
+        evaluateePosition: employeeInfo.position,
+        evaluateeDepartment: employeeInfo.department,
+        growthLevel: employeeInfo.growthLevel,
         evaluationStatus: 'in-progress',
         lastModified: new Date().toISOString(),
         tasks: [
@@ -86,101 +105,66 @@ export const EvaluateeDashboard: React.FC = () => {
             feedbackHistory: []
           }
         ]
-      };
-      setEvaluationData(defaultData);
+      });
     }
-  };
+  }, [user]);
 
-  if (!user || !evaluationData) {
-    return (
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-        <div className="text-center">
-          <p className="text-gray-500">평가 데이터를 불러오는 중...</p>
-        </div>
-      </div>
-    );
+  if (!evaluationData) {
+    return <div>Loading...</div>;
   }
 
+  const totalTasks = evaluationData.tasks.length;
   const completedTasks = evaluationData.tasks.filter(task => task.score !== undefined).length;
-  const progress = Math.round((completedTasks / evaluationData.tasks.length) * 100);
-  
-  // Calculate both exact and floored scores
-  const exactScore = Math.round(evaluationData.tasks.reduce((sum, task) => {
-    if (task.score) {
-      return sum + (task.score * task.weight / 100);
-    }
-    return sum;
-  }, 0) * 10) / 10;
-  const flooredScore = Math.floor(exactScore);
+  const inProgressTasks = totalTasks - completedTasks;
 
-  const isAchieved = flooredScore >= evaluationData.growthLevel;
-  
-  // Updated feedback count to include history
-  const feedbackCount = evaluationData.tasks.reduce((count, task) => {
-    return count + (task.feedbackHistory?.length || 0);
-  }, 0);
+  const displayedFeedbacks = showAllFeedbacks ? allFeedbacks : allFeedbacks.slice(0, 5);
 
-  // Updated stats with mobile-friendly labels
   const myStats = [
     { 
-      label: { full: '등록한 과업', mobile: '과업' },
+      label: { full: '전체 과업', mobile: '과업' },
       value: `${evaluationData.tasks.length}개`, 
       icon: Target, 
-      color: 'text-orange-600' 
+      color: 'text-blue-600' 
     },
     { 
       label: { full: '완료된 평가', mobile: '완료' },
       value: `${completedTasks}개`, 
-      icon: TrendingUp, 
+      icon: CheckCircle, 
+      color: 'text-green-600' 
+    },
+    { 
+      label: { full: '진행 중인 평가', mobile: '진행중' },
+      value: `${inProgressTasks}개`, 
+      icon: Clock, 
       color: 'text-yellow-600' 
     },
     { 
       label: { full: '받은 피드백', mobile: '피드백' },
-      value: `${feedbackCount}건`, 
-      icon: MessageCircle, 
-      color: 'text-amber-600' 
-    }
+      value: `${allFeedbacks.length}건`, 
+      icon: MessageSquare, 
+      color: 'text-purple-600' 
+    },
   ];
-
-  const getStatusBadge = (status: 'completed' | 'in-review' | 'in-progress' | 'ongoing') => {
-    switch (status) {
-      case 'completed':
-        return <Badge className="status-achieved">평가 완료</Badge>;
-      case 'in-review':
-        return <Badge className="status-in-progress">검토 중</Badge>;
-      case 'in-progress':
-        return <Badge variant="outline">진행 중</Badge>;
-      case 'ongoing':
-        return <Badge variant="secondary">상시 업무</Badge>;
-      default:
-        return <Badge variant="outline">대기</Badge>;
-    }
-  };
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
-            <span className="hidden md:inline">내 성과 대시보드</span>
-            <span className="inline md:hidden">내 성과</span>
+            <span className="hidden md:inline">피평가자 대시보드</span>
+            <span className="inline md:hidden">내 대시보드</span>
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            <span className="hidden md:inline">{user.name} {user.position} • {user.department}</span>
-            <span className="inline md:hidden">성과 관리 및 과업 현황</span>
+            <span className="hidden md:inline">나의 성과를 확인하고 평가 과정을 추적하세요</span>
+            <span className="inline md:hidden">성과 확인 및 평가 추적</span>
           </p>
         </div>
-        <Button 
-          className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
-          onClick={() => setShowTaskManagement(true)}
-        >
-          <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-          <span className="hidden sm:inline">과업 관리</span>
-          <span className="inline sm:hidden">관리</span>
-        </Button>
+        <Badge variant="outline" className="border-green-500 text-green-900 bg-green-100 text-xs">
+          Lv. {evaluationData.growthLevel}
+        </Badge>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {myStats.map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -197,131 +181,69 @@ export const EvaluateeDashboard: React.FC = () => {
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>나의 성과 요약</CardTitle>
-          <CardDescription>현재 평가 점수와 달성 현황</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-amber-600 mb-2">Lv.{evaluationData.growthLevel}</div>
-              <p className="text-sm text-muted-foreground">성장 레벨</p>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">
-                {exactScore !== flooredScore ? `${flooredScore}점(${exactScore})` : `${flooredScore}점`}
-              </div>
-              <p className="text-sm text-muted-foreground">현재 점수</p>
-            </div>
-            <div className="text-center">
-              <Badge 
-                className={`text-lg px-4 py-2 ${isAchieved ? 'status-achieved' : 'status-in-progress'}`}
-              >
-                {isAchieved ? '달성' : '미달성'}
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-2">현재 상태</p>
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex justify-between text-sm mb-2">
-              <span>평가진행률</span>
-              <span>{progress}%</span>
-            </div>
-            <Progress value={progress} className="[&>div]:ok-orange" />
-          </div>
-        </CardContent>
-      </Card>
-
       <Tabs defaultValue="tasks" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="tasks" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">내 과업</span>
             <span className="inline sm:hidden">과업</span>
           </TabsTrigger>
+          <TabsTrigger value="progress" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">평가 현황</span>
+            <span className="inline sm:hidden">현황</span>
+          </TabsTrigger>
           <TabsTrigger value="feedback" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">받은 피드백</span>
+            <span className="hidden sm:inline">피드백 이력</span>
             <span className="inline sm:hidden">피드백</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">평가 이력</span>
-            <span className="inline sm:hidden">이력</span>
+          <TabsTrigger value="performance" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">성과 분석</span>
+            <span className="inline sm:hidden">성과</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tasks" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>등록한 과업 목록</CardTitle>
-                  <CardDescription>
-                    총 가중치: {evaluationData.tasks.reduce((sum, task) => sum + task.weight, 0)}% • 
-                    완료: {completedTasks}/{evaluationData.tasks.length}
-                  </CardDescription>
-                </div>
-                <Badge 
-                  variant={evaluationData.evaluationStatus === 'completed' ? 'default' : 'secondary'}
-                  className={evaluationData.evaluationStatus === 'completed' ? 'status-achieved' : 'status-in-progress'}
-                >
-                  {evaluationData.evaluationStatus === 'completed' ? '평가 완료' : '평가 진행 중'}
-                </Badge>
-              </div>
+              <CardTitle className="text-base sm:text-lg">내 과업 목록</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">현재 진행 중인 과업들과 평가 현황을 확인하세요</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
                 {evaluationData.tasks.map((task, index) => (
-                  <div key={task.id} className="p-4 border rounded-lg">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-medium mb-1">{task.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span>가중치: {task.weight}%</span>
-                          <span>과업 {index + 1}</span>
-                          {task.startDate && task.endDate && (
-                            <span className="text-blue-600">
-                              {format(new Date(task.startDate), 'MM/dd')} - {format(new Date(task.endDate), 'MM/dd')}
-                            </span>
-                          )}
-                        </div>
+                  <div key={task.id} className="p-3 sm:p-4 border rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base truncate">{task.title}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                        {task.startDate && task.endDate && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            기간: {task.startDate} ~ {task.endDate}
+                          </p>
+                        )}
                       </div>
-                      <div className="text-right">
-                        {task.score !== undefined ? (
-                          <div className="space-y-1">
-                            <Badge className="status-achieved mb-1">평가 완료</Badge>
-                            <div className="text-sm text-gray-600">
-                              {task.score}점/Lv.{evaluationData.growthLevel}
-                            </div>
+                      <div className="flex flex-col items-end gap-1 ml-3">
+                        <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 text-xs">
+                          {task.weight}%
+                        </Badge>
+                        {task.contributionMethod && task.contributionScope && task.contributionMethod !== '기여없음' && (
+                          <div className="text-xs text-gray-600 text-right">
+                            {task.contributionMethod}, {task.contributionScope}
                           </div>
-                        ) : (
-                          <Badge className="status-in-progress">평가 대기</Badge>
+                        )}
+                        {task.score !== undefined && (
+                          <Badge className="status-achieved text-xs">
+                            {task.score}점
+                          </Badge>
                         )}
                       </div>
                     </div>
-
-                    {task.contributionMethod && task.contributionScope && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-2">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <Badge variant="outline" className="border-orange-200 text-orange-700 text-sm px-3 py-1 font-semibold">
-                            {task.contributionMethod}
-                          </Badge>
-                          <Badge variant="outline" className="border-blue-200 text-blue-700 text-sm px-3 py-1 font-semibold">
-                            {task.contributionScope}
-                          </Badge>
-                        </div>
-                        {task.feedback && (
-                          <p className="text-sm text-gray-700">💬 {task.feedback}</p>
-                        )}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
 
-              {/* Gantt Chart Integration */}
+              {/* Task Schedule Gantt Chart */}
               <div className="mt-6">
-                <h4 className="text-lg font-medium mb-4">과업 일정</h4>
+                <h4 className="font-medium text-sm sm:text-base mb-3">과업 일정</h4>
                 <TaskGanttChart tasks={evaluationData.tasks} />
               </div>
             </CardContent>
@@ -331,108 +253,121 @@ export const EvaluateeDashboard: React.FC = () => {
         <TabsContent value="feedback" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>받은 피드백</CardTitle>
-              <CardDescription>평가자로부터 받은 모든 피드백 히스토리</CardDescription>
+              <CardTitle className="text-base sm:text-lg">피드백 이력</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                평가자로부터 받은 피드백을 확인하세요 (최신순)
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {evaluationData.tasks.map((task) => {
-                  const allFeedbacks = task.feedbackHistory || [];
-                  if (allFeedbacks.length === 0) return null;
-                  
-                  return (
-                    <div key={task.id} className="border rounded-lg">
-                      <div className="p-4 border-b bg-gray-50">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-medium">{task.title}</h4>
-                            <p className="text-sm text-muted-foreground">{allFeedbacks.length}건의 피드백</p>
+                {displayedFeedbacks.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8 text-sm">받은 피드백이 없습니다.</p>
+                ) : (
+                  <>
+                    {displayedFeedbacks.map((feedback, index) => (
+                      <div key={feedback.id} className="p-3 sm:p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline" className="border-blue-200 text-blue-700 text-xs">
+                            {feedback.taskTitle}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(feedback.date).toLocaleDateString('ko-KR', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs sm:text-sm font-medium">평가자: {feedback.evaluatorName}</span>
                           </div>
-                          {task.score !== undefined && (
-                            <Badge variant="outline" className="border-orange-200 text-orange-700">
-                              {task.score}점
-                            </Badge>
-                          )}
+                          <p className="text-xs sm:text-sm text-gray-700">
+                            {feedback.content}
+                          </p>
                         </div>
                       </div>
-                      <div className="p-4 space-y-3">
-                        {allFeedbacks.map((feedbackItem, index) => (
-                          <div key={feedbackItem.id} className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(feedbackItem.date), 'yyyy-MM-dd HH:mm')}
-                              </span>
-                              <span className="text-xs text-gray-600">
-                                {feedbackItem.evaluatorName}
-                              </span>
-                            </div>
-                            <p className="text-sm">💬 {feedbackItem.content}</p>
-                          </div>
-                        ))}
+                    ))}
+                    
+                    {allFeedbacks.length > 5 && (
+                      <div className="text-center pt-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllFeedbacks(!showAllFeedbacks)}
+                          className="text-sm"
+                        >
+                          {showAllFeedbacks ? (
+                            <>
+                              <ChevronUp className="w-4 h-4 mr-1" />
+                              접기
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-4 h-4 mr-1" />
+                              {allFeedbacks.length - 5}개 더보기
+                            </>
+                          )}
+                        </Button>
                       </div>
-                    </div>
-                  );
-                })}
-                {evaluationData.tasks.every(task => !task.feedbackHistory?.length) && (
-                  <p className="text-center text-gray-500 py-8">받은 피드백이 없습니다.</p>
+                    )}
+                  </>
                 )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-4">
+        <TabsContent value="progress" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>평가 이력</CardTitle>
-              <CardDescription>과거 평가 결과와 성장 추이</CardDescription>
+              <CardTitle className="text-base sm:text-lg">평가 진행 현황</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">과업별 평가 진행 상황을 한눈에 확인하세요</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">2024년 상반기</h4>
-                    <Badge className={evaluationData.evaluationStatus === 'completed' ? 'status-achieved' : 'status-in-progress'}>
-                      {evaluationData.evaluationStatus === 'completed' ? '완료' : '진행 중'}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <div className="text-lg font-bold text-amber-600">Lv.{evaluationData.growthLevel}</div>
-                      <p className="text-xs text-muted-foreground">성장 레벨</p>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-orange-600">
-                        {exactScore !== flooredScore ? `${flooredScore}점(${exactScore})` : `${flooredScore}점`}
+                {evaluationData.tasks.map((task, index) => (
+                  <div key={task.id} className="p-3 sm:p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base truncate">{task.title}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">현재 점수</p>
+                      {task.score !== undefined ? (
+                        <Badge className="status-achieved text-xs">
+                          {task.score}점
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          평가 대기 중
+                        </Badge>
+                      )}
                     </div>
-                    <div>
-                      <div className={`text-lg font-bold ${isAchieved ? 'text-green-600' : 'text-red-600'}`}>
-                        {isAchieved ? '달성' : '미달성'}
-                      </div>
-                      <p className="text-xs text-muted-foreground">현재 결과</p>
-                    </div>
+                    <Progress value={task.score !== undefined ? 100 : 0} className="[&>div]:ok-green" />
                   </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
 
-      {/* Task Management Modal */}
-      {showTaskManagement && (
-        <TaskManagement
-          evaluationData={evaluationData}
-          onClose={() => setShowTaskManagement(false)}
-          onSave={(updatedData) => {
-            setEvaluationData(updatedData);
-            localStorage.setItem(`evaluation-${user.id}`, JSON.stringify(updatedData));
-            setShowTaskManagement(false);
-          }}
-        />
-      )}
+        <TabsContent value="performance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">종합 성과 분석</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">전체 과업 평가 결과를 기반으로 한 성과 분석 리포트입니다</CardDescription>
+            </CardHeader>
+            <CardContent className="text-center py-12">
+              <TrendingUp className="w-10 h-10 text-green-500 mx-auto mb-4" />
+              <p className="text-gray-500 text-sm">
+                아직 평가가 완료되지 않았습니다.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
