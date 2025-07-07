@@ -4,9 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Target, CheckCircle, Clock, MessageSquare, TrendingUp, ChevronDown, ChevronUp, Settings, PieChart, Award, Calendar as CalendarIcon } from 'lucide-react';
+import { Target, CheckCircle, Clock, MessageSquare, TrendingUp, ChevronDown, ChevronUp, Settings, Award, Calendar as CalendarIcon, Star, Trophy } from 'lucide-react';
 import TaskGanttChart from '@/components/TaskGanttChart';
 import TaskManagement from '@/components/Dashboard/TaskManagement';
 import { Task, FeedbackHistoryItem, EvaluationData } from '@/types/evaluation';
@@ -211,7 +210,7 @@ export const EvaluateeDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Performance Summary Section */}
+      {/* Performance Summary Section - Restructured into 3 areas */}
       {completedTasks > 0 && (
         <Card>
           <CardHeader>
@@ -219,45 +218,46 @@ export const EvaluateeDashboard: React.FC = () => {
             <CardDescription className="text-xs sm:text-sm">전체 과업 평가 결과를 기반으로 한 성과 분석입니다</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {/* Overall Score */}
-              <div className="text-center p-6 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Growth Level */}
+              <div className="text-center p-6 border rounded-lg bg-gradient-to-b from-blue-50 to-blue-100">
                 <div className="flex items-center justify-center mb-4">
-                  <Award className={`w-8 h-8 mr-2 ${isAchieved ? 'text-green-600' : 'text-orange-600'}`} />
-                  <h3 className="text-xl font-bold">종합 점수</h3>
+                  <Star className="w-8 h-8 text-blue-600 mr-2" />
+                  <h3 className="text-lg font-bold text-blue-800">성장 레벨</h3>
                 </div>
-                <div className="text-3xl font-bold mb-2">
-                  {flooredScore}점
+                <div className="text-4xl font-bold text-blue-600 mb-2">
+                  Lv. {evaluationData.growthLevel}
                 </div>
-                <div className="text-sm text-gray-600 mb-4">
-                  목표 레벨: {evaluationData.growthLevel}점
+                <div className="text-sm text-blue-700">
+                  목표 성장 단계
                 </div>
-                <Badge 
-                  className={isAchieved ? 'status-achieved' : 'bg-orange-100 text-orange-800 border-orange-200'}
-                >
-                  {isAchieved ? '목표 달성' : '목표 미달성'}
-                </Badge>
               </div>
 
-              {/* Evaluation Progress */}
-              <div className="p-4 border rounded-lg bg-gray-50">
-                <h4 className="font-medium text-sm mb-2">평가 진행 상황</h4>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-green-600">{completedTasks}</div>
-                    <div className="text-xs text-gray-600">완료된 평가</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-orange-600">{inProgressTasks}</div>
-                    <div className="text-xs text-gray-600">진행 중인 평가</div>
-                  </div>
+              {/* Current Score */}
+              <div className="text-center p-6 border rounded-lg bg-gradient-to-b from-orange-50 to-orange-100">
+                <div className="flex items-center justify-center mb-4">
+                  <TrendingUp className="w-8 h-8 text-orange-600 mr-2" />
+                  <h3 className="text-lg font-bold text-orange-800">현재 점수</h3>
                 </div>
-                <Progress 
-                  value={(completedTasks / totalTasks) * 100} 
-                  className="mt-3 [&>div]:ok-green" 
-                />
-                <div className="text-xs text-gray-600 text-center mt-2">
-                  전체 진행률: {Math.round((completedTasks / totalTasks) * 100)}%
+                <div className="text-4xl font-bold text-orange-600 mb-2">
+                  {flooredScore}점
+                </div>
+                <div className="text-sm text-orange-700">
+                  종합 평가 점수
+                </div>
+              </div>
+
+              {/* Current Status */}
+              <div className="text-center p-6 border rounded-lg bg-gradient-to-b from-green-50 to-green-100">
+                <div className="flex items-center justify-center mb-4">
+                  <Trophy className={`w-8 h-8 mr-2 ${isAchieved ? 'text-green-600' : 'text-red-600'}`} />
+                  <h3 className={`text-lg font-bold ${isAchieved ? 'text-green-800' : 'text-red-800'}`}>현재 상태</h3>
+                </div>
+                <div className={`text-2xl font-bold mb-2 ${isAchieved ? 'text-green-600' : 'text-red-600'}`}>
+                  {isAchieved ? '목표 달성' : '목표 미달성'}
+                </div>
+                <div className={`text-sm ${isAchieved ? 'text-green-700' : 'text-red-700'}`}>
+                  레벨 {evaluationData.growthLevel} 기준
                 </div>
               </div>
             </div>
@@ -367,7 +367,7 @@ export const EvaluateeDashboard: React.FC = () => {
                 ) : (
                   Object.entries(groupedFeedbacks).map(([taskTitle, feedbacks]) => {
                     const isExpanded = expandedTasks[taskTitle];
-                    const displayedFeedbacks = isExpanded ? feedbacks : feedbacks.slice(0, 5);
+                    const displayedFeedbacks = isExpanded ? feedbacks : feedbacks.slice(0, 1);
                     
                     return (
                       <div key={taskTitle} className="space-y-3">
@@ -395,7 +395,7 @@ export const EvaluateeDashboard: React.FC = () => {
                           ))}
                         </div>
                         
-                        {feedbacks.length > 5 && (
+                        {feedbacks.length > 1 && (
                           <div className="text-center">
                             <Button
                               variant="ghost"
@@ -411,7 +411,7 @@ export const EvaluateeDashboard: React.FC = () => {
                               ) : (
                                 <>
                                   <ChevronDown className="w-4 h-4 mr-1" />
-                                  {feedbacks.length - 5}개 더보기
+                                  {feedbacks.length - 1}개 더보기
                                 </>
                               )}
                             </Button>

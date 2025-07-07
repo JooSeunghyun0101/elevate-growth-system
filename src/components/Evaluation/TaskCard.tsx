@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -150,13 +149,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                           {tempStartDate ? format(tempStartDate, "yyyy-MM-dd") : "날짜 선택"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0" align="center" side="bottom">
                         <CalendarComponent
                           mode="single"
                           selected={tempStartDate}
                           onSelect={setTempStartDate}
                           initialFocus
-                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -176,13 +174,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                           {tempEndDate ? format(tempEndDate, "yyyy-MM-dd") : "날짜 선택"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0" align="center" side="bottom">
                         <CalendarComponent
                           mode="single"
                           selected={tempEndDate}
                           onSelect={setTempEndDate}
                           initialFocus
-                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -205,12 +202,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="relative">
+                <div className="flex items-center gap-2">
                   <CardTitle className="text-base sm:text-lg">{task.title}</CardTitle>
                   {canEditTask && (
                     <button
                       onClick={handleTaskEdit}
-                      className="absolute -left-6 top-1 text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 hover:text-gray-700"
                       title="과업 내용 수정"
                     >
                       <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -230,7 +227,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             )}
           </div>
           
-          <div className="flex items-center gap-2 flex-shrink-0 relative">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {isEditingWeight ? (
               <div className="flex items-center gap-2">
                 <Input
@@ -256,21 +253,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </button>
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-lg font-bold">
+                  <span className="hidden sm:inline">가중치 {task.weight}%</span>
+                  <span className="inline sm:hidden">{task.weight}%</span>
+                </Badge>
                 {user?.role === 'evaluator' && (
                   <button
                     onClick={handleWeightEdit}
-                    className="absolute -left-6 top-1 text-gray-500 hover:text-gray-700"
+                    className="text-gray-500 hover:text-gray-700"
                     title="가중치 수정"
                   >
                     <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 )}
-                <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-lg font-bold">
-                  <span className="hidden sm:inline">가중치 {task.weight}%</span>
-                  <span className="inline sm:hidden">{task.weight}%</span>
-                </Badge>
-              </>
+              </div>
             )}
           </div>
         </div>
