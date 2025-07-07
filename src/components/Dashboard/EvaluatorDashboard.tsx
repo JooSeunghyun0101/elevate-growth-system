@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -183,7 +182,20 @@ export const EvaluatorDashboard: React.FC = () => {
           } as Task & { evaluateeId: string; evaluateeName: string }));
 
           combinedTasks.push(...evaluateeTasks);
-          tasksByEvaluatee[evaluatee.id] = evaluationData.tasks;
+          
+          // Fix the individual evaluatee tasks to also have proper feedbackHistory
+          const fixedEvaluateeTasks = evaluationData.tasks.map(task => ({
+            ...task,
+            feedbackHistory: (task.feedbackHistory || []).map(historyItem => ({
+              id: historyItem.id,
+              content: historyItem.content,
+              date: historyItem.date,
+              evaluatorName: historyItem.evaluatorName,
+              evaluatorId: (historyItem as any).evaluatorId || user.id || 'unknown'
+            }))
+          }));
+          
+          tasksByEvaluatee[evaluatee.id] = fixedEvaluateeTasks;
 
           updatedEvaluatees.push({
             id: evaluatee.id,
