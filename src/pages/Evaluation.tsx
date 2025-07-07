@@ -17,6 +17,7 @@ const Evaluation = () => {
     handleMethodClick,
     handleScopeClick,
     handleFeedbackChange,
+    handleTaskUpdate,
     calculateTotalScore,
     isAchieved,
     handleSave
@@ -29,7 +30,6 @@ const Evaluation = () => {
   const handleSaveAndNavigate = async () => {
     const success = handleSave();
     if (success) {
-      // Navigate back to dashboard after save
       setTimeout(() => {
         navigate('/');
       }, 1500);
@@ -67,6 +67,7 @@ const Evaluation = () => {
         onScopeClick={handleScopeClick}
         onFeedbackChange={handleFeedbackChange}
         onWeightChange={handleWeightChange}
+        onTaskUpdate={handleTaskUpdate}
       />
     </div>
   );

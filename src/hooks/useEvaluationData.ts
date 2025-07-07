@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +12,7 @@ export const useEvaluationData = (employeeId: string) => {
   
   const employeeInfo = getEmployeeData(employeeId);
 
-  // 점수 매트릭스 (방식 x 범위)
+  // 점수 매트릭스 (방식 x 범위) - 의존적, 독립적, 상호적, 전략적 순서
   const scoreMatrix = [
     [2, 3, 4, 4], // 총괄
     [1, 2, 3, 4], // 리딩
@@ -82,7 +81,6 @@ export const useEvaluationData = (employeeId: string) => {
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        // Update with current employee info but keep evaluation data
         setEvaluationData(prev => ({
           ...parsedData,
           evaluateeName: employeeInfo.name,
@@ -91,7 +89,6 @@ export const useEvaluationData = (employeeId: string) => {
           growthLevel: employeeInfo.growthLevel,
         }));
 
-        // Initialize temp feedbacks with current feedback values
         const initialTempFeedbacks: Record<string, string> = {};
         parsedData.tasks.forEach((task: Task) => {
           if (task.feedback) {
@@ -132,7 +129,6 @@ export const useEvaluationData = (employeeId: string) => {
       lastModified: new Date().toISOString()
     }));
 
-    // Send notification to evaluatee if evaluator made changes
     if (user?.role === 'evaluator') {
       const changes = Object.entries(updates)
         .filter(([_, value]) => value !== undefined && value !== task[_ as keyof Task])
@@ -168,7 +164,6 @@ export const useEvaluationData = (employeeId: string) => {
     
     updateTask(taskId, 'weight', weight);
     
-    // Send weight change notification
     if (user?.role === 'evaluator' && task && previousWeight !== weight) {
       addNotification({
         recipientId: employeeId,
@@ -183,7 +178,6 @@ export const useEvaluationData = (employeeId: string) => {
       });
     }
     
-    // Show warning if total weight is not 100%
     const newTotalWeight = evaluationData.tasks.reduce((sum, t) => {
       return sum + (t.id === taskId ? weight : t.weight);
     }, 0);
@@ -205,12 +199,10 @@ export const useEvaluationData = (employeeId: string) => {
     const previousMethod = task.contributionMethod;
     const updatedTask = { ...task, contributionMethod: method };
     
-    // Handle "기여없음" case
     if (method === '기여없음') {
       updatedTask.contributionScope = '기여없음';
       updatedTask.score = 0;
     } else if (updatedTask.contributionScope && updatedTask.contributionScope !== '기여없음') {
-      // Calculate score if both method and scope are selected (and not "기여없음")
       const methodIndex = contributionMethods.indexOf(method);
       const scopeIndex = contributionScopes.indexOf(updatedTask.contributionScope);
       if (methodIndex !== -1 && scopeIndex !== -1) {
@@ -224,9 +216,7 @@ export const useEvaluationData = (employeeId: string) => {
       lastModified: new Date().toISOString()
     }));
 
-    // Send notifications to evaluatee if evaluator made changes
     if (user?.role === 'evaluator') {
-      // Send method change notification
       if (previousMethod !== method) {
         addNotification({
           recipientId: employeeId,
@@ -241,7 +231,6 @@ export const useEvaluationData = (employeeId: string) => {
         });
       }
 
-      // Send score change notification if score actually changed
       if (previousScore !== updatedTask.score) {
         addNotification({
           recipientId: employeeId,
@@ -266,12 +255,10 @@ export const useEvaluationData = (employeeId: string) => {
     const previousScope = task.contributionScope;
     const updatedTask = { ...task, contributionScope: scope };
     
-    // Handle "기여없음" case
     if (scope === '기여없음') {
       updatedTask.contributionMethod = '기여없음';
       updatedTask.score = 0;
     } else if (updatedTask.contributionMethod && updatedTask.contributionMethod !== '기여없음') {
-      // Calculate score if both method and scope are selected (and not "기여없음")
       const methodIndex = contributionMethods.indexOf(updatedTask.contributionMethod);
       const scopeIndex = contributionScopes.indexOf(scope);
       if (methodIndex !== -1 && scopeIndex !== -1) {
@@ -285,9 +272,7 @@ export const useEvaluationData = (employeeId: string) => {
       lastModified: new Date().toISOString()
     }));
 
-    // Send notifications to evaluatee if evaluator made changes
     if (user?.role === 'evaluator') {
-      // Send scope change notification
       if (previousScope !== scope) {
         addNotification({
           recipientId: employeeId,
@@ -302,7 +287,6 @@ export const useEvaluationData = (employeeId: string) => {
         });
       }
 
-      // Send score change notification if score actually changed
       if (previousScore !== updatedTask.score) {
         addNotification({
           recipientId: employeeId,
@@ -319,14 +303,12 @@ export const useEvaluationData = (employeeId: string) => {
     }
   };
 
-  // Handle temporary feedback changes (don't save to history yet)
   const handleFeedbackChange = (taskId: string, feedback: string) => {
     setTempFeedbacks(prev => ({
       ...prev,
       [taskId]: feedback
     }));
 
-    // Update the current feedback in the task (but not history)
     setEvaluationData(prev => ({
       ...prev,
       tasks: prev.tasks.map(task => 
@@ -346,8 +328,8 @@ export const useEvaluationData = (employeeId: string) => {
       return sum;
     }, 0);
     return {
-      exactScore: Math.round(totalWeightedScore * 10) / 10, // 소수점 첫째자리까지
-      flooredScore: Math.floor(totalWeightedScore) // 버림한 정수
+      exactScore: Math.round(totalWeightedScore * 10) / 10,
+      flooredScore: Math.floor(totalWeightedScore)
     };
   };
 
@@ -362,7 +344,18 @@ export const useEvaluationData = (employeeId: string) => {
 
   const handleSave = () => {
     try {
-      // Get the previously saved data to compare changes
+      // Check if total weight is 100%
+      const totalWeight = evaluationData.tasks.reduce((sum, task) => sum + task.weight, 0);
+      
+      if (totalWeight !== 100) {
+        toast({
+          title: "저장 실패",
+          description: `가중치 합계가 100%가 아닙니다. 현재: ${totalWeight}%\n가중치를 조정한 후 다시 저장해주세요.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+
       const previousDataString = localStorage.getItem(`evaluation-${employeeId}`);
       let previousData: EvaluationData | null = null;
       
@@ -374,7 +367,6 @@ export const useEvaluationData = (employeeId: string) => {
         }
       }
 
-      // Process feedback changes and add to history only if feedback actually changed
       const updatedTasks = evaluationData.tasks.map(task => {
         const currentFeedback = tempFeedbacks[task.id] || '';
         const previousTask = previousData?.tasks.find(t => t.id === task.id);
@@ -382,7 +374,6 @@ export const useEvaluationData = (employeeId: string) => {
 
         let updatedFeedbackHistory = task.feedbackHistory || [];
 
-        // Only add to history if feedback changed and is not empty
         if (currentFeedback.trim() && currentFeedback !== previousFeedback) {
           const newFeedbackItem: FeedbackHistoryItem = {
             id: `feedback-${Date.now()}-${task.id}`,
@@ -393,7 +384,6 @@ export const useEvaluationData = (employeeId: string) => {
           };
           updatedFeedbackHistory = [...updatedFeedbackHistory, newFeedbackItem];
 
-          // Send feedback notification
           if (user?.role === 'evaluator') {
             addNotification({
               recipientId: employeeId,

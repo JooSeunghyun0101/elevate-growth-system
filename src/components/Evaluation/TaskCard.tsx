@@ -224,21 +224,23 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </CardHeader>
       <CardContent className="p-4 sm:p-6 pt-0 space-y-4 sm:space-y-6">
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6 items-start">
-          {/* Scoring Chart */}
-          <div className="flex flex-col items-center justify-start w-full">
-            <ScoringChart
-              selectedMethod={task.contributionMethod}
-              selectedScope={task.contributionScope}
-              size="small"
-              title={`과업 ${index + 1} 스코어링`}
-              onMethodClick={(method) => onMethodClick(task.id, method)}
-              onScopeClick={(scope) => onScopeClick(task.id, scope)}
-            />
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+          {/* Scoring Chart - Fixed height container */}
+          <div className="flex flex-col min-h-[420px] sm:min-h-[500px]">
+            <div className="flex-1 flex items-center justify-center">
+              <ScoringChart
+                selectedMethod={task.contributionMethod}
+                selectedScope={task.contributionScope}
+                size="large"
+                title={`과업 ${index + 1} 스코어링`}
+                onMethodClick={(method) => onMethodClick(task.id, method)}
+                onScopeClick={(scope) => onScopeClick(task.id, scope)}
+              />
+            </div>
           </div>
 
-          {/* Score Display and Feedback Input */}
-          <div className="flex flex-col w-full min-h-[300px] sm:min-h-[420px]">
+          {/* Score Display and Feedback Input - Fixed height container */}
+          <div className="flex flex-col min-h-[420px] sm:min-h-[500px]">
             {/* Score Display Section */}
             {task.score !== undefined || isNoContribution ? (
               <ScoreDisplay
