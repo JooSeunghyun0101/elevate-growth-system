@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -173,8 +174,11 @@ export const EvaluatorDashboard: React.FC = () => {
             evaluateeName: evaluatee.name,
             // Ensure feedbackHistory has the correct type with evaluatorId
             feedbackHistory: (task.feedbackHistory || []).map(historyItem => ({
-              ...historyItem,
-              evaluatorId: historyItem.evaluatorId || user.id || 'unknown'
+              id: historyItem.id,
+              content: historyItem.content,
+              date: historyItem.date,
+              evaluatorName: historyItem.evaluatorName,
+              evaluatorId: (historyItem as any).evaluatorId || user.id || 'unknown'
             }))
           } as Task & { evaluateeId: string; evaluateeName: string }));
 
