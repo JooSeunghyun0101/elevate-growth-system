@@ -255,10 +255,10 @@ const Evaluation = () => {
 
   if (!user || user.role !== 'evaluator') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">접근 권한이 없습니다</h2>
-          <p className="text-gray-600">평가자만 접근할 수 있는 페이지입니다.</p>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">접근 권한이 없습니다</h2>
+          <p className="text-sm sm:text-base text-gray-600">평가자만 접근할 수 있는 페이지입니다.</p>
         </div>
       </div>
     );
@@ -278,7 +278,7 @@ const Evaluation = () => {
       />
 
       {/* Tasks Evaluation */}
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
         {evaluationData.tasks.map((task, index) => (
           <TaskCard
             key={task.id}
