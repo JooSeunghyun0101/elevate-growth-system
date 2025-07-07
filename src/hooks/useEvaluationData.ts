@@ -115,8 +115,10 @@ export const useEvaluationData = (employeeId: string) => {
         recipientId: employeeId,
         title: '과업 가중치 수정',
         message: `평가자가 과업의 가중치를 ${weight}%로 수정했습니다.`,
-        type: 'evaluation_update',
-        data: { taskId, weight }
+        type: 'evaluation_updated',
+        priority: 'medium',
+        senderId: user.id,
+        senderName: user.name
       });
     }
   };
@@ -152,8 +154,10 @@ export const useEvaluationData = (employeeId: string) => {
         recipientId: employeeId,
         title: '평가 내용 수정',
         message: `평가자가 과업의 기여방식을 "${method}"로 수정했습니다.`,
-        type: 'evaluation_update',
-        data: { taskId, contributionMethod: method }
+        type: 'evaluation_updated',
+        priority: 'medium',
+        senderId: user.id,
+        senderName: user.name
       });
     }
   };
@@ -189,8 +193,10 @@ export const useEvaluationData = (employeeId: string) => {
         recipientId: employeeId,
         title: '평가 내용 수정',
         message: `평가자가 과업의 기여범위를 "${scope}"로 수정했습니다.`,
-        type: 'evaluation_update',
-        data: { taskId, contributionScope: scope }
+        type: 'evaluation_updated',
+        priority: 'medium',
+        senderId: user.id,
+        senderName: user.name
       });
     }
   };
@@ -217,8 +223,10 @@ export const useEvaluationData = (employeeId: string) => {
         recipientId: employeeId,
         title: '피드백 등록',
         message: `평가자가 과업에 대한 피드백을 작성했습니다.`,
-        type: 'feedback',
-        data: { taskId, feedback }
+        type: 'hr_message',
+        priority: 'medium',
+        senderId: user.id,
+        senderName: user.name
       });
     }
   };
@@ -269,8 +277,10 @@ export const useEvaluationData = (employeeId: string) => {
           message: isEvaluationComplete() 
             ? '평가자가 성과평가를 완료했습니다.' 
             : '평가자가 평가 내용을 저장했습니다.',
-          type: 'evaluation_complete',
-          data: { evaluationStatus: updatedData.evaluationStatus }
+          type: 'evaluation_completed',
+          priority: 'high',
+          senderId: user.id,
+          senderName: user.name
         });
       }
 
