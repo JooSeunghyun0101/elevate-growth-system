@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,10 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Trash2, Save } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { X, Plus, Trash2, Save, Calendar as CalendarIcon } from 'lucide-react';
 import { EvaluationData, Task } from '@/types/evaluation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface TaskManagementProps {
   evaluationData: EvaluationData;
@@ -88,14 +93,16 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     // Find original tasks to preserve evaluation data
     const originalTasksMap = new Map(evaluationData.tasks.map(task => [task.id, task]));
     
-    // Check for content changes in existing tasks (title, description, weight)
+    // Check for content changes in existing tasks (title, description, weight, dates)
     const hasTaskContentChanges = tasks.some(task => {
       const original = originalTasksMap.get(task.id);
       if (!original) return false; // New task, not a content change
       return (
         original.title !== task.title || 
         original.description !== task.description || 
-        original.weight !== task.weight
+        original.weight !== task.weight ||
+        original.startDate !== task.startDate ||
+        original.endDate !== task.endDate
       );
     });
 
@@ -114,7 +121,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           contributionMethod: originalTask.contributionMethod,
           contributionScope: originalTask.contributionScope,
           feedback: originalTask.feedback,
-          feedbackDate: originalTask.feedbackDate
+          feedbackDate: originalTask.feedbackDate,
+          feedbackHistory: originalTask.feedbackHistory
         };
       } else {
         // New task - no evaluation data
@@ -158,7 +166,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         return original && (
           original.title !== task.title || 
           original.description !== task.description || 
-          original.weight !== task.weight
+          original.weight !== task.weight ||
+          original.startDate !== task.startDate ||
+          original.endDate !== task.endDate
         );
       }).map(t => ({ id: t.id, title: t.title }))
     });
@@ -178,7 +188,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           return original && (
             original.title !== task.title || 
             original.description !== task.description || 
-            original.weight !== task.weight
+            original.weight !== task.weight ||
+            original.startDate !== task.startDate ||
+            original.endDate !== task.endDate
           );
         });
 
@@ -193,6 +205,12 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             }
             if (original.weight !== task.weight) {
               changes.push(`"${task.title}" 가중치 ${original.weight}% → ${task.weight}%`);
+            }
+            if (original.startDate !== task.startDate) {
+              changes.push(`"${task.title}" 시작일 ${original.startDate || '미설정'} → ${task.startDate || '미설정'}`);
+            }
+            if (original.endDate !== task.endDate) {
+              changes.push(`"${task.title}" 종료일 ${original.endDate || '미설정'} → ${task.endDate || '미설정'}`);
             }
           }
         });
@@ -218,7 +236,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             recipientId: evaluatorId,
             title: '과업 관리 변경',
             message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다. ${changeMessage}`,
-            type: 'task_updated',
+            type: 'task_content_changed',
             priority: 'medium',
             senderId: user.id,
             senderName: user.name,
@@ -320,6 +338,60 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       className="text-sm"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-sm">시작일</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal text-sm",
+                              !task.startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {task.startDate ? format(new Date(task.startDate), 'yyyy-MM-dd') : '시작일 선택'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={task.startDate ? new Date(task.startDate) : undefined}
+                            onSelect={(date) => updateTask(task.id, { startDate: date ? format(date, 'yyyy-MM-dd') : undefined })}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label className="text-sm">종료일</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal text-sm",
+                              !task.endDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {task.endDate ? format(new Date(task.endDate), 'yyyy-MM-dd') : '종료일 선택'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={task.endDate ? new Date(task.endDate) : undefined}
+                            onSelect={(date) => updateTask(task.id, { endDate: date ? format(date, 'yyyy-MM-dd') : undefined })}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div>
@@ -327,6 +399,11 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   <p className="text-xs sm:text-sm text-muted-foreground mb-2">{task.description}</p>
                   <div className="flex items-center space-x-4 text-xs sm:text-sm text-muted-foreground">
                     <span>가중치: {task.weight}%</span>
+                    {task.startDate && task.endDate && (
+                      <span className="text-blue-600">
+                        {format(new Date(task.startDate), 'MM/dd')} - {format(new Date(task.endDate), 'MM/dd')}
+                      </span>
+                    )}
                     {task.contributionMethod && task.contributionScope && (
                       <Badge variant="outline" className="border-orange-200 text-orange-700 text-xs">
                         {task.contributionMethod}/{task.contributionScope}

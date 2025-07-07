@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Users, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EvaluationGuide from './EvaluationGuide';
+import TaskGanttChart from '@/components/TaskGanttChart';
+import { Task } from '@/types/evaluation';
 
 interface EvaluationData {
   evaluateeId: string;
@@ -29,6 +32,8 @@ interface EvaluationData {
     feedbackDate?: string;
     lastModified?: string;
     evaluatorName?: string;
+    startDate?: string;
+    endDate?: string;
   }>;
 }
 
@@ -81,6 +86,7 @@ export const EvaluatorDashboard: React.FC = () => {
   const [evaluatees, setEvaluatees] = useState<EvaluateeInfo[]>([]);
   const [recentFeedbacks, setRecentFeedbacks] = useState<RecentFeedback[]>([]);
   const [showEvaluationGuide, setShowEvaluationGuide] = useState(false);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
 
   const loadEvaluationData = () => {
     if (!user) return;
@@ -89,6 +95,7 @@ export const EvaluatorDashboard: React.FC = () => {
     const myEvaluatees = evaluatorMapping[user.employeeId] || [];
     const updatedEvaluatees: EvaluateeInfo[] = [];
     const allFeedbacks: RecentFeedback[] = [];
+    const combinedTasks: Task[] = [];
 
     myEvaluatees.forEach(evaluatee => {
       const savedData = localStorage.getItem(`evaluation-${evaluatee.id}`);
@@ -121,6 +128,18 @@ export const EvaluatorDashboard: React.FC = () => {
                 score: task.score ? `${task.score}점` : '평가중',
                 evaluatorName: task.evaluatorName || user.name
               });
+            }
+          });
+
+          // Add tasks to combined list with evaluatee info
+          evaluationData.tasks.forEach(task => {
+            if (task.startDate && task.endDate) {
+              combinedTasks.push({
+                ...task,
+                title: `${evaluatee.name}: ${task.title}`, // Add evaluatee name to task title
+                evaluateeId: evaluatee.id,
+                evaluateeName: evaluatee.name
+              } as Task & { evaluateeId: string; evaluateeName: string });
             }
           });
 
@@ -181,9 +200,11 @@ export const EvaluatorDashboard: React.FC = () => {
 
     console.log('Updated evaluatees data:', updatedEvaluatees);
     console.log('Recent feedbacks (sorted):', sortedFeedbacks);
+    console.log('Combined tasks:', combinedTasks);
     
     setEvaluatees(updatedEvaluatees);
     setRecentFeedbacks(sortedFeedbacks);
+    setAllTasks(combinedTasks);
   };
 
   // Load data on mount and set up refresh
@@ -280,10 +301,14 @@ export const EvaluatorDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="evaluatees" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="evaluatees" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">담당 피평가자</span>
             <span className="inline sm:hidden">피평가자</span>
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">전체 일정</span>
+            <span className="inline sm:hidden">일정</span>
           </TabsTrigger>
           <TabsTrigger value="pending" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">대기 중인 평가</span>
@@ -352,6 +377,18 @@ export const EvaluatorDashboard: React.FC = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="schedule" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">전체 과업 일정</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">담당 피평가자들의 모든 과업 일정을 확인하세요</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TaskGanttChart tasks={allTasks} />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">

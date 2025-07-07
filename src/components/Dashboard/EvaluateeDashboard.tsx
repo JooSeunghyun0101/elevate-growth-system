@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -233,14 +234,10 @@ export const EvaluateeDashboard: React.FC = () => {
       </Card>
 
       <Tabs defaultValue="tasks" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="tasks" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">내 과업</span>
             <span className="inline sm:hidden">과업</span>
-          </TabsTrigger>
-          <TabsTrigger value="timeline" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">일정표</span>
-            <span className="inline sm:hidden">일정</span>
           </TabsTrigger>
           <TabsTrigger value="feedback" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">받은 피드백</span>
@@ -305,16 +302,13 @@ export const EvaluateeDashboard: React.FC = () => {
 
                     {task.contributionMethod && task.contributionScope && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">기여 방식/범위</span>
-                          <div className="flex gap-2">
-                            <Badge variant="outline" className="border-orange-200 text-orange-700 text-sm px-3 py-1">
-                              {task.contributionMethod}
-                            </Badge>
-                            <Badge variant="outline" className="border-blue-200 text-blue-700 text-sm px-3 py-1">
-                              {task.contributionScope}
-                            </Badge>
-                          </div>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <Badge variant="outline" className="border-orange-200 text-orange-700 text-sm px-3 py-1 font-semibold">
+                            {task.contributionMethod}
+                          </Badge>
+                          <Badge variant="outline" className="border-blue-200 text-blue-700 text-sm px-3 py-1 font-semibold">
+                            {task.contributionScope}
+                          </Badge>
                         </div>
                         {task.feedback && (
                           <p className="text-sm text-gray-700">💬 {task.feedback}</p>
@@ -324,18 +318,12 @@ export const EvaluateeDashboard: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="timeline" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>과업 일정표</CardTitle>
-              <CardDescription>등록된 과업들의 진행 일정</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TaskGanttChart tasks={evaluationData.tasks} />
+              {/* Gantt Chart Integration */}
+              <div className="mt-6">
+                <h4 className="text-lg font-medium mb-4">과업 일정</h4>
+                <TaskGanttChart tasks={evaluationData.tasks} />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

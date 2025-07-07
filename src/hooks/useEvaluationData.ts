@@ -72,6 +72,9 @@ export const useEvaluationData = (employeeId: string) => {
     ]
   });
 
+  // Store feedback temporarily without adding to history
+  const [tempFeedbacks, setTempFeedbacks] = useState<Record<string, string>>({});
+
   // Load saved data on component mount
   useEffect(() => {
     const savedData = localStorage.getItem(`evaluation-${employeeId}`);
@@ -86,6 +89,15 @@ export const useEvaluationData = (employeeId: string) => {
           evaluateeDepartment: employeeInfo.department,
           growthLevel: employeeInfo.growthLevel,
         }));
+
+        // Initialize temp feedbacks with current feedback values
+        const initialTempFeedbacks: Record<string, string> = {};
+        parsedData.tasks.forEach((task: Task) => {
+          if (task.feedback) {
+            initialTempFeedbacks[task.id] = task.feedback;
+          }
+        });
+        setTempFeedbacks(initialTempFeedbacks);
       } catch (error) {
         console.error('Failed to load saved evaluation data:', error);
       }
@@ -134,9 +146,9 @@ export const useEvaluationData = (employeeId: string) => {
         const task = evaluationData.tasks.find(t => t.id === taskId);
         addNotification({
           recipientId: employeeId,
-          title: '과업 내용 수정',
+          title: '과업 내용 변경',
           message: `평가자가 "${task?.title}" 과업을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`,
-          type: 'task_updated',
+          type: 'task_content_changed',
           priority: 'medium',
           senderId: user.id,
           senderName: user.name,
@@ -167,6 +179,7 @@ export const useEvaluationData = (employeeId: string) => {
     const task = evaluationData.tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    const previousScore = task.score;
     const updatedTask = { ...task, contributionMethod: method };
     
     // Handle "기여없음" case
@@ -187,12 +200,27 @@ export const useEvaluationData = (employeeId: string) => {
       tasks: prev.tasks.map(t => t.id === taskId ? updatedTask : t),
       lastModified: new Date().toISOString()
     }));
+
+    // Send score change notification if score actually changed
+    if (user?.role === 'evaluator' && previousScore !== updatedTask.score) {
+      addNotification({
+        recipientId: employeeId,
+        title: '평가 점수 변경',
+        message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
+        type: 'score_changed',
+        priority: 'high',
+        senderId: user.id,
+        senderName: user.name,
+        relatedEvaluationId: employeeId
+      });
+    }
   };
 
   const handleScopeClick = (taskId: string, scope: string) => {
     const task = evaluationData.tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    const previousScore = task.score;
     const updatedTask = { ...task, contributionScope: scope };
     
     // Handle "기여없음" case
@@ -213,36 +241,35 @@ export const useEvaluationData = (employeeId: string) => {
       tasks: prev.tasks.map(t => t.id === taskId ? updatedTask : t),
       lastModified: new Date().toISOString()
     }));
+
+    // Send score change notification if score actually changed
+    if (user?.role === 'evaluator' && previousScore !== updatedTask.score) {
+      addNotification({
+        recipientId: employeeId,
+        title: '평가 점수 변경',
+        message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
+        type: 'score_changed',
+        priority: 'high',
+        senderId: user.id,
+        senderName: user.name,
+        relatedEvaluationId: employeeId
+      });
+    }
   };
 
+  // Handle temporary feedback changes (don't save to history yet)
   const handleFeedbackChange = (taskId: string, feedback: string) => {
-    const task = evaluationData.tasks.find(t => t.id === taskId);
-    if (!task) return;
+    setTempFeedbacks(prev => ({
+      ...prev,
+      [taskId]: feedback
+    }));
 
-    // Add to feedback history if feedback is different and not empty
-    let updatedFeedbackHistory = task.feedbackHistory || [];
-    if (feedback.trim() && feedback !== task.feedback) {
-      const newFeedbackItem: FeedbackHistoryItem = {
-        id: `feedback-${Date.now()}`,
-        content: feedback,
-        date: new Date().toISOString(),
-        evaluatorName: user?.name || '평가자',
-        evaluatorId: user?.id || 'unknown'
-      };
-      updatedFeedbackHistory = [...updatedFeedbackHistory, newFeedbackItem];
-    }
-
+    // Update the current feedback in the task (but not history)
     setEvaluationData(prev => ({
       ...prev,
       tasks: prev.tasks.map(task => 
         task.id === taskId 
-          ? { 
-              ...task, 
-              feedback,
-              feedbackHistory: updatedFeedbackHistory,
-              feedbackDate: new Date().toISOString(),
-              evaluatorName: user?.name || '평가자'
-            }
+          ? { ...task, feedback }
           : task
       ),
       lastModified: new Date().toISOString()
@@ -285,8 +312,52 @@ export const useEvaluationData = (employeeId: string) => {
         }
       }
 
+      // Process feedback changes and add to history only if feedback actually changed
+      const updatedTasks = evaluationData.tasks.map(task => {
+        const currentFeedback = tempFeedbacks[task.id] || '';
+        const previousTask = previousData?.tasks.find(t => t.id === task.id);
+        const previousFeedback = previousTask?.feedback || '';
+
+        let updatedFeedbackHistory = task.feedbackHistory || [];
+
+        // Only add to history if feedback changed and is not empty
+        if (currentFeedback.trim() && currentFeedback !== previousFeedback) {
+          const newFeedbackItem: FeedbackHistoryItem = {
+            id: `feedback-${Date.now()}-${task.id}`,
+            content: currentFeedback,
+            date: new Date().toISOString(),
+            evaluatorName: user?.name || '평가자',
+            evaluatorId: user?.id || 'unknown'
+          };
+          updatedFeedbackHistory = [...updatedFeedbackHistory, newFeedbackItem];
+
+          // Send feedback notification
+          if (user?.role === 'evaluator') {
+            addNotification({
+              recipientId: employeeId,
+              title: '피드백 등록',
+              message: `"${task.title}" 과업에 새로운 피드백이 등록되었습니다.\n\n${currentFeedback}`,
+              type: 'feedback_added',
+              priority: 'medium',
+              senderId: user.id,
+              senderName: user.name,
+              relatedEvaluationId: employeeId
+            });
+          }
+        }
+
+        return {
+          ...task,
+          feedback: currentFeedback,
+          feedbackHistory: updatedFeedbackHistory,
+          feedbackDate: currentFeedback !== previousFeedback ? new Date().toISOString() : task.feedbackDate,
+          evaluatorName: user?.name || task.evaluatorName
+        };
+      });
+
       const updatedData = {
         ...evaluationData,
+        tasks: updatedTasks,
         evaluationStatus: isEvaluationComplete() ? 'completed' as const : 'in-progress' as const,
         lastModified: new Date().toISOString()
       };
@@ -298,88 +369,6 @@ export const useEvaluationData = (employeeId: string) => {
         title: "평가 저장 완료",
         description: `평가 내용이 성공적으로 저장되었습니다. ${isEvaluationComplete() ? '평가가 완료되었습니다.' : ''}`,
       });
-
-      // Send notifications only for actual changes when evaluator saves
-      if (user?.role === 'evaluator' && previousData) {
-        const changes: string[] = [];
-        const taskChanges: string[] = [];
-        
-        // Compare each task for changes
-        evaluationData.tasks.forEach(currentTask => {
-          const previousTask = previousData.tasks.find(t => t.id === currentTask.id);
-          if (!previousTask) return; // Skip new tasks
-          
-          const taskChangesForThisTask: string[] = [];
-          
-          // Check for evaluation changes
-          if (previousTask.contributionMethod !== currentTask.contributionMethod) {
-            const methodText = currentTask.contributionMethod === '기여없음' ? '기여없음' : `${currentTask.contributionMethod} 방식`;
-            taskChangesForThisTask.push(`기여방식: ${methodText}`);
-          }
-          
-          if (previousTask.contributionScope !== currentTask.contributionScope) {
-            const scopeText = currentTask.contributionScope === '기여없음' ? '기여없음' : `${currentTask.contributionScope} 범위`;
-            taskChangesForThisTask.push(`기여범위: ${scopeText}`);
-          }
-          
-          if (previousTask.score !== currentTask.score) {
-            taskChangesForThisTask.push(`점수: ${currentTask.score || 0}점`);
-          }
-          
-          if (previousTask.feedback !== currentTask.feedback && currentTask.feedback?.trim()) {
-            taskChangesForThisTask.push(`피드백 ${previousTask.feedback ? '수정' : '추가'}`);
-          }
-
-          // If there are changes for this task, add them to overall changes
-          if (taskChangesForThisTask.length > 0) {
-            changes.push(`"${currentTask.title}": ${taskChangesForThisTask.join(', ')}`);
-            taskChanges.push(currentTask.title);
-          }
-        });
-
-        // Send notification only if there are actual changes
-        if (changes.length > 0) {
-          const isCompleted = isEvaluationComplete();
-          const wasCompleted = previousData.evaluationStatus === 'completed';
-          
-          let title = '';
-          let message = '';
-          
-          if (isCompleted && !wasCompleted) {
-            title = '평가 완료';
-            message = `평가자가 성과평가를 완료했습니다.\n\n변경된 내용:\n${changes.join('\n')}`;
-          } else if (isCompleted && wasCompleted) {
-            title = '평가 내용 수정';
-            message = `평가자가 완료된 평가 내용을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`;
-          } else {
-            title = '평가 내용 수정';
-            message = `평가자가 평가 내용을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`;
-          }
-
-          addNotification({
-            recipientId: employeeId,
-            title,
-            message,
-            type: isCompleted ? 'evaluation_completed' : 'evaluation_updated',
-            priority: isCompleted ? 'high' : 'medium',
-            senderId: user.id,
-            senderName: user.name,
-            relatedEvaluationId: employeeId
-          });
-        } else if (isEvaluationComplete() && previousData.evaluationStatus !== 'completed') {
-          // Send completion notification even if no changes in current save
-          addNotification({
-            recipientId: employeeId,
-            title: '평가 완료',
-            message: '평가자가 성과평가를 완료했습니다.',
-            type: 'evaluation_completed',
-            priority: 'high',
-            senderId: user.id,
-            senderName: user.name,
-            relatedEvaluationId: employeeId
-          });
-        }
-      }
 
       return true;
     } catch (error) {

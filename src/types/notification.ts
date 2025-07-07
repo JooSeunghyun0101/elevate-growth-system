@@ -1,5 +1,8 @@
 
 export type NotificationType = 
+  | 'score_changed'
+  | 'task_content_changed' 
+  | 'feedback_added'
   | 'task_updated'
   | 'evaluation_updated' 
   | 'evaluation_started'
