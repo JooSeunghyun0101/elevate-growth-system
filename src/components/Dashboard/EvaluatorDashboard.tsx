@@ -165,12 +165,17 @@ export const EvaluatorDashboard: React.FC = () => {
             }
           });
 
-          // Add tasks to combined list and individual evaluatee list
+          // Add tasks to combined list and individual evaluatee list - fix the type error
           const evaluateeTasks = evaluationData.tasks.map(task => ({
             ...task,
             title: `${evaluatee.name}: ${task.title}`,
             evaluateeId: evaluatee.id,
-            evaluateeName: evaluatee.name
+            evaluateeName: evaluatee.name,
+            // Ensure feedbackHistory has the correct type with evaluatorId
+            feedbackHistory: (task.feedbackHistory || []).map(historyItem => ({
+              ...historyItem,
+              evaluatorId: historyItem.evaluatorId || user.id || 'unknown'
+            }))
           } as Task & { evaluateeId: string; evaluateeName: string }));
 
           combinedTasks.push(...evaluateeTasks);
