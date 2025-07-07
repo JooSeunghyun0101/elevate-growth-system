@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,24 +36,14 @@ const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
             </h3>
             <div className="space-y-3">
               <div className="p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg">
-                <h4 className="font-medium text-sm sm:text-base mb-3 text-orange-800">성장레벨별 역할 기준</h4>
-                <div className="grid gap-2 sm:gap-3">
-                  <div className="flex items-start gap-3">
-                    <Badge className="bg-amber-100 text-amber-800 text-xs flex-shrink-0">Lv.1</Badge>
-                    <p className="text-xs sm:text-sm text-gray-700">기본 업무 수행 능력을 갖추고, 주어진 과업을 성실히 완수하는 단계</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Badge className="bg-orange-100 text-orange-800 text-xs flex-shrink-0">Lv.2</Badge>
-                    <p className="text-xs sm:text-sm text-gray-700">독립적 업무 수행과 팀 내 협업을 통해 상호적 성과를 창출하는 단계</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Badge className="bg-red-100 text-red-800 text-xs flex-shrink-0">Lv.3</Badge>
-                    <p className="text-xs sm:text-sm text-gray-700">전략적 사고와 리딩 역할을 통해 조직 전체에 영향을 미치는 단계</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Badge className="bg-purple-100 text-purple-800 text-xs flex-shrink-0">Lv.4</Badge>
-                    <p className="text-xs sm:text-sm text-gray-700">총괄적 관리와 전략적 의사결정을 통해 조직의 방향을 이끄는 단계</p>
-                  </div>
+                <h4 className="font-medium text-sm sm:text-base mb-3 text-orange-800">평가점수의 의미</h4>
+                <div className="space-y-2">
+                  <p className="text-xs sm:text-sm text-gray-700 font-medium">
+                    평가점수는 성장레벨별 요구수준을 뜻합니다.
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-700">
+                    각 피평가자의 성장레벨에 따라 기대되는 역할과 성과 수준이 다르며, 이를 기준으로 평가점수가 산정됩니다.
+                  </p>
                 </div>
               </div>
               <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
@@ -261,7 +250,7 @@ const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
         </CardContent>
 
         <div className="border-t bg-gray-50 flex-shrink-0 p-4 sm:p-6">
-          <Button onClick={onClose} className="ok-orange hover:opacity-90 w-full sm:w-auto sm:ml-auto flex">
+          <Button onClick={onClose} variant="outline" className="w-full sm:w-auto sm:ml-auto flex">
             확인
           </Button>
         </div>
