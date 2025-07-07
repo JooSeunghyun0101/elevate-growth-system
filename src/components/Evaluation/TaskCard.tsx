@@ -5,7 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Target, Edit3, Check, X, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Target, Edit3, Check, X, Calendar, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import ScoringChart from '@/components/ScoringChart';
 import ScoreDisplay from './ScoreDisplay';
 import { Task } from '@/types/evaluation';
@@ -36,8 +41,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [tempTitle, setTempTitle] = useState(task.title);
   const [tempDescription, setTempDescription] = useState(task.description);
-  const [tempStartDate, setTempStartDate] = useState(task.startDate || '');
-  const [tempEndDate, setTempEndDate] = useState(task.endDate || '');
+  const [tempStartDate, setTempStartDate] = useState<Date | undefined>(
+    task.startDate ? new Date(task.startDate) : undefined
+  );
+  const [tempEndDate, setTempEndDate] = useState<Date | undefined>(
+    task.endDate ? new Date(task.endDate) : undefined
+  );
 
   const handleWeightEdit = () => {
     setTempWeight(task.weight);
@@ -59,8 +68,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const handleTaskEdit = () => {
     setTempTitle(task.title);
     setTempDescription(task.description);
-    setTempStartDate(task.startDate || '');
-    setTempEndDate(task.endDate || '');
+    setTempStartDate(task.startDate ? new Date(task.startDate) : undefined);
+    setTempEndDate(task.endDate ? new Date(task.endDate) : undefined);
     setIsEditingTask(true);
   };
 
@@ -74,11 +83,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
       if (tempDescription.trim() !== task.description) {
         updates.description = tempDescription.trim();
       }
-      if (tempStartDate !== (task.startDate || '')) {
-        updates.startDate = tempStartDate;
+      if (tempStartDate) {
+        const newStartDate = format(tempStartDate, 'yyyy-MM-dd');
+        if (newStartDate !== task.startDate) {
+          updates.startDate = newStartDate;
+        }
       }
-      if (tempEndDate !== (task.endDate || '')) {
-        updates.endDate = tempEndDate;
+      if (tempEndDate) {
+        const newEndDate = format(tempEndDate, 'yyyy-MM-dd');
+        if (newEndDate !== task.endDate) {
+          updates.endDate = newEndDate;
+        }
       }
 
       if (Object.keys(updates).length > 0) {
@@ -91,8 +106,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const handleTaskCancel = () => {
     setTempTitle(task.title);
     setTempDescription(task.description);
-    setTempStartDate(task.startDate || '');
-    setTempEndDate(task.endDate || '');
+    setTempStartDate(task.startDate ? new Date(task.startDate) : undefined);
+    setTempEndDate(task.endDate ? new Date(task.endDate) : undefined);
     setIsEditingTask(false);
   };
 
@@ -102,7 +117,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <Card>
       <CardHeader className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {isEditingTask ? (
               <div className="space-y-3">
@@ -121,22 +136,56 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs text-gray-600">시작일</label>
-                    <Input
-                      type="date"
-                      value={tempStartDate}
-                      onChange={(e) => setTempStartDate(e.target.value)}
-                      className="text-xs"
-                    />
+                    <label className="text-xs text-gray-600 mb-1 block">시작일</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-xs",
+                            !tempStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {tempStartDate ? format(tempStartDate, "yyyy-MM-dd") : "날짜 선택"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={tempStartDate}
+                          onSelect={setTempStartDate}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-600">종료일</label>
-                    <Input
-                      type="date"
-                      value={tempEndDate}
-                      onChange={(e) => setTempEndDate(e.target.value)}
-                      className="text-xs"
-                    />
+                    <label className="text-xs text-gray-600 mb-1 block">종료일</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-xs",
+                            !tempEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {tempEndDate ? format(tempEndDate, "yyyy-MM-dd") : "날짜 선택"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={tempEndDate}
+                          onSelect={setTempEndDate}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -155,30 +204,47 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="flex items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-base sm:text-lg truncate">{task.title}</CardTitle>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
-                  {task.startDate && task.endDate && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <Calendar className="w-3 h-3 text-gray-500" />
-                      <span className="text-xs text-gray-500">
-                        {task.startDate} ~ {task.endDate}
-                      </span>
-                    </div>
-                  )}
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  {/* Edit buttons on the left */}
+                  <div className="flex flex-col gap-1 mr-2">
+                    {canEditTask && (
+                      <button
+                        onClick={handleTaskEdit}
+                        className="text-gray-500 hover:text-gray-700 flex-shrink-0"
+                        title="과업 내용 수정"
+                      >
+                        <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    )}
+                    {user?.role === 'evaluator' && (
+                      <button
+                        onClick={handleWeightEdit}
+                        className="text-gray-500 hover:text-gray-700 flex-shrink-0"
+                        title="가중치 수정"
+                      >
+                        <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base sm:text-lg">{task.title}</CardTitle>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                    {task.startDate && task.endDate && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <Calendar className="w-3 h-3 text-gray-500" />
+                        <span className="text-xs text-gray-500">
+                          {task.startDate} ~ {task.endDate}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {canEditTask && (
-                  <button
-                    onClick={handleTaskEdit}
-                    className="text-gray-500 hover:text-gray-700 flex-shrink-0"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                )}
               </div>
             )}
           </div>
+          
           <div className="flex items-center gap-2 flex-shrink-0">
             {isEditingWeight ? (
               <div className="flex items-center gap-2">
@@ -205,33 +271,23 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-1">
-                <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-lg font-bold">
-                  <span className="hidden sm:inline">가중치 {task.weight}%</span>
-                  <span className="inline sm:hidden">{task.weight}%</span>
-                </Badge>
-                {user?.role === 'evaluator' && (
-                  <button
-                    onClick={handleWeightEdit}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-                )}
-              </div>
+              <Badge variant="outline" className="border-orange-500 text-orange-900 bg-orange-100 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-lg font-bold">
+                <span className="hidden sm:inline">가중치 {task.weight}%</span>
+                <span className="inline sm:hidden">{task.weight}%</span>
+              </Badge>
             )}
           </div>
         </div>
       </CardHeader>
       <CardContent className="p-4 sm:p-6 pt-0 space-y-4 sm:space-y-6">
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-          {/* Scoring Chart - Fixed height container */}
-          <div className="flex flex-col min-h-[420px] sm:min-h-[500px]">
+          {/* Scoring Chart - Adjusted container */}
+          <div className="flex flex-col min-h-[350px] sm:min-h-[400px]">
             <div className="flex-1 flex items-center justify-center">
               <ScoringChart
                 selectedMethod={task.contributionMethod}
                 selectedScope={task.contributionScope}
-                size="large"
+                size="small"
                 title={`과업 ${index + 1} 스코어링`}
                 onMethodClick={(method) => onMethodClick(task.id, method)}
                 onScopeClick={(scope) => onScopeClick(task.id, scope)}
@@ -239,8 +295,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </div>
           </div>
 
-          {/* Score Display and Feedback Input - Fixed height container */}
-          <div className="flex flex-col min-h-[420px] sm:min-h-[500px]">
+          {/* Score Display and Feedback Input - Adjusted container */}
+          <div className="flex flex-col min-h-[350px] sm:min-h-[400px]">
             {/* Score Display Section */}
             {task.score !== undefined || isNoContribution ? (
               <ScoreDisplay
@@ -268,7 +324,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
                 value={task.feedback || ''}
                 onChange={(e) => onFeedbackChange(task.id, e.target.value)}
-                className="flex-1 min-h-[120px] sm:min-h-[160px] resize-none text-xs sm:text-sm"
+                className="flex-1 min-h-[100px] sm:min-h-[120px] resize-none text-xs sm:text-sm"
               />
             </div>
           </div>

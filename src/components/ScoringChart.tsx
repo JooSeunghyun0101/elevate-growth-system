@@ -15,7 +15,7 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   selectedScope, 
   selectedMethod, 
   title = "스코어링 매트릭스",
-  size = 'medium',
+  size = 'small',
   onMethodClick,
   onScopeClick
 }) => {
@@ -36,22 +36,22 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   const getCellSize = () => {
     switch (size) {
       case 'small':
-        return 'w-10 h-10 text-xs';
+        return 'w-8 h-8 text-xs';
       case 'large':
         return 'w-20 h-20 text-lg';
       default:
-        return 'w-14 h-14 text-sm';
+        return 'w-12 h-12 text-sm';
     }
   };
 
   const getHeaderSize = () => {
     switch (size) {
       case 'small':
-        return 'w-10 h-10 text-xs';
+        return 'w-8 h-8 text-xs';
       case 'large':
         return 'w-20 h-20 text-base';
       default:
-        return 'w-14 h-14 text-xs';
+        return 'w-12 h-12 text-xs';
     }
   };
 
@@ -93,18 +93,18 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
   };
 
   return (
-    <Card className="w-fit border-orange-200">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base text-center text-orange-700">{title}</CardTitle>
+    <Card className="w-fit border-orange-200 max-w-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm text-center text-orange-700">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3">
         <div className="flex flex-col gap-1">
           {/* Matrix rows with method labels */}
           {methods.map((method, methodIndex) => (
             <div key={method} className="flex gap-1">
               {/* Method label */}
               <div className={`
-                ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border cursor-pointer transition-all
+                ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border cursor-pointer transition-all text-center leading-tight
                 ${isMethodSelected(methodIndex) 
                   ? 'bg-orange-500 text-white border-orange-600 border-2 shadow-lg transform scale-105' 
                   : 'bg-orange-200 text-gray-900 hover:bg-orange-300'
@@ -141,7 +141,7 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
           ))}
 
           {/* Header row at bottom */}
-          <div className="flex gap-1 mt-2">
+          <div className="flex gap-1 mt-1">
             <div 
               className={`
                 ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border cursor-pointer transition-all text-center leading-tight
@@ -169,28 +169,6 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
                 {scope}
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="mt-4 text-xs text-gray-600">
-          <div className="flex flex-wrap gap-2 justify-center">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-orange-200 rounded"></div>
-              <span>기여방식 (클릭)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-amber-200 rounded"></div>
-              <span>기여범위 (클릭)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-200 rounded"></div>
-              <span>기여없음 (클릭)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-100 border border-green-500 rounded"></div>
-              <span>선택된 조합</span>
-            </div>
           </div>
         </div>
       </CardContent>

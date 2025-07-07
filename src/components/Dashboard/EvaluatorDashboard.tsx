@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
+import { Users, CheckCircle, Clock, MessageSquare, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EvaluationGuide from './EvaluationGuide';
 import TaskGanttChart from '@/components/TaskGanttChart';
@@ -60,6 +60,10 @@ interface RecentFeedback {
   evaluatorName?: string;
 }
 
+interface TaskFeedbacks {
+  [taskTitle: string]: RecentFeedback[];
+}
+
 // Employee mapping - evaluator to evaluatees (updated with new positions)
 const evaluatorMapping: Record<string, Array<{id: string, name: string, position: string, department: string, growthLevel: number}>> = {
   'H0908033': [ // 박판근
@@ -83,7 +87,8 @@ export const EvaluatorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [evaluatees, setEvaluatees] = useState<EvaluateeInfo[]>([]);
-  const [recentFeedbacks, setRecentFeedbacks] = useState<RecentFeedback[]>([]);
+  const [taskFeedbacks, setTaskFeedbacks] = useState<TaskFeedbacks>({});
+  const [showAllFeedbacks, setShowAllFeedbacks] = useState<Record<string, boolean>>({});
   const [showEvaluationGuide, setShowEvaluationGuide] = useState(false);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [evaluateeTasks, setEvaluateeTasks] = useState<Record<string, Task[]>>({});
@@ -94,7 +99,7 @@ export const EvaluatorDashboard: React.FC = () => {
     // Get evaluatees for current evaluator
     const myEvaluatees = evaluatorMapping[user.employeeId] || [];
     const updatedEvaluatees: EvaluateeInfo[] = [];
-    const allFeedbacks: RecentFeedback[] = [];
+    const feedbacksByTask: TaskFeedbacks = {};
     const combinedTasks: Task[] = [];
     const tasksByEvaluatee: Record<string, Task[]> = {};
 
@@ -118,10 +123,14 @@ export const EvaluatorDashboard: React.FC = () => {
 
           const status = evaluationData.evaluationStatus;
 
-          // Extract feedback data
+          // Extract feedback data grouped by task
           evaluationData.tasks.forEach((task) => {
             if (task.feedback && task.feedback.trim()) {
-              allFeedbacks.push({
+              const taskKey = `${evaluationData.evaluateeName}: ${task.title}`;
+              if (!feedbacksByTask[taskKey]) {
+                feedbacksByTask[taskKey] = [];
+              }
+              feedbacksByTask[taskKey].push({
                 evaluatee: `${evaluationData.evaluateeName} ${evaluationData.evaluateePosition}`,
                 task: task.title,
                 feedback: task.feedback,
@@ -185,11 +194,10 @@ export const EvaluatorDashboard: React.FC = () => {
       }
     });
 
-    // Sort feedbacks by date and take top 5
-    const sortedFeedbacks = allFeedbacks
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 5)
-      .map(feedback => ({
+    // Sort feedbacks by date within each task group
+    Object.keys(feedbacksByTask).forEach(taskKey => {
+      feedbacksByTask[taskKey].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      feedbacksByTask[taskKey] = feedbacksByTask[taskKey].map(feedback => ({
         ...feedback,
         date: new Date(feedback.date).toLocaleDateString('ko-KR', {
           month: 'short',
@@ -198,13 +206,14 @@ export const EvaluatorDashboard: React.FC = () => {
           minute: '2-digit'
         })
       }));
+    });
 
     console.log('Updated evaluatees data:', updatedEvaluatees);
-    console.log('Recent feedbacks (sorted):', sortedFeedbacks);
+    console.log('Task feedbacks:', feedbacksByTask);
     console.log('Combined tasks:', combinedTasks);
     
     setEvaluatees(updatedEvaluatees);
-    setRecentFeedbacks(sortedFeedbacks);
+    setTaskFeedbacks(feedbacksByTask);
     setAllTasks(combinedTasks);
     setEvaluateeTasks(tasksByEvaluatee);
   };
@@ -230,6 +239,8 @@ export const EvaluatorDashboard: React.FC = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  const totalFeedbackCount = Object.values(taskFeedbacks).reduce((sum, feedbacks) => sum + feedbacks.length, 0);
+
   const myStats = [
     { 
       label: { full: '담당 피평가자', mobile: '피평가자' },
@@ -251,7 +262,7 @@ export const EvaluatorDashboard: React.FC = () => {
     },
     { 
       label: { full: '작성한 피드백', mobile: '피드백' },
-      value: `${recentFeedbacks.length}건`, 
+      value: `${totalFeedbackCount}건`, 
       icon: MessageSquare, 
       color: 'text-orange-500' 
     },
@@ -259,6 +270,13 @@ export const EvaluatorDashboard: React.FC = () => {
 
   const handleEvaluateClick = (evaluateeId: string) => {
     navigate(`/evaluation/${evaluateeId}`);
+  };
+
+  const toggleShowAllFeedbacks = (taskKey: string) => {
+    setShowAllFeedbacks(prev => ({
+      ...prev,
+      [taskKey]: !prev[taskKey]
+    }));
   };
 
   return (
@@ -468,38 +486,86 @@ export const EvaluatorDashboard: React.FC = () => {
         <TabsContent value="feedback" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base sm:text-lg">최근 작성한 피드백</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">팀원들에게 제공한 피드백 내역 (최신순)</CardDescription>
+              <CardTitle className="text-base sm:text-lg">작성한 피드백 (과업별)</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">과업별로 작성한 피드백 내역 (최신순)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentFeedbacks.map((feedback, index) => (
-                  <div key={index} className="p-3 sm:p-4 border rounded-lg">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-medium text-sm sm:text-lg">{feedback.evaluatee}</p>
-                        <Badge variant="outline" className="mt-1 text-xs">
-                          {feedback.task}
-                        </Badge>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="border-orange-200 text-orange-700 mb-1 text-xs">
-                          {feedback.score}
-                        </Badge>
-                        <p className="text-xs text-muted-foreground">{feedback.date}</p>
-                      </div>
+              <div className="space-y-6">
+                {Object.entries(taskFeedbacks).map(([taskKey, feedbacks]) => (
+                  <div key={taskKey} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium text-sm sm:text-base">{taskKey}</h3>
+                      <Badge variant="outline" className="text-xs">
+                        {feedbacks.length}개 피드백
+                      </Badge>
                     </div>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs sm:text-sm font-medium">평가자: {feedback.evaluatorName || '평가자 미확인'}</span>
+                    
+                    {/* Show latest feedback */}
+                    {feedbacks.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs sm:text-sm font-medium">
+                              평가자: {feedbacks[0].evaluatorName || '평가자 미확인'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="border-orange-200 text-orange-700 text-xs">
+                                {feedbacks[0].score}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">{feedbacks[0].date}</span>
+                            </div>
+                          </div>
+                          <p className="text-xs sm:text-sm text-gray-700">
+                            {feedbacks[0].feedback}
+                          </p>
+                        </div>
+                        
+                        {/* Show additional feedbacks if expanded */}
+                        {showAllFeedbacks[taskKey] && feedbacks.slice(1).map((feedback, index) => (
+                          <div key={index} className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs sm:text-sm font-medium">
+                                평가자: {feedback.evaluatorName || '평가자 미확인'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="border-orange-200 text-orange-700 text-xs">
+                                  {feedback.score}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">{feedback.date}</span>
+                              </div>
+                            </div>
+                            <p className="text-xs sm:text-sm text-gray-700">
+                              {feedback.feedback}
+                            </p>
+                          </div>
+                        ))}
+                        
+                        {/* Show more/less button */}
+                        {feedbacks.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleShowAllFeedbacks(taskKey)}
+                            className="w-full text-xs"
+                          >
+                            {showAllFeedbacks[taskKey] ? (
+                              <>
+                                <ChevronUp className="w-3 h-3 mr-1" />
+                                접기
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-3 h-3 mr-1" />
+                                {feedbacks.length - 1}개 더보기
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-700">
-                        {feedback.feedback}
-                      </p>
-                    </div>
+                    )}
                   </div>
                 ))}
-                {recentFeedbacks.length === 0 && (
+                {Object.keys(taskFeedbacks).length === 0 && (
                   <p className="text-center text-gray-500 py-8 text-sm">작성된 피드백이 없습니다.</p>
                 )}
               </div>

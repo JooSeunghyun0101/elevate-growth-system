@@ -1,14 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Task } from '@/types/evaluation';
 import { format, differenceInDays, parseISO } from 'date-fns';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface MiniGanttChartProps {
   tasks: Task[];
   className?: string;
+  maxInitialTasks?: number;
 }
 
-const MiniGanttChart: React.FC<MiniGanttChartProps> = ({ tasks, className = '' }) => {
+const MiniGanttChart: React.FC<MiniGanttChartProps> = ({ 
+  tasks, 
+  className = '', 
+  maxInitialTasks = 3 
+}) => {
+  const [showAll, setShowAll] = useState(false);
+  
   // Filter tasks that have both start and end dates
   const tasksWithDates = tasks.filter(task => task.startDate && task.endDate);
   
@@ -38,6 +46,9 @@ const MiniGanttChart: React.FC<MiniGanttChartProps> = ({ tasks, className = '' }
     'bg-indigo-400'
   ];
 
+  const displayTasks = showAll ? tasksWithDates : tasksWithDates.slice(0, maxInitialTasks);
+  const hasMore = tasksWithDates.length > maxInitialTasks;
+
   return (
     <div className={`w-full ${className}`}>
       <div className="space-y-1">
@@ -48,7 +59,7 @@ const MiniGanttChart: React.FC<MiniGanttChartProps> = ({ tasks, className = '' }
         </div>
         
         {/* Tasks */}
-        {tasksWithDates.slice(0, 4).map((task, index) => {
+        {displayTasks.map((task, index) => {
           const startDate = parseISO(task.startDate!);
           const endDate = parseISO(task.endDate!);
           const taskDays = differenceInDays(endDate, startDate);
@@ -78,9 +89,25 @@ const MiniGanttChart: React.FC<MiniGanttChartProps> = ({ tasks, className = '' }
           );
         })}
         
-        {tasksWithDates.length > 4 && (
-          <div className="text-xs text-gray-400 text-center pt-1">
-            +{tasksWithDates.length - 4}개 더
+        {/* Show more/less button */}
+        {hasMore && (
+          <div className="flex justify-center pt-2">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            >
+              {showAll ? (
+                <>
+                  <ChevronUp className="w-3 h-3" />
+                  접기
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3 h-3" />
+                  +{tasksWithDates.length - maxInitialTasks}개 더
+                </>
+              )}
+            </button>
           </div>
         )}
       </div>
