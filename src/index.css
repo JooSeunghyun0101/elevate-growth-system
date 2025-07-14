@@ -114,12 +114,9 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  .performance-gradient {
-    background: linear-gradient(135deg, hsl(var(--ok-orange)) 0%, hsl(var(--ok-yellow)) 100%);
-  }
   
   .ok-orange {
-    background-color: hsl(var(--ok-orange));
+    background-color: #fff;
   }
   
   .ok-dark-brown {
@@ -189,5 +186,31 @@ All colors MUST be HSL.
   .score-4 {
     background-color: hsl(var(--ok-orange));
     color: white;
+  }
+}
+
+/* 커스텀 애니메이션 */
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes rain {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(50px);
+    opacity: 0;
   }
 }

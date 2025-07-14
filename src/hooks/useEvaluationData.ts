@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { EvaluationData, Task, FeedbackHistoryItem } from '@/types/evaluation';
 import { getEmployeeData } from '@/utils/employeeData';
+import { checkSimilarFeedback } from '@/lib/openai';
 
 export const useEvaluationData = (employeeId: string) => {
   const { user } = useAuth();
@@ -342,7 +343,7 @@ export const useEvaluationData = (employeeId: string) => {
     return flooredScore >= evaluationData.growthLevel;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
       // Check if total weight is 100%
       const totalWeight = evaluationData.tasks.reduce((sum, task) => sum + task.weight, 0);
@@ -354,6 +355,50 @@ export const useEvaluationData = (employeeId: string) => {
           variant: "destructive",
         });
         return false;
+      }
+
+      // 자동 중복검사 수행
+      const duplicateWarnings: string[] = [];
+      
+      for (const task of evaluationData.tasks) {
+        const currentFeedback = tempFeedbacks[task.id] || task.feedback || '';
+        if (currentFeedback.trim()) {
+          // 현재 과업의 기존 피드백들을 제외한 다른 피드백들 수집
+          const otherFeedbacks = evaluationData.tasks
+            .filter(t => t.id !== task.id) // 현재 과업 제외
+            .flatMap(t => {
+              const feedbacks = [];
+              if (t.feedback && t.feedback.trim()) feedbacks.push(t.feedback);
+              if (t.feedbackHistory) {
+                feedbacks.push(...t.feedbackHistory.map(fh => fh.content));
+              }
+              return feedbacks;
+            })
+            .filter(fb => fb.trim());
+
+          if (otherFeedbacks.length > 0) {
+            try {
+              const duplicateCheck = await checkSimilarFeedback(currentFeedback, otherFeedbacks);
+              if (!duplicateCheck.includes('유사한 피드백이 없습니다')) {
+                duplicateWarnings.push(`"${task.title}": ${duplicateCheck}`);
+              }
+            } catch (error) {
+              console.error('중복검사 중 오류:', error);
+              // 중복검사 실패시에도 저장은 진행
+            }
+          }
+        }
+      }
+
+      // 중복 경고가 있으면 사용자에게 알림
+      if (duplicateWarnings.length > 0) {
+        const shouldContinue = window.confirm(
+          `다음 과업들의 피드백이 다른 과업과 유사할 수 있습니다:\n\n${duplicateWarnings.join('\n\n')}\n\n계속 저장하시겠습니까?`
+        );
+        
+        if (!shouldContinue) {
+          return false;
+        }
       }
 
       const previousDataString = localStorage.getItem(`evaluation-${employeeId}`);

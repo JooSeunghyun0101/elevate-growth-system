@@ -84,11 +84,76 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'confetti-fall': {
+					'0%': {
+						transform: 'translateY(-10px) rotate(0deg)',
+						opacity: '1'
+					},
+					'100%': {
+						transform: 'translateY(100px) rotate(360deg)',
+						opacity: '0'
+					}
+				},
+				'confetti-spin': {
+					'0%': { transform: 'rotate(0deg) scale(1)' },
+					'50%': { transform: 'rotate(180deg) scale(1.2)' },
+					'100%': { transform: 'rotate(360deg) scale(1)' }
+				},
+				'rain-drop': {
+					'0%': {
+						transform: 'translateY(-20px)',
+						opacity: '0'
+					},
+					'10%': {
+						opacity: '1'
+					},
+					'100%': {
+						transform: 'translateY(80px)',
+						opacity: '0'
+					}
+				},
+				'sad-face': {
+					'0%, 100%': { transform: 'scale(1) rotate(0deg)' },
+					'25%': { transform: 'scale(1.1) rotate(-5deg)' },
+					'75%': { transform: 'scale(1.1) rotate(5deg)' }
+				},
+				'celebration': {
+					'0%, 100%': { transform: 'scale(1) rotate(0deg)' },
+					'25%': { transform: 'scale(1.2) rotate(-10deg)' },
+					'50%': { transform: 'scale(1.3) rotate(0deg)' },
+					'75%': { transform: 'scale(1.2) rotate(10deg)' }
+				},
+				'sparkle': {
+					'0%, 100%': { opacity: '0', transform: 'scale(0) rotate(0deg)' },
+					'50%': { opacity: '1', transform: 'scale(1) rotate(180deg)' }
+				},
+				'bounce-in': {
+					'0%': { transform: 'scale(0) rotate(0deg)' },
+					'50%': { transform: 'scale(1.2) rotate(180deg)' },
+					'100%': { transform: 'scale(1) rotate(360deg)' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'wiggle': {
+					'0%, 100%': { transform: 'rotate(-3deg)' },
+					'50%': { transform: 'rotate(3deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'confetti-fall': 'confetti-fall 1.5s ease-out infinite',
+				'confetti-spin': 'confetti-spin 2s linear infinite',
+				'rain-drop': 'rain-drop 2s ease-in-out infinite',
+				'sad-face': 'sad-face 1s ease-in-out',
+				'celebration': 'celebration 0.8s ease-in-out',
+				'sparkle': 'sparkle 1.5s ease-in-out infinite',
+				'bounce-in': 'bounce-in 0.8s ease-out',
+				'float': 'float 3s ease-in-out infinite',
+				'wiggle': 'wiggle 1s ease-in-out'
 			}
 		}
 	},

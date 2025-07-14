@@ -44,6 +44,9 @@ const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
                   <p className="text-xs sm:text-sm text-gray-700">
                     각 피평가자의 성장레벨에 따라 기대되는 역할과 성과 수준이 다르며, 이를 기준으로 평가점수가 산정됩니다.
                   </p>
+                  <p className="text-xs sm:text-sm text-gray-700">
+                    성장레벨보다 평가점수가 같거나 높으면 해당 평가는 달성한 것이 됩니다.
+                  </p>
                 </div>
               </div>
               <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
@@ -73,49 +76,64 @@ const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
               평가 절차
             </h3>
             <div className="grid gap-2 sm:gap-3">
+              {/* 피평가자: 과업 등록 */}
+              <div className="flex items-start gap-3 p-3 border rounded-lg">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-blue-600">1</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm sm:text-base mb-1">과업 등록</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">피평가자가 본인의 주요 과업과 가중치를 등록합니다. (필요시 과업 관리에서 추가/수정)</p>
+                </div>
+              </div>
+              {/* 평가자: 과업 검토 */}
               <div className="flex items-start gap-3 p-3 border rounded-lg">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm sm:text-base font-bold text-orange-600">1</span>
+                  <span className="text-sm sm:text-base font-bold text-orange-600">2</span>
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-sm sm:text-base mb-1">과업 검토</h4>
                   <p className="text-xs sm:text-sm text-gray-600">피평가자의 과업 목록과 가중치를 확인합니다. 필요시 과업 관리에서 수정할 수 있습니다.</p>
                 </div>
               </div>
+              {/* 평가자: 기여방식 평가 */}
               <div className="flex items-start gap-3 p-3 border rounded-lg">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm sm:text-base font-bold text-orange-600">2</span>
+                  <span className="text-sm sm:text-base font-bold text-orange-600">3</span>
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-sm sm:text-base mb-1">기여방식 평가</h4>
                   <p className="text-xs sm:text-sm text-gray-600">각 과업에 대해 피평가자의 기여방식(총괄/리딩/실무/지원)을 선택합니다.</p>
                 </div>
               </div>
+              {/* 평가자: 기여범위 평가 */}
               <div className="flex items-start gap-3 p-3 border rounded-lg">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm sm:text-base font-bold text-orange-600">3</span>
+                  <span className="text-sm sm:text-base font-bold text-orange-600">4</span>
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-sm sm:text-base mb-1">기여범위 평가</h4>
                   <p className="text-xs sm:text-sm text-gray-600">과업의 영향 범위(전략적/상호적/독립적/의존적)를 평가합니다.</p>
                 </div>
               </div>
+              {/* 평가자: 피드백 작성 */}
               <div className="flex items-start gap-3 p-3 border rounded-lg">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm sm:text-base font-bold text-orange-600">4</span>
+                  <span className="text-sm sm:text-base font-bold text-orange-600">5</span>
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-sm sm:text-base mb-1">피드백 작성</h4>
                   <p className="text-xs sm:text-sm text-gray-600">구체적이고 건설적인 피드백을 작성하여 성장 방향을 제시합니다.</p>
                 </div>
               </div>
+              {/* 피평가자: 피드백 확인 */}
               <div className="flex items-start gap-3 p-3 border rounded-lg">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-blue-600">6</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-sm sm:text-base mb-1">평가 완료</h4>
-                  <p className="text-xs sm:text-sm text-gray-600">모든 과업 평가 완료 후 저장하여 평가를 마무리합니다.</p>
+                  <h4 className="font-medium text-sm sm:text-base mb-1">피드백 확인</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">피평가자는 피드백을 받고 올바른 방향으로 과업을 수행하며, 필요시 과업을 수정할 수 있습니다.</p>
                 </div>
               </div>
             </div>
@@ -131,41 +149,41 @@ const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
               <table className="w-full text-xs sm:text-sm border border-gray-200 rounded-lg">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="p-2 sm:p-3 text-left border-b">기여방식 \ 기여범위</th>
-                    <th className="p-2 sm:p-3 text-center border-b">전략적</th>
-                    <th className="p-2 sm:p-3 text-center border-b">상호적</th>
-                    <th className="p-2 sm:p-3 text-center border-b">독립적</th>
+                    <th className="p-2 sm:p-3 text-left border-b">기여방식 / 기여범위</th>
                     <th className="p-2 sm:p-3 text-center border-b">의존적</th>
+                    <th className="p-2 sm:p-3 text-center border-b">독립적</th>
+                    <th className="p-2 sm:p-3 text-center border-b">상호적</th>
+                    <th className="p-2 sm:p-3 text-center border-b">전략적</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td className="p-2 sm:p-3 font-medium border-b">총괄</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-orange-300">4점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-200">2점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-200">3점</td>
                     <td className="p-2 sm:p-3 text-center border-b bg-orange-200">4점</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-orange-100">3점</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-orange-50">2점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-orange-200">4점</td>
                   </tr>
                   <tr>
                     <td className="p-2 sm:p-3 font-medium border-b">리딩</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-blue-300">4점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-200">2점</td>
                     <td className="p-2 sm:p-3 text-center border-b bg-blue-200">3점</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-blue-100">2점</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-blue-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-200">3점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-orange-200">4점</td>
                   </tr>
                   <tr>
                     <td className="p-2 sm:p-3 font-medium border-b">실무</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-green-200">3점</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-green-100">2점</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-green-50">1점</td>
-                    <td className="p-2 sm:p-3 text-center border-b bg-green-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-gray-100">1점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-200">2점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-200">3점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-blue-200">3점</td>
                   </tr>
                   <tr>
                     <td className="p-2 sm:p-3 font-medium">지원</td>
-                    <td className="p-2 sm:p-3 text-center bg-gray-100">2점</td>
-                    <td className="p-2 sm:p-3 text-center bg-gray-50">1점</td>
-                    <td className="p-2 sm:p-3 text-center bg-gray-50">1점</td>
-                    <td className="p-2 sm:p-3 text-center bg-gray-50">1점</td>
+                    <td className="p-2 sm:p-3 text-center bg-gray-100">1점</td>
+                    <td className="p-2 sm:p-3 text-center bg-gray-100">1점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-200">2점</td>
+                    <td className="p-2 sm:p-3 text-center border-b bg-green-200">2점</td>
                   </tr>
                 </tbody>
               </table>
@@ -181,7 +199,7 @@ const EvaluationGuide: React.FC<EvaluationGuideProps> = ({ onClose }) => {
             <div className="grid gap-2 sm:gap-3 sm:grid-cols-2">
               <div className="p-3 border rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-orange-100 text-orange-800 text-xs">총괄</Badge>
+                  <Badge variant="outline" className="text-xs">총괄</Badge>
                   <span className="text-xs sm:text-sm font-medium">업무 전체를 책임지고 관리</span>
                 </div>
                 <p className="text-xs text-gray-600">프로젝트나 업무의 전체적인 방향을 설정하고 다른 구성원들을 이끌어 목표를 달성하는 역할</p>

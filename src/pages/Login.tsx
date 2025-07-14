@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Lock, Building2, UserCheck } from 'lucide-react';
+import { User, Lock, UserCheck } from 'lucide-react';
 
 const Login = () => {
   const { user, login, getAvailableRoles } = useAuth();
@@ -89,8 +89,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'hsl(var(--ok-bright-gray))' }}>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 ok-orange rounded-lg flex items-center justify-center">
-            <Building2 className="w-8 h-8 text-white" />
+          <div className="mx-auto mb-4 w-20 h-20 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+            <img src="/느낌표_orange.png" alt="OK Logo" className="w-12 h-12" />
           </div>
           <CardTitle className="text-2xl">Performance Management</CardTitle>
           <CardDescription>차세대 성과관리 시스템에 로그인하세요</CardDescription>
@@ -138,7 +138,7 @@ const Login = () => {
 
               <Button 
                 type="submit" 
-                className="w-full ok-orange hover:opacity-90"
+                className="w-full bg-orange-500 text-white hover:bg-orange-600"
                 disabled={isLoading}
               >
                 {isLoading ? '로그인 중...' : '로그인'}
@@ -176,7 +176,7 @@ const Login = () => {
               <div className="space-y-2">
                 <Button 
                   type="submit" 
-                  className="w-full ok-orange hover:opacity-90"
+                  className="w-full bg-orange-500 text-white hover:bg-orange-600"
                   disabled={isLoading || !selectedRole}
                 >
                   {isLoading ? '로그인 중...' : '로그인'}

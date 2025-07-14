@@ -51,8 +51,8 @@ export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3 sm:space-x-4">
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 performance-gradient rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm sm:text-lg">OK</span>
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+              <img src="/느낌표_orange.png" alt="OK Logo" className="w-10 h-10" />
             </div>
             <div>
               <h1 className="text-lg sm:text-xl font-bold text-gray-900">

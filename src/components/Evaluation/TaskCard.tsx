@@ -5,13 +5,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Target, Edit3, Check, X, Calendar, CalendarIcon } from 'lucide-react';
+import { Target, Edit3, Check, X, Calendar, CalendarIcon, Bot, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import ScoringChart from '@/components/ScoringChart';
 import ScoreDisplay from './ScoreDisplay';
+import AIFeedbackChat from './AIFeedbackChat';
 import { Task } from '@/types/evaluation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -46,6 +48,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [tempEndDate, setTempEndDate] = useState<Date | undefined>(
     task.endDate ? new Date(task.endDate) : undefined
   );
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   const handleWeightEdit = () => {
     setTempWeight(task.weight);
@@ -113,9 +116,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const isNoContribution = task.contributionMethod === '기여없음' && task.contributionScope === '기여없음';
   const canEditTask = user?.role === 'evaluator' && onTaskUpdate;
 
+  // 기존 피드백들 수집 (중복 검사용)
+  const existingFeedbacks = task.feedbackHistory?.map(fb => fb.content) || [];
+
   return (
-    <Card>
-      <CardHeader className="p-4 sm:p-6">
+    <TooltipProvider>
+      <Card className="group transition-all duration-150 hover:shadow-lg hover:scale-[1.02] hover:border-orange-200">
+        <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {isEditingTask ? (
@@ -186,32 +193,55 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleTaskSave}
-                    className="text-green-600 hover:text-green-800"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={handleTaskCancel}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleTaskSave}
+                        className="text-green-600 hover:text-green-800 hover:scale-110 transition-all duration-200"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>저장</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleTaskCancel}
+                        className="text-red-600 hover:text-red-800 hover:scale-110 transition-all duration-200"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>취소</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <CardTitle className="text-base sm:text-lg">{task.title}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg group-hover:text-orange-600 transition-colors duration-150">
+                    {task.title}
+                  </CardTitle>
                   {canEditTask && (
-                    <button
-                      onClick={handleTaskEdit}
-                      className="text-gray-500 hover:text-gray-700"
-                      title="과업 내용 수정"
-                    >
-                      <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                                              <button
+                        onClick={handleTaskEdit}
+                        className="text-gray-500 hover:text-orange-600 hover:scale-110 transition-all duration-150"
+                        title="과업 내용 수정"
+                      >
+                          <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>과업 내용 수정</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
                 <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
@@ -239,18 +269,32 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   max="100"
                 />
                 <span className="text-xs sm:text-sm">%</span>
-                <button
-                  onClick={handleWeightSave}
-                  className="text-green-600 hover:text-green-800"
-                >
-                  <Check className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-                <button
-                  onClick={handleWeightCancel}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
+                                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleWeightSave}
+                        className="text-green-600 hover:text-green-800 hover:scale-110 transition-all duration-200"
+                      >
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>저장</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleWeightCancel}
+                        className="text-red-600 hover:text-red-800 hover:scale-110 transition-all duration-200"
+                      >
+                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>취소</p>
+                    </TooltipContent>
+                  </Tooltip>
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -259,13 +303,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   <span className="inline sm:hidden">{task.weight}%</span>
                 </Badge>
                 {user?.role === 'evaluator' && (
-                  <button
-                    onClick={handleWeightEdit}
-                    className="text-gray-500 hover:text-gray-700"
-                    title="가중치 수정"
-                  >
-                    <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleWeightEdit}
+                        className="text-gray-500 hover:text-orange-600 hover:scale-110 transition-all duration-150"
+                        title="가중치 수정"
+                      >
+                        <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>가중치 수정</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             )}
@@ -276,16 +327,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
           {/* Scoring Chart - Adjusted container */}
           <div className="flex flex-col min-h-[450px] sm:min-h-[500px]">
-            <div className="flex-1 flex items-center justify-center">
-              <ScoringChart
-                selectedMethod={task.contributionMethod}
-                selectedScope={task.contributionScope}
-                size="medium"
-                title={`과업 ${index + 1} 스코어링`}
-                onMethodClick={(method) => onMethodClick(task.id, method)}
-                onScopeClick={(scope) => onScopeClick(task.id, scope)}
-              />
-            </div>
+                          <div className="flex-1 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                <ScoringChart
+                  selectedMethod={task.contributionMethod}
+                  selectedScope={task.contributionScope}
+                  size="medium"
+                  title={`과업 ${index + 1} 스코어링`}
+                  onMethodClick={(method) => onMethodClick(task.id, method)}
+                  onScopeClick={(scope) => onScopeClick(task.id, scope)}
+                />
+              </div>
           </div>
 
           {/* Score Display and Feedback Input - Adjusted container */}
@@ -309,21 +360,54 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
             {/* Feedback Input - Takes remaining space */}
             <div className="flex-1 flex flex-col mt-3 sm:mt-4">
-              <Label htmlFor={`feedback-${task.id}`} className="text-sm sm:text-base font-bold mb-2 sm:mb-3 block text-amber-800">
-                피드백
-              </Label>
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <Label htmlFor={`feedback-${task.id}`} className="text-sm sm:text-base font-bold block text-amber-800">
+                  피드백
+                </Label>
+                {user?.role === 'evaluator' && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsAIChatOpen(true)}
+                        className="text-xs sm:text-sm bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 hover:text-orange-700 hover:scale-105 hover:shadow-md transition-all duration-150 group"
+                      >
+                        <Bot className="w-3 h-3 sm:w-4 sm:h-4 mr-1 group-hover:animate-bounce transition-all duration-150" />
+                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 group-hover:animate-spin transition-all duration-150" />
+                        <span className="hidden sm:inline">AI와 대화로 피드백 만들기</span>
+                        <span className="inline sm:hidden">AI 피드백</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>AI와 대화하여 피드백을 생성하거나 개선하세요</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
               <Textarea
                 id={`feedback-${task.id}`}
                 placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
                 value={task.feedback || ''}
                 onChange={(e) => onFeedbackChange(task.id, e.target.value)}
-                className="flex-1 min-h-[150px] sm:min-h-[180px] resize-none text-xs sm:text-sm"
+                className="flex-1 min-h-[150px] sm:min-h-[180px] resize-none text-xs sm:text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all duration-200"
               />
             </div>
           </div>
         </div>
       </CardContent>
-    </Card>
+
+      {/* AI 피드백 챗봇 모달 */}
+      <AIFeedbackChat
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        task={task}
+        currentFeedback={task.feedback || ''}
+        onApplyFeedback={(feedback) => onFeedbackChange(task.id, feedback)}
+        existingFeedbacks={existingFeedbacks}
+      />
+      </Card>
+    </TooltipProvider>
   );
 };
 

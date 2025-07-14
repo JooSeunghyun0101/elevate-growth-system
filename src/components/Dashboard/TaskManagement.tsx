@@ -268,7 +268,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             </CardDescription>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-[#F55000]" />
           </Button>
         </CardHeader>
         
@@ -420,7 +420,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             onClick={addNewTask}
             className="w-full border-dashed border-orange-200 text-orange-700 hover:bg-orange-50 text-sm"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4 text-[#FFAA00]" />
             새 과업 추가
           </Button>
         </CardContent>
@@ -441,10 +441,10 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                 </Button>
                 <Button 
                   onClick={handleSave}
-                  className="ok-orange hover:opacity-90 flex-1 sm:flex-none text-sm"
+                  className="bg-[#F55000] hover:bg-[#FFAA00] text-white flex-1 sm:flex-none text-sm"
                   disabled={totalWeight !== 100}
                 >
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="mr-2 h-4 w-4 text-white" />
                   저장
                 </Button>
               </div>
