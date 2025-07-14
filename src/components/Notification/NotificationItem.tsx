@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Bell, CheckCircle, AlertCircle, MessageSquare, Edit, Star } from 'lucide-react';
+import { CheckCircle, AlertCircle, MessageSquare, Edit, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Notification } from '@/types/notification';
@@ -33,7 +33,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       case 'task_updated':
         return <AlertCircle className="h-4 w-4 text-orange-600" />;
       default:
-        return <Bell className="h-4 w-4 text-gray-600" />;
+        return <img src="/느낌표_orange.png" alt="Notification" className="h-7 w-7" />;
     }
   };
 

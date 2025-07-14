@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell } from 'lucide-react';
+// import { Bell } from 'lucide-react'; // Replaced with custom icon
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/contexts/NotificationContext';
@@ -25,7 +25,7 @@ const NotificationBell: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative"
       >
-        <Bell className="h-5 w-5" />
+        <img src="/느낌표_orange.png" alt="Notification" className="h-7 w-7" />
         {userUnreadCount > 0 && (
           <Badge 
             variant="destructive" 

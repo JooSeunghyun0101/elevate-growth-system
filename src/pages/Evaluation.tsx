@@ -28,7 +28,7 @@ const Evaluation = () => {
   };
 
   const handleSaveAndNavigate = async () => {
-    const success = handleSave();
+    const success = await handleSave();
     if (success) {
       setTimeout(() => {
         navigate('/');

@@ -28,23 +28,12 @@ const MiniGanttChart: React.FC<MiniGanttChartProps> = ({
     );
   }
 
-  // Find the earliest start date and latest end date
-  const allDates = tasksWithDates.flatMap(task => [
-    parseISO(task.startDate!),
-    parseISO(task.endDate!)
-  ]);
-  const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
-  const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
+  // 기존 minDate, maxDate 계산 부분을 다음으로 대체
+  const minDate = new Date(new Date().getFullYear(), 0, 1);
+  const maxDate = new Date(new Date().getFullYear(), 11, 31);
   const totalDays = differenceInDays(maxDate, minDate);
 
-  const colors = [
-    'bg-blue-400',
-    'bg-green-400', 
-    'bg-yellow-400',
-    'bg-purple-400',
-    'bg-pink-400',
-    'bg-indigo-400'
-  ];
+  const ganttColors = ['#F55000', '#55474A', '#FFAA00'];
 
   const displayTasks = showAll ? tasksWithDates : tasksWithDates.slice(0, maxInitialTasks);
   const hasMore = tasksWithDates.length > maxInitialTasks;
@@ -53,7 +42,7 @@ const MiniGanttChart: React.FC<MiniGanttChartProps> = ({
     <div className={`w-full ${className}`}>
       <div className="space-y-1">
         {/* Header with date range */}
-        <div className="flex justify-between text-xs text-gray-500 mb-2">
+        <div className="flex justify-between text-xs text-black mb-2">
           <span>{format(minDate, 'MM/dd')}</span>
           <span>{format(maxDate, 'MM/dd')}</span>
         </div>
@@ -75,14 +64,16 @@ const MiniGanttChart: React.FC<MiniGanttChartProps> = ({
               </div>
               <div className="flex-1 relative bg-gray-100 h-3 rounded-sm">
                 <div
-                  className={`absolute h-full rounded-sm ${colors[index % colors.length]} opacity-70`}
+                  className="absolute h-full rounded-sm"
                   style={{
                     left: `${Math.max(0, leftPercent)}%`,
-                    width: `${Math.min(100 - Math.max(0, leftPercent), widthPercent)}%`
+                    width: `${Math.min(100 - Math.max(0, leftPercent), widthPercent)}%`,
+                    backgroundColor: ganttColors[index % ganttColors.length],
+                    opacity: 0.85
                   }}
                 />
               </div>
-              <div className="text-xs text-gray-400 w-12 text-right">
+              <div className="text-xs text-black w-12 text-right">
                 {taskDays + 1}일
               </div>
             </div>

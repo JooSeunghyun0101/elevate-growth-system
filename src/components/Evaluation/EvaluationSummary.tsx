@@ -67,20 +67,40 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="group hover:shadow-lg hover:scale-105 hover:border-green-200 transition-all duration-300 relative overflow-hidden">
         <CardContent className="p-3 sm:p-4">
           <div className="text-center">
             <p className="text-xs sm:text-sm text-gray-600">달성 여부</p>
             <div className="flex items-center justify-center gap-1 sm:gap-2 mt-1">
               {isAchieved ? (
                 <>
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                  <span className="text-sm sm:text-lg font-semibold text-green-700">달성</span>
+                  <div className="relative inline-block">
+                    <span className="text-2xl sm:text-3xl group-hover:animate-celebration transition-all duration-300">
+                      🎉
+                    </span>
+                    {/* 반짝이는 효과 - 2개만 */}
+                    <span className="absolute -top-1 -right-1 text-xs opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-all duration-300" style={{ animationDelay: '0s' }}>✨</span>
+                    <span className="absolute -bottom-1 -left-1 text-xs opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-all duration-300" style={{ animationDelay: '0.3s' }}>⭐</span>
+                  </div>
+                  <span className="text-sm sm:text-lg font-semibold text-green-700 group-hover:text-green-800 transition-colors duration-300">달성</span>
                 </>
               ) : (
                 <>
-                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
-                  <span className="text-sm sm:text-lg font-semibold text-red-700">미달성</span>
+                  <div className="relative inline-block">
+                    <span className="text-2xl sm:text-3xl group-hover:animate-sad-face transition-all duration-300">
+                      😢
+                    </span>
+                  </div>
+                  <span className="text-sm sm:text-lg font-semibold text-red-700 group-hover:text-red-800 transition-colors duration-300">미달성</span>
+                  
+                  {/* 눈물 애니메이션 - 카드 위쪽 바깥에서 시작 */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {/* 눈물 이모티콘들 - 4개만 카드 위쪽 바깥에서 시작 */}
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '20%', animationDelay: '0s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '50%', animationDelay: '0.5s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '80%', animationDelay: '1s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '35%', animationDelay: '1.5s' }}>💧</div>
+                  </div>
                 </>
               )}
             </div>

@@ -98,6 +98,8 @@ export const EvaluatorDashboard: React.FC = () => {
   const [showEvaluationGuide, setShowEvaluationGuide] = useState(false);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [evaluateeTasks, setEvaluateeTasks] = useState<Record<string, Task[]>>({});
+  const [selectedTab, setSelectedTab] = useState('evaluatees');
+  const [pendingBadgeRead, setPendingBadgeRead] = useState(false);
 
   const loadEvaluationData = () => {
     if (!user) return;
@@ -208,7 +210,7 @@ export const EvaluatorDashboard: React.FC = () => {
             lastActivity: new Date(evaluationData.lastModified).toLocaleDateString('ko-KR', {
               month: 'short',
               day: 'numeric'
-            }) + ' 전',
+            }),
             status,
             totalScore: flooredScore,
             exactScore: exactScore,
@@ -365,25 +367,31 @@ export const EvaluatorDashboard: React.FC = () => {
         ))}
       </div>
 
-      <Tabs defaultValue="evaluatees" className="space-y-4">
+      <Tabs value={selectedTab} onValueChange={(tab) => {
+        setSelectedTab(tab);
+        if (tab === 'pending') setPendingBadgeRead(true);
+      }} className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="evaluatees" className="text-xs sm:text-sm">
+          <TabsTrigger value="evaluatees" className="text-xs sm:text-sm flex items-center">
             <span className="hidden sm:inline">담당 피평가자</span>
             <span className="inline sm:hidden">피평가자</span>
           </TabsTrigger>
-          <TabsTrigger value="schedule" className="text-xs sm:text-sm">
+          <TabsTrigger value="schedule" className="text-xs sm:text-sm flex items-center">
             <span className="hidden sm:inline">전체 일정</span>
             <span className="inline sm:hidden">일정</span>
           </TabsTrigger>
-          <TabsTrigger value="pending" className="text-xs sm:text-sm">
+          <TabsTrigger value="pending" className="text-xs sm:text-sm flex items-center">
             <span className="hidden sm:inline">대기 중인 평가</span>
             <span className="inline sm:hidden">대기중</span>
+            {!pendingBadgeRead && evaluatees.filter(e => e.status === 'in-progress').length > 0 && (
+              <Badge variant="destructive" className="ml-2 h-5 w-5 flex items-center justify-center text-xs p-0">{evaluatees.filter(e => e.status === 'in-progress').length}</Badge>
+            )}
           </TabsTrigger>
-          <TabsTrigger value="completed" className="text-xs sm:text-sm">
+          <TabsTrigger value="completed" className="text-xs sm:text-sm flex items-center">
             <span className="hidden sm:inline">완료한 평가</span>
             <span className="inline sm:hidden">완료</span>
           </TabsTrigger>
-          <TabsTrigger value="feedback" className="text-xs sm:text-sm">
+          <TabsTrigger value="feedback" className="text-xs sm:text-sm flex items-center">
             <span className="hidden sm:inline">피드백 내역</span>
             <span className="inline sm:hidden">피드백</span>
           </TabsTrigger>
@@ -433,7 +441,7 @@ export const EvaluatorDashboard: React.FC = () => {
                     <Button 
                       size="sm" 
                       onClick={() => handleEvaluateClick(person.id)}
-                      className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
+                      className="bg-[#F55000] text-white hover:bg-[#FFAA00] hover:scale-105 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-4"
                     >
                       평가하기
                     </Button>
@@ -475,7 +483,7 @@ export const EvaluatorDashboard: React.FC = () => {
                     <Button 
                       size="sm" 
                       onClick={() => handleEvaluateClick(person.id)}
-                      className="ok-orange hover:opacity-90 text-xs sm:text-sm px-2 sm:px-4"
+                      className="bg-[#F55000] text-white hover:bg-[#FFAA00] text-xs sm:text-sm px-2 sm:px-4"
                     >
                       <span className="hidden sm:inline">평가 진행</span>
                       <span className="inline sm:hidden">진행</span>

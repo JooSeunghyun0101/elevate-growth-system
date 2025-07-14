@@ -19,29 +19,18 @@ const TaskGanttChart: React.FC<TaskGanttChartProps> = ({ tasks }) => {
     );
   }
 
-  // Find the earliest start date and latest end date
-  const allDates = tasksWithDates.flatMap(task => [
-    parseISO(task.startDate!),
-    parseISO(task.endDate!)
-  ]);
-  const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
-  const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
+  // 기존 minDate, maxDate 계산 부분을 다음으로 대체
+  const minDate = new Date(new Date().getFullYear(), 0, 1);
+  const maxDate = new Date(new Date().getFullYear(), 11, 31);
   const totalDays = differenceInDays(maxDate, minDate);
 
-  const colors = [
-    'bg-blue-500',
-    'bg-green-500', 
-    'bg-yellow-500',
-    'bg-purple-500',
-    'bg-pink-500',
-    'bg-indigo-500'
-  ];
+  const ganttColors = ['#F55000', '#55474A', '#FFAA00'];
 
   return (
     <div className="w-full overflow-x-auto">
       <div className="min-w-[800px] space-y-2">
         {/* Header with date range */}
-        <div className="flex justify-between text-sm text-gray-600 mb-4">
+        <div className="flex justify-between text-sm text-black mb-4">
           <span>{format(minDate, 'yyyy-MM-dd')}</span>
           <span>{format(maxDate, 'yyyy-MM-dd')}</span>
         </div>
@@ -63,17 +52,19 @@ const TaskGanttChart: React.FC<TaskGanttChartProps> = ({ tasks }) => {
               </div>
               <div className="flex-1 relative bg-gray-100 h-6 rounded min-w-0">
                 <div
-                  className={`absolute h-full rounded ${colors[index % colors.length]} opacity-80`}
+                  className="absolute h-full rounded"
                   style={{
                     left: `${Math.max(0, leftPercent)}%`,
-                    width: `${Math.min(100 - Math.max(0, leftPercent), widthPercent)}%`
+                    width: `${Math.min(100 - Math.max(0, leftPercent), widthPercent)}%`,
+                    backgroundColor: ganttColors[index % ganttColors.length],
+                    opacity: 0.85
                   }}
                 />
-                <div className="absolute inset-0 flex items-center px-2 text-xs text-white font-medium">
+                <div className="absolute inset-0 flex items-center px-2 text-xs text-black font-medium">
                   {taskDays + 1}일
                 </div>
               </div>
-              <div className="text-xs text-gray-500 w-24 text-right">
+              <div className="text-xs text-black w-24 text-right">
                 {format(startDate, 'MM/dd')} - {format(endDate, 'MM/dd')}
               </div>
             </div>
