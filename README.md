@@ -1,73 +1,23 @@
-# Welcome to your Lovable project
-
-## Project info
-
-**URL**: https://lovable.dev/projects/1f381f1f-3c22-4901-8c2e-6613a7412fc8
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/1f381f1f-3c22-4901-8c2e-6613a7412fc8) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1f381f1f-3c22-4901-8c2e-6613a7412fc8) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# Elevate Growth System - 성과평가 시스템 
+  
+## 프로젝트 개요 
+Elevate Growth System은 기업의 성과평가를 위한 현대적이고 직관적인 웹 애플리케이션입니다. 
+  
+## 주요 기능 
+- 성과평가 관리: 과업별 평가, 가중치 설정, 점수 계산 
+- AI 피드백 시스템: OpenAI API를 활용한 지능형 피드백 생성 
+- 시각화 및 분석: 간트차트, 스코어링 차트, 대시보드 
+  
+## 기술 스택 
+- React 18, TypeScript, Vite 
+- Tailwind CSS, shadcn/ui 
+- OpenAI API 
+  
+## 설치 및 실행 
+1. 저장소 클론 
+2. 의존성 설치: npm install 
+3. 개발 서버 실행: npm run dev 
+  
+## AI 기능 설정 
+AI 피드백 기능을 사용하려면 OpenAI API 키가 필요합니다. 
+자세한 설정 방법은 AI_SETUP.md 파일을 참조하세요. 
