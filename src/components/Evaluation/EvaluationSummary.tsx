@@ -59,7 +59,7 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
               {totalScore}점
               {exactScore !== totalScore && (
                 <span className="text-sm text-gray-500 ml-1">
-                  ({exactScore})
+                  ({exactScore.toFixed(2)})
                 </span>
               )}
             </p>

@@ -146,9 +146,9 @@ export const useEvaluationData = (employeeId: string) => {
       if (changes.length > 0) {
         addNotification({
           recipientId: employeeId,
-          title: '과업 내용 변경',
-          message: `평가자가 "${task.title}" 과업을 수정했습니다.\n\n변경된 내용:\n${changes.join('\n')}`,
-          type: 'task_content_changed',
+          title: `"${task.title}" 과업 수정`,
+          message: `• ${changes.join('\n• ')}`,
+          type: 'task_summary',
           priority: 'medium',
           senderId: user.id,
           senderName: user.name,
@@ -168,9 +168,9 @@ export const useEvaluationData = (employeeId: string) => {
     if (user?.role === 'evaluator' && task && previousWeight !== weight) {
       addNotification({
         recipientId: employeeId,
-        title: '과업 가중치 변경',
-        message: `"${task.title}" 과업의 가중치가 변경되었습니다.\n${previousWeight}% → ${weight}%`,
-        type: 'task_content_changed',
+        title: `"${task.title}" 과업 수정`,
+        message: `• 가중치 변경: ${previousWeight}% → ${weight}%`,
+        type: 'task_summary',
         priority: 'medium',
         senderId: user.id,
         senderName: user.name,
@@ -218,26 +218,22 @@ export const useEvaluationData = (employeeId: string) => {
     }));
 
     if (user?.role === 'evaluator') {
+      const changes: string[] = [];
+      
       if (previousMethod !== method) {
-        addNotification({
-          recipientId: employeeId,
-          title: '평가 내용 변경',
-          message: `"${task.title}" 과업의 기여방식이 변경되었습니다.\n${previousMethod || '미설정'} → ${method}`,
-          type: 'task_content_changed',
-          priority: 'medium',
-          senderId: user.id,
-          senderName: user.name,
-          relatedEvaluationId: employeeId,
-          relatedTaskId: taskId
-        });
+        changes.push(`기여방식 변경: ${previousMethod || '미설정'} → ${method}`);
       }
 
       if (previousScore !== updatedTask.score) {
+        changes.push(`점수 변경: ${previousScore || 0}점 → ${updatedTask.score}점`);
+      }
+
+      if (changes.length > 0) {
         addNotification({
           recipientId: employeeId,
-          title: '평가 점수 변경',
-          message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
-          type: 'score_changed',
+          title: `"${task.title}" 과업 수정`,
+          message: `• ${changes.join('\n• ')}`,
+          type: 'task_summary',
           priority: 'high',
           senderId: user.id,
           senderName: user.name,
@@ -274,26 +270,22 @@ export const useEvaluationData = (employeeId: string) => {
     }));
 
     if (user?.role === 'evaluator') {
+      const changes: string[] = [];
+      
       if (previousScope !== scope) {
-        addNotification({
-          recipientId: employeeId,
-          title: '평가 내용 변경',
-          message: `"${task.title}" 과업의 기여범위가 변경되었습니다.\n${previousScope || '미설정'} → ${scope}`,
-          type: 'task_content_changed',
-          priority: 'medium',
-          senderId: user.id,
-          senderName: user.name,
-          relatedEvaluationId: employeeId,
-          relatedTaskId: taskId
-        });
+        changes.push(`기여범위 변경: ${previousScope || '미설정'} → ${scope}`);
       }
 
       if (previousScore !== updatedTask.score) {
+        changes.push(`점수 변경: ${previousScore || 0}점 → ${updatedTask.score}점`);
+      }
+
+      if (changes.length > 0) {
         addNotification({
           recipientId: employeeId,
-          title: '평가 점수 변경',
-          message: `"${task.title}" 과업의 점수가 변경되었습니다.\n${previousScore || 0}점 → ${updatedTask.score}점`,
-          type: 'score_changed',
+          title: `"${task.title}" 과업 수정`,
+          message: `• ${changes.join('\n• ')}`,
+          type: 'task_summary',
           priority: 'high',
           senderId: user.id,
           senderName: user.name,
@@ -329,7 +321,7 @@ export const useEvaluationData = (employeeId: string) => {
       return sum;
     }, 0);
     return {
-      exactScore: Math.round(totalWeightedScore * 10) / 10,
+      exactScore: Math.round(totalWeightedScore * 100) / 100,
       flooredScore: Math.floor(totalWeightedScore)
     };
   };
@@ -432,9 +424,9 @@ export const useEvaluationData = (employeeId: string) => {
           if (user?.role === 'evaluator') {
             addNotification({
               recipientId: employeeId,
-              title: '피드백 등록',
-              message: `"${task.title}" 과업에 새로운 피드백이 등록되었습니다.\n\n${currentFeedback}`,
-              type: 'feedback_added',
+              title: `"${task.title}" 과업 수정`,
+              message: `• 피드백 등록`,
+              type: 'task_summary',
               priority: 'medium',
               senderId: user.id,
               senderName: user.name,

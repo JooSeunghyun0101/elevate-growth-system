@@ -27,6 +27,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         return <Edit className="h-4 w-4 text-blue-600" />;
       case 'feedback_added':
         return <MessageSquare className="h-4 w-4 text-green-600" />;
+      case 'task_summary':
+        return <Edit className="h-4 w-4 text-orange-600" />;
       case 'evaluation_completed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'evaluation_updated':
@@ -38,21 +40,21 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   };
 
   const getPriorityColor = () => {
-    switch (notification.priority) {
-      case 'high': return 'border-red-200 bg-red-50';
-      case 'medium': return 'border-yellow-200 bg-yellow-50';
-      case 'low': return 'border-gray-200 bg-gray-50';
-      default: return 'border-gray-200 bg-white';
+    if (notification.isRead) {
+      return 'border-gray-200 bg-white';
     }
+    
+    // 모든 읽지 않은 알림을 노란색으로 통일
+    return 'border-yellow-200 bg-yellow-50';
   };
 
-  const shouldTruncate = notification.message.length > 100;
+  const shouldTruncate = notification.message.length > 300;
   const displayMessage = shouldTruncate && !isExpanded 
-    ? notification.message.substring(0, 100) + '...' 
+    ? notification.message.substring(0, 300) + '...' 
     : notification.message;
 
   return (
-    <div className={`p-4 border rounded-lg ${getPriorityColor()} ${!notification.isRead ? 'ring-2 ring-blue-100' : ''}`}>
+    <div className={`p-4 border rounded-lg ${getPriorityColor()}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           {getIcon()}
@@ -60,11 +62,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             <div className="flex items-center gap-2 mb-1">
               <h4 className="font-medium text-sm truncate">{notification.title}</h4>
               {!notification.isRead && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">새로운</Badge>
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-orange-500 text-white hover:bg-orange-600">new</Badge>
               )}
             </div>
             <div className="text-sm text-gray-700 space-y-1">
-              <div className="whitespace-pre-wrap break-words">
+              <div className="whitespace-pre-wrap break-words leading-relaxed">
                 {displayMessage}
               </div>
               {shouldTruncate && (

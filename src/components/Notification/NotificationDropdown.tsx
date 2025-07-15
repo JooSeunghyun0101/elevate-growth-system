@@ -3,9 +3,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCheck, X } from 'lucide-react';
+import { CheckCheck, X, Trash2 } from 'lucide-react';
 import { Notification } from '@/types/notification';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import NotificationItem from './NotificationItem';
 
 interface NotificationDropdownProps {
@@ -17,10 +18,17 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   notifications,
   onClose
 }) => {
-  const { markAllAsRead, markAsRead, deleteNotification } = useNotifications();
+  const { markAllAsRead, markAsRead, deleteNotification, deleteAllNotifications } = useNotifications();
+  const { user } = useAuth();
 
   const handleMarkAllAsRead = () => {
     markAllAsRead();
+  };
+
+  const handleDeleteAll = () => {
+    if (user) {
+      deleteAllNotifications(user.id);
+    }
   };
 
   return (
@@ -29,6 +37,18 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm sm:text-base font-semibold">알림</CardTitle>
           <div className="flex items-center gap-2">
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteAll}
+                className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-800"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                <span className="hidden sm:inline">모두삭제</span>
+                <span className="inline sm:hidden">삭제</span>
+              </Button>
+            )}
             {notifications.some(n => !n.isRead) && (
               <Button
                 variant="ghost"

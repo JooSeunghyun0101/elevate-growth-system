@@ -156,7 +156,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                           {tempStartDate ? format(tempStartDate, "yyyy-MM-dd") : "날짜 선택"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                      <PopoverContent className="w-[320px] p-0" align="center" side="bottom">
                         <CalendarComponent
                           mode="single"
                           selected={tempStartDate}
@@ -181,7 +181,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                           {tempEndDate ? format(tempEndDate, "yyyy-MM-dd") : "날짜 선택"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                      <PopoverContent className="w-[320px] p-0" align="center" side="bottom">
                         <CalendarComponent
                           mode="single"
                           selected={tempEndDate}
