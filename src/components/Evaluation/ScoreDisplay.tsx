@@ -16,7 +16,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   contributionScope
 }) => {
   const calculateWeightedScore = (score: number, weight: number) => {
-    return ((score * weight) / 100).toFixed(1);
+    return ((score * weight) / 100).toFixed(2);
   };
 
   return (

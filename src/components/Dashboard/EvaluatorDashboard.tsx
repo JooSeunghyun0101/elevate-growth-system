@@ -417,7 +417,7 @@ export const EvaluatorDashboard: React.FC = () => {
                       {person.totalScore !== undefined && person.growthLevel && (
                         <div className="text-xs text-gray-600">
                           {person.exactScore && person.exactScore !== person.totalScore 
-                            ? `${person.totalScore}점(${person.exactScore})/Lv.${person.growthLevel}`
+                            ? `${person.totalScore}점(${person.exactScore.toFixed(2)})/Lv.${person.growthLevel}`
                             : `${person.totalScore}점/Lv.${person.growthLevel}`
                           }
                         </div>
@@ -517,7 +517,7 @@ export const EvaluatorDashboard: React.FC = () => {
                         <Badge className="status-achieved mb-1 text-xs">평가 완료</Badge>
                         <p className="text-xs sm:text-sm text-gray-600">
                           총점: {person.exactScore && person.exactScore !== person.totalScore 
-                            ? `${person.totalScore}점(${person.exactScore})`
+                            ? `${person.totalScore}점(${person.exactScore.toFixed(2)})`
                             : `${person.totalScore}점`
                           } / 목표: {person.growthLevel}점
                         </p>

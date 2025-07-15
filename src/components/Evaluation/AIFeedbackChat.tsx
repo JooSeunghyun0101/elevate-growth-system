@@ -78,9 +78,14 @@ const AIFeedbackChat: React.FC<AIFeedbackChatProps> = ({
 
   // 스크롤을 맨 아래로 이동
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
+    const scrollToBottom = () => {
+      if (scrollAreaRef.current) {
+        scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      }
+    };
+    
+    // 메시지가 추가된 후 즉시 스크롤
+    scrollToBottom();
   }, [messages]);
 
   const addMessage = (content: string, role: 'user' | 'assistant') => {
@@ -248,7 +253,14 @@ const AIFeedbackChat: React.FC<AIFeedbackChatProps> = ({
           </div>
 
           {/* 채팅 메시지 영역 */}
-          <ScrollArea className="flex-1 border rounded-lg p-4 animate-in fade-in duration-500 delay-300" ref={scrollAreaRef}>
+          <div 
+            className="flex-1 border rounded-lg p-4 animate-in fade-in duration-500 delay-300 h-[300px] overflow-y-auto" 
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#9CA3AF #F3F4F6'
+            }}
+            ref={scrollAreaRef}
+          >
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -300,7 +312,7 @@ const AIFeedbackChat: React.FC<AIFeedbackChatProps> = ({
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
 
           {/* 추천된 피드백 표시 */}
           {suggestedFeedback && (

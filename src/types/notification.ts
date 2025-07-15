@@ -8,7 +8,8 @@ export type NotificationType =
   | 'evaluation_started'
   | 'evaluation_completed'
   | 'hr_message'
-  | 'user_assigned';
+  | 'user_assigned'
+  | 'task_summary';
 
 export type NotificationPriority = 'low' | 'medium' | 'high';
 
@@ -26,6 +27,7 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
   readAt?: string;
+  lastModified?: string;
 }
 
 export interface NotificationContext {
@@ -35,5 +37,7 @@ export interface NotificationContext {
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   deleteNotification: (notificationId: string) => void;
+  deleteAllNotifications: (userId: string) => void;
+  cleanupOldNotifications: () => void;
   getNotificationsForUser: (userId: string) => Notification[];
 }

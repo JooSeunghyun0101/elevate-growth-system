@@ -230,12 +230,12 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         if (changes.length > 0) {
           const changeMessage = changes.length === 1 
             ? changes[0] 
-            : `${changes.length}개 변경사항: ${changes.slice(0, 2).join(', ')}${changes.length > 2 ? ' 외' : ''}`;
+            : `${changes.length}개 변경사항:\n${changes.map(change => `• ${change}`).join('\n')}`;
 
           addNotification({
             recipientId: evaluatorId,
             title: '과업 관리 변경',
-            message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다. ${changeMessage}`,
+            message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다.\n\n${changeMessage}`,
             type: 'task_content_changed',
             priority: 'medium',
             senderId: user.id,
@@ -354,7 +354,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                             {task.startDate ? format(new Date(task.startDate), 'yyyy-MM-dd') : '시작일 선택'}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-[320px] p-0" align="start">
                           <Calendar
                             mode="single"
                             selected={task.startDate ? new Date(task.startDate) : undefined}
@@ -380,7 +380,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                             {task.endDate ? format(new Date(task.endDate), 'yyyy-MM-dd') : '종료일 선택'}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-[320px] p-0" align="start">
                           <Calendar
                             mode="single"
                             selected={task.endDate ? new Date(task.endDate) : undefined}
