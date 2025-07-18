@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCheck, X, Trash2 } from 'lucide-react';
 import { Notification } from '@/types/notification';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotifications } from '@/contexts/NotificationContextDB';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationItem from './NotificationItem';
 
@@ -27,12 +27,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const handleDeleteAll = () => {
     if (user) {
-      deleteAllNotifications(user.id);
+      deleteAllNotifications(user.employeeId);
     }
   };
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] z-50">
+    <div className="absolute right-0 top-full mt-2 w-80 sm:w-[28rem] lg:w-[32rem] max-w-[calc(100vw-2rem)] z-50">
       <Card className="shadow-lg border bg-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm sm:text-base font-semibold">알림</CardTitle>

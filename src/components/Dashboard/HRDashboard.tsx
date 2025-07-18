@@ -10,6 +10,7 @@ import { EvaluatorManagement } from '@/components/Settings/EvaluatorManagement';
 import { EvaluationMatrix } from '@/components/Settings/EvaluationMatrix';
 import { NotificationSettings } from '@/components/Settings/NotificationSettings';
 import { DataExport } from '@/components/Settings/DataExport';
+import { GeminiTest } from '@/components/GeminiTest';
 
 export const HRDashboard: React.FC = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -22,18 +23,7 @@ export const HRDashboard: React.FC = () => {
     initializeEmployeeData();
   }, []);
 
-  // Refresh data periodically
-  useEffect(() => {
-    const refreshData = () => {
-      setOverallStats(getOverallStats());
-      setDepartmentStats(getDepartmentStats());
-      setRecentActivities(getRecentActivities());
-    };
-
-    // Refresh every 30 seconds
-    const interval = setInterval(refreshData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  // 시간 기반 자동 새로고침 제거 - 사용자 액션에 의해서만 새로고침
 
   const overviewStatsData = [
     { 
@@ -310,6 +300,9 @@ export const HRDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+          
+          {/* AI 테스트 섹션 */}
+          <GeminiTest />
         </TabsContent>
       </Tabs>
     </div>

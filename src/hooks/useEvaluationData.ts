@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotifications } from '@/contexts/NotificationContextDB';
 import { EvaluationData, Task, FeedbackHistoryItem } from '@/types/evaluation';
-import { getEmployeeData } from '@/utils/employeeData';
+import { getEmployeeDataSync } from '@/utils/employeeData';
 import { checkSimilarFeedback } from '@/lib/openai';
 
 export const useEvaluationData = (employeeId: string) => {
@@ -11,7 +11,7 @@ export const useEvaluationData = (employeeId: string) => {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   
-  const employeeInfo = getEmployeeData(employeeId);
+  const employeeInfo = getEmployeeDataSync(employeeId);
 
   // 점수 매트릭스 (방식 x 범위) - 의존적, 독립적, 상호적, 전략적 순서
   const scoreMatrix = [

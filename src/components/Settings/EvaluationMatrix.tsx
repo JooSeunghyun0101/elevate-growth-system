@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { settingsService } from '@/lib/database';
 import { X, Save } from 'lucide-react';
 
 interface EvaluationMatrixProps {
@@ -12,14 +14,44 @@ interface EvaluationMatrixProps {
 
 export const EvaluationMatrix: React.FC<EvaluationMatrixProps> = ({ onClose }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   
   // Default matrix from evaluation logic
-  const [matrix, setMatrix] = useState([
+  const defaultMatrix = [
     [2, 3, 4, 4], // 총괄
     [1, 2, 3, 4], // 리딩
     [1, 1, 2, 3], // 실무
     [1, 1, 1, 2]  // 지원
-  ]);
+  ];
+  
+  const [matrix, setMatrix] = useState(defaultMatrix);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 컴포넌트 마운트 시 DB에서 설정 로드
+  useEffect(() => {
+    const loadMatrix = async () => {
+      if (!user) return;
+
+      try {
+        console.log('🔍 평가 매트릭스 로딩 시작...');
+        const setting = await settingsService.getUserSetting(user.employeeId, 'evaluation_matrix');
+        
+        if (setting && setting.setting_data) {
+          setMatrix(setting.setting_data);
+          console.log('✅ 저장된 매트릭스 로드 완료');
+        } else {
+          console.log('📝 기본 매트릭스 사용');
+        }
+      } catch (error) {
+        console.error('❌ 매트릭스 로딩 실패:', error);
+        // 에러 발생 시 기본 매트릭스 사용
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMatrix();
+  }, [user]);
 
   const contributionMethods = ['총괄', '리딩', '실무', '지원'];
   const contributionScopes = ['의존적', '독립적', '상호적', '전략적'];
@@ -36,27 +68,59 @@ export const EvaluationMatrix: React.FC<EvaluationMatrixProps> = ({ onClose }) =
     setMatrix(newMatrix);
   };
 
-  const handleSave = () => {
-    localStorage.setItem('evaluation-matrix', JSON.stringify(matrix));
-    toast({
-      title: "매트릭스 저장 완료",
-      description: "평가 매트릭스가 성공적으로 저장되었습니다.",
-    });
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      console.log('💾 평가 매트릭스 저장 시작...');
+      
+      await settingsService.saveSetting(user.employeeId, 'evaluation_matrix', matrix);
+      
+      toast({
+        title: "매트릭스 저장 완료",
+        description: "평가 매트릭스가 성공적으로 저장되었습니다.",
+      });
+      
+      console.log('✅ 평가 매트릭스 저장 완료');
+    } catch (error) {
+      console.error('❌ 매트릭스 저장 실패:', error);
+      toast({
+        title: "저장 실패",
+        description: "평가 매트릭스 저장 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleReset = () => {
-    const defaultMatrix = [
-      [2, 3, 4, 4],
-      [1, 2, 3, 4],
-      [1, 1, 2, 3],
-      [1, 1, 1, 2]
-    ];
     setMatrix(defaultMatrix);
     toast({
       title: "매트릭스 초기화",
       description: "기본 매트릭스로 초기화되었습니다.",
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">평가 매트릭스 설정</h2>
+            <p className="text-muted-foreground">데이터를 로딩 중입니다...</p>
+          </div>
+          <Button variant="outline" onClick={onClose}>
+            <X className="mr-2 h-4 w-4" />
+            닫기
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">로딩 중...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

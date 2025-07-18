@@ -10,10 +10,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { X, Plus, Trash2, Save, Calendar as CalendarIcon } from 'lucide-react';
 import { EvaluationData, Task } from '@/types/evaluation';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/contexts/NotificationContextDB';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { taskService, evaluationService, notificationService } from '@/lib/services';
 
 interface TaskManagementProps {
   evaluationData: EvaluationData;
@@ -65,8 +66,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   const addNewTask = () => {
     const newTask: Task = {
       id: Date.now().toString(),
-      title: '새 과업',
-      description: '과업 설명을 입력하세요',
+      title: '',
+      description: '',
       weight: 0,
       lastModified: new Date().toISOString()
     };
@@ -89,7 +90,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     ));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Find original tasks to preserve evaluation data
     const originalTasksMap = new Map(evaluationData.tasks.map(task => [task.id, task]));
     
@@ -173,77 +174,180 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       }).map(t => ({ id: t.id, title: t.title }))
     });
 
-    // Send notifications for changes if user is evaluatee
-    if (user?.role === 'evaluatee' && (hasTaskContentChanges || hasStructuralChanges)) {
-      // Find the evaluator for this evaluatee
-      const evaluatorId = findEvaluatorForEvaluatee(evaluationData.evaluateeId);
 
-      if (evaluatorId) {
-        // Collect all changes for a comprehensive notification
-        const changes: string[] = [];
+
+    // 데이터베이스에 저장
+    try {
+      console.log('💾 과업 관리 저장 시작...');
+      
+      // 1. 평가 정보 조회
+      const evaluation = await evaluationService.getEvaluationByEmployeeId(evaluationData.evaluateeId);
+      if (!evaluation) {
+        throw new Error('평가 정보를 찾을 수 없습니다.');
+      }
+
+      // 2. 기존 과업들 조회
+      const existingTasks = await taskService.getTasksByEvaluationId(evaluation.id);
+      const existingTasksMap = new Map(existingTasks.map((task: any) => [task.task_id, task]));
+
+      // 3. 과업별로 업데이트 또는 생성
+      // 이번 저장 과정에서 생성될 새 과업들의 task_id를 미리 계산
+      let nextTaskNumber = 1;
+      
+      // 기존 과업들의 번호를 수집하여 다음 번호 계산
+      const existingTaskNumbers = existingTasks
+        .map((t: any) => t.task_id)
+        .filter((id: string) => id.startsWith(evaluationData.evaluateeId))
+        .map((id: string) => {
+          const match = id.match(new RegExp(`^${evaluationData.evaluateeId}_T(\\d+)$`));
+          return match ? parseInt(match[1]) : 0;
+        })
+        .filter(num => num > 0)
+        .sort((a: number, b: number) => b - a);
+      
+      if (existingTaskNumbers.length > 0) {
+        nextTaskNumber = existingTaskNumbers[0] + 1;
+      }
+      
+      console.log('🔍 기존 과업 번호들:', existingTaskNumbers);
+      console.log('🆔 다음 과업 번호 시작:', nextTaskNumber);
+      
+      for (const task of updatedTasks) {
+        const existingTask = existingTasksMap.get(task.id) as any;
         
-        // Check for content changes
-        const changedTasks = tasks.filter(task => {
-          const original = originalTasksMap.get(task.id);
-          return original && (
-            original.title !== task.title || 
-            original.description !== task.description || 
-            original.weight !== task.weight ||
-            original.startDate !== task.startDate ||
-            original.endDate !== task.endDate
-          );
-        });
-
-        changedTasks.forEach(task => {
-          const original = originalTasksMap.get(task.id);
-          if (original) {
-            if (original.title !== task.title) {
-              changes.push(`"${original.title}" 과업명 변경`);
-            }
-            if (original.description !== task.description) {
-              changes.push(`"${task.title}" 과업 설명 수정`);
-            }
-            if (original.weight !== task.weight) {
-              changes.push(`"${task.title}" 가중치 ${original.weight}% → ${task.weight}%`);
-            }
-            if (original.startDate !== task.startDate) {
-              changes.push(`"${task.title}" 시작일 ${original.startDate || '미설정'} → ${task.startDate || '미설정'}`);
-            }
-            if (original.endDate !== task.endDate) {
-              changes.push(`"${task.title}" 종료일 ${original.endDate || '미설정'} → ${task.endDate || '미설정'}`);
-            }
-          }
-        });
-
-        // Check for new tasks
-        const newTasks = tasks.filter(task => !originalTasksMap.has(task.id));
-        newTasks.forEach(task => {
-          changes.push(`"${task.title}" 새 과업 추가`);
-        });
-
-        // Check for deleted tasks
-        const deletedTasks = evaluationData.tasks.filter(task => !tasks.find(t => t.id === task.id));
-        deletedTasks.forEach(task => {
-          changes.push(`"${task.title}" 과업 삭제`);
-        });
-
-        if (changes.length > 0) {
-          const changeMessage = changes.length === 1 
-            ? changes[0] 
-            : `${changes.length}개 변경사항:\n${changes.map(change => `• ${change}`).join('\n')}`;
-
-          addNotification({
-            recipientId: evaluatorId,
-            title: '과업 관리 변경',
-            message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다.\n\n${changeMessage}`,
-            type: 'task_content_changed',
-            priority: 'medium',
-            senderId: user.id,
-            senderName: user.name,
-            relatedEvaluationId: evaluationData.evaluateeId
+        if (existingTask) {
+          // 기존 과업 업데이트 - task_id 보존
+          await taskService.updateTask(existingTask.id, {
+            title: task.title,
+            description: task.description || null,
+            weight: task.weight,
+            start_date: task.startDate || null,
+            end_date: task.endDate || null,
+            contribution_method: task.contributionMethod || null,
+            contribution_scope: task.contributionScope || null,
+            score: task.score || null,
+            feedback: task.feedback || null,
+            feedback_date: task.feedbackDate || null,
+            evaluator_name: task.evaluatorName || null
           });
+          console.log(`✅ 기존 과업 업데이트: ${existingTask.task_id} - ${task.title}`);
+        } else {
+          // 새 과업 생성 - 순차적인 task_id 생성
+          const newTaskId = `${evaluationData.evaluateeId}_T${nextTaskNumber}`;
+          console.log(`🆔 새 task_id 할당: ${newTaskId} (번호: ${nextTaskNumber})`);
+          
+          await taskService.createTask({
+            task_id: newTaskId,
+            evaluation_id: evaluation.id,
+            title: task.title,
+            description: task.description || null,
+            weight: task.weight,
+            start_date: task.startDate || null,
+            end_date: task.endDate || null,
+            contribution_method: task.contributionMethod || null,
+            contribution_scope: task.contributionScope || null,
+            score: task.score || null,
+            feedback: task.feedback || null,
+            feedback_date: task.feedbackDate || null,
+            evaluator_name: task.evaluatorName || null
+          });
+          console.log(`✅ 새 과업 생성: ${newTaskId} - ${task.title}`);
+          
+          // 다음 번호로 증가
+          nextTaskNumber++;
         }
       }
+
+      // 4. 삭제된 과업들 처리
+      const updatedTaskIds = new Set(updatedTasks.map(task => task.id));
+      const deletedTasks = existingTasks.filter(task => !updatedTaskIds.has(task.id));
+      
+      for (const deletedTask of deletedTasks) {
+        await taskService.deleteTask(deletedTask.id);
+        console.log(`🗑️ 과업 삭제: ${deletedTask.task_id} - ${deletedTask.title}`);
+      }
+
+      // 4. 평가 상태 업데이트
+      await evaluationService.updateEvaluation(evaluation.id, {
+        evaluation_status: evaluationStatus,
+        last_modified: new Date().toISOString()
+      });
+      console.log('📊 평가 상태 업데이트:', evaluationStatus);
+
+      // 6. 알림 생성 (데이터베이스 저장 성공 후)
+      if (user?.role === 'evaluatee' && (hasTaskContentChanges || hasStructuralChanges)) {
+        // Find the evaluator for this evaluatee
+        const evaluatorId = findEvaluatorForEvaluatee(evaluationData.evaluateeId);
+
+        if (evaluatorId) {
+          // Collect all changes for a comprehensive notification
+          const changes: string[] = [];
+          
+          // Check for content changes
+          const changedTasks = tasks.filter(task => {
+            const original = originalTasksMap.get(task.id);
+            return original && (
+              original.title !== task.title || 
+              original.description !== task.description || 
+              original.weight !== task.weight ||
+              original.startDate !== task.startDate ||
+              original.endDate !== task.endDate
+            );
+          });
+
+          changedTasks.forEach(task => {
+            const original = originalTasksMap.get(task.id);
+            if (original) {
+              if (original.title !== task.title) changes.push(`"${original.title}" → "${task.title}" 제목 변경`);
+              if (original.description !== task.description) changes.push(`"${task.title}" 설명 수정`);
+              if (original.weight !== task.weight) changes.push(`"${task.title}" 가중치 ${original.weight}% → ${task.weight}%`);
+              if (original.startDate !== task.startDate) changes.push(`"${task.title}" 시작일 변경`);
+              if (original.endDate !== task.endDate) changes.push(`"${task.title}" 종료일 변경`);
+            }
+          });
+
+          // Check for new tasks
+          const newTasks = tasks.filter(task => !originalTasksMap.has(task.id));
+          newTasks.forEach(task => {
+            changes.push(`"${task.title}" 새 과업 추가`);
+          });
+
+          // Check for deleted tasks
+          const deletedTasks = evaluationData.tasks.filter(task => !tasks.find(t => t.id === task.id));
+          deletedTasks.forEach(task => {
+            changes.push(`"${task.title}" 과업 삭제`);
+          });
+
+          // 평가 상태 변경 알림 추가
+          if (evaluationData.evaluationStatus === 'completed' && evaluationStatus === 'in-progress') {
+            changes.push('평가 상태: 완료 → 진행중 (재평가 필요)');
+          }
+
+          if (changes.length > 0) {
+            const changeMessage = changes.length === 1 
+              ? changes[0] 
+              : `${changes.length}개 변경사항:\n${changes.map(change => `• ${change}`).join('\n')}`;
+
+            await addNotification({
+              recipientId: evaluatorId,
+              title: '과업 관리 변경',
+              message: `${evaluationData.evaluateeName}님이 과업을 수정했습니다.\n\n${changeMessage}`,
+              type: 'task_content_changed',
+              priority: evaluationStatus === 'in-progress' ? 'high' : 'medium',
+              senderId: user.id,
+              senderName: user.name,
+              relatedEvaluationId: evaluationData.evaluateeId
+            });
+            
+            console.log('📧 과업 변경 알림 생성:', { evaluatorId, changes: changes.length, newStatus: evaluationStatus });
+            console.log('📣 과업 변경 알림 생성 완료, 평가자에게 즉시 반영됨');
+          }
+        }
+      }
+
+      console.log('✅ 과업 관리 저장 완료');
+    } catch (error) {
+      console.error('❌ 과업 관리 저장 실패:', error);
     }
     
     onSave(updatedData);
@@ -257,14 +361,14 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             <CardTitle className="text-xl sm:text-2xl">과업 관리</CardTitle>
             <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <span>과업을 추가하거나 수정할 수 있습니다.</span>
-              <div className="flex items-center gap-2">
+              <span className="flex items-center gap-2">
                 <span>총 가중치: {totalWeight}%</span>
                 {totalWeight !== 100 && (
                   <Badge variant="destructive" className="text-xs">
                     가중치 합계가 100%가 아닙니다
                   </Badge>
                 )}
-              </div>
+              </span>
             </CardDescription>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">

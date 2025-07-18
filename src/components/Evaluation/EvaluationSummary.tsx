@@ -78,9 +78,12 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
                     <span className="text-2xl sm:text-3xl group-hover:animate-celebration transition-all duration-300">
                       🎉
                     </span>
-                    {/* 반짝이는 효과 - 2개만 */}
+                    {/* 반짝이는 효과 - 5개로 증가 */}
                     <span className="absolute -top-1 -right-1 text-xs opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-all duration-300" style={{ animationDelay: '0s' }}>✨</span>
                     <span className="absolute -bottom-1 -left-1 text-xs opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-all duration-300" style={{ animationDelay: '0.3s' }}>⭐</span>
+                    <span className="absolute -top-2 left-1/2 transform -translate-x-1/2 text-xs opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-all duration-300" style={{ animationDelay: '0.6s' }}>✨</span>
+                    <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-all duration-300" style={{ animationDelay: '0.9s' }}>⭐</span>
+                    <span className="absolute top-1/2 -left-2 transform -translate-y-1/2 text-xs opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-all duration-300" style={{ animationDelay: '1.2s' }}>✨</span>
                   </div>
                   <span className="text-sm sm:text-lg font-semibold text-green-700 group-hover:text-green-800 transition-colors duration-300">달성</span>
                 </>
@@ -95,11 +98,14 @@ const EvaluationSummary: React.FC<EvaluationSummaryProps> = ({
                   
                   {/* 눈물 애니메이션 - 카드 위쪽 바깥에서 시작 */}
                   <div className="absolute inset-0 pointer-events-none">
-                    {/* 눈물 이모티콘들 - 4개만 카드 위쪽 바깥에서 시작 */}
+                    {/* 눈물 이모티콘들 - 자연스러운 떨어지는 시점으로 조정 */}
                     <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '20%', animationDelay: '0s' }}>💧</div>
-                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '50%', animationDelay: '0.5s' }}>💧</div>
-                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '80%', animationDelay: '1s' }}>💧</div>
-                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '35%', animationDelay: '1.5s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '50%', animationDelay: '0.3s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '80%', animationDelay: '0.8s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '35%', animationDelay: '1.2s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '65%', animationDelay: '0.6s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '10%', animationDelay: '1.7s' }}>💧</div>
+                    <div className="absolute text-xs opacity-0 group-hover:opacity-100 group-hover:animate-rain-drop" style={{ top: '-20px', left: '90%', animationDelay: '0.4s' }}>💧</div>
                   </div>
                 </>
               )}

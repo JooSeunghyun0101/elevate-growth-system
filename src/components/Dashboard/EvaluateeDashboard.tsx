@@ -9,18 +9,29 @@ import { Target, CheckCircle, Clock, MessageSquare, TrendingUp, ChevronDown, Che
 import TaskGanttChart from '@/components/TaskGanttChart';
 import TaskManagement from '@/components/Dashboard/TaskManagement';
 import { Task, FeedbackHistoryItem, EvaluationData } from '@/types/evaluation';
-import { getEmployeeData } from '@/utils/employeeData';
+import { useEvaluationDataDB } from '@/hooks/useEvaluationDataDB';
 import EvaluationGuide from '@/components/Dashboard/EvaluationGuide';
 import EvaluationSummary from '@/components/Evaluation/EvaluationSummary';
 
 export const EvaluateeDashboard: React.FC = () => {
   const { user } = useAuth();
-  const [evaluationData, setEvaluationData] = useState<EvaluationData | null>(null);
+  
+  // 데이터베이스 연동 훅 사용
+  const {
+    evaluationData,
+    isLoading,
+    handleTaskUpdate,
+    calculateTotalScore,
+    isEvaluationComplete,
+    isAchieved,
+    reloadData
+  } = useEvaluationDataDB(user?.employeeId || '');
+
   const [allFeedbacks, setAllFeedbacks] = useState<(FeedbackHistoryItem & { taskTitle: string })[]>([]);
   const [groupedFeedbacks, setGroupedFeedbacks] = useState<Record<string, (FeedbackHistoryItem & { taskTitle: string })[]>>({});
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
   const [showTaskManagement, setShowTaskManagement] = useState(false);
-  const [showEvaluationGuide, setShowEvaluationGuide] = useState(false); // Added state for EvaluationGuide
+  const [showEvaluationGuide, setShowEvaluationGuide] = useState(false);
   const [selectedTab, setSelectedTab] = useState('tasks');
   const [allFeedbacksBadgeRead, setAllFeedbacksBadgeRead] = useState(false);
   const [lastFeedbackCheck, setLastFeedbackCheck] = useState(() => {
@@ -44,108 +55,57 @@ export const EvaluateeDashboard: React.FC = () => {
     }
   };
 
+  // 피드백 데이터 업데이트 - 모든 과업 포함
   useEffect(() => {
-    if (!user) return;
+    if (!evaluationData) return;
 
-    const employeeInfo = getEmployeeData(user.employeeId);
-    const savedData = localStorage.getItem(`evaluation-${user.employeeId}`);
-    
-    if (savedData) {
-      try {
-        const data: EvaluationData = JSON.parse(savedData);
-        setEvaluationData(data);
-
-        // Collect all feedback history items with task titles
-        const feedbackItems: (FeedbackHistoryItem & { taskTitle: string })[] = [];
-        data.tasks.forEach(task => {
-          if (task.feedbackHistory && task.feedbackHistory.length > 0) {
-            task.feedbackHistory.forEach(feedback => {
-              feedbackItems.push({
-                ...feedback,
-                taskTitle: task.title
-              });
-            });
-          }
+    // Collect all feedback history items with task titles
+    const feedbackItems: (FeedbackHistoryItem & { taskTitle: string })[] = [];
+    evaluationData.tasks.forEach(task => {
+      if (task.feedbackHistory && task.feedbackHistory.length > 0) {
+        task.feedbackHistory.forEach(feedback => {
+          feedbackItems.push({
+            ...feedback,
+            taskTitle: task.title
+          });
         });
-
-        // Sort by date (most recent first)
-        feedbackItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setAllFeedbacks(feedbackItems);
-
-        // Group feedbacks by task
-        const grouped: Record<string, (FeedbackHistoryItem & { taskTitle: string })[]> = {};
-        feedbackItems.forEach(feedback => {
-          if (!grouped[feedback.taskTitle]) {
-            grouped[feedback.taskTitle] = [];
-          }
-          grouped[feedback.taskTitle].push(feedback);
-        });
-
-        // Sort each group by date (most recent first)
-        Object.keys(grouped).forEach(taskTitle => {
-          grouped[taskTitle].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        });
-
-        setGroupedFeedbacks(grouped);
-      } catch (error) {
-        console.error('Failed to parse evaluation data:', error);
       }
-    } else {
-      // Create default data if no saved evaluation found
-      setEvaluationData({
-        evaluateeId: user.employeeId,
-        evaluateeName: employeeInfo.name,
-        evaluateePosition: employeeInfo.position,
-        evaluateeDepartment: employeeInfo.department,
-        growthLevel: employeeInfo.growthLevel,
-        evaluationStatus: 'in-progress',
-        lastModified: new Date().toISOString(),
-        tasks: [
-          {
-            id: '1',
-            title: '브랜드 캠페인 기획',
-            description: 'Q2 신제품 출시를 위한 통합 브랜드 캠페인 기획 및 실행',
-            weight: 30,
-            startDate: '2024-01-15',
-            endDate: '2024-03-15',
-            feedbackHistory: []
-          },
-          {
-            id: '2',
-            title: '고객 만족도 조사',
-            description: '기존 고객 대상 만족도 조사 설계 및 분석',
-            weight: 25,
-            startDate: '2024-02-01',
-            endDate: '2024-04-01',
-            feedbackHistory: []
-          },
-          {
-            id: '3',
-            title: '소셜미디어 콘텐츠 관리',
-            description: '월간 소셜미디어 콘텐츠 계획 및 게시물 관리',
-            weight: 20,
-            startDate: '2024-01-01',
-            endDate: '2024-06-30',
-            feedbackHistory: []
-          },
-          {
-            id: '4',
-            title: '팀 프로젝트 협업',
-            description: '디자인팀과의 협업 프로젝트 진행',
-            weight: 25,
-            startDate: '2024-03-01',
-            endDate: '2024-05-31',
-            feedbackHistory: []
-          }
-        ]
-      });
-    }
-  }, [user]);
+    });
 
-  const handleTaskManagementSave = (updatedData: EvaluationData) => {
-    setEvaluationData(updatedData);
-    localStorage.setItem(`evaluation-${user!.employeeId}`, JSON.stringify(updatedData));
+    // Sort by date (most recent first)
+    feedbackItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setAllFeedbacks(feedbackItems);
+
+    // Group feedbacks by task - 모든 과업 포함 (피드백이 없는 과업도 포함)
+    const grouped: Record<string, (FeedbackHistoryItem & { taskTitle: string })[]> = {};
+    
+    // 모든 과업을 먼저 초기화 (빈 배열로)
+    evaluationData.tasks.forEach(task => {
+      grouped[task.title] = [];
+    });
+    
+    // 피드백이 있는 과업들의 피드백 추가
+    feedbackItems.forEach(feedback => {
+      if (grouped[feedback.taskTitle]) {
+        grouped[feedback.taskTitle].push(feedback);
+      }
+    });
+
+    // Sort each group by date (most recent first)
+    Object.keys(grouped).forEach(taskTitle => {
+      grouped[taskTitle].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    });
+
+    setGroupedFeedbacks(grouped);
+    console.log('📬 피드백 이력 업데이트:', feedbackItems.length, '개 (전체 과업:', evaluationData.tasks.length, '개)');
+  }, [evaluationData]);
+
+  // 자동 새로고침 제거 - 저장/완료 버튼 클릭 시에만 새로고침
+
+  const handleTaskManagementSave = async (updatedData: EvaluationData) => {
     setShowTaskManagement(false);
+    console.log('💾 과업 관리 저장 완료 - 데이터 새로고침');
+    await reloadData(); // 데이터 새로고침
   };
 
   const toggleTaskFeedbacks = (taskTitle: string) => {
@@ -155,8 +115,12 @@ export const EvaluateeDashboard: React.FC = () => {
     }));
   };
 
-  if (!evaluationData) {
+  if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (!evaluationData) {
+    return <div>평가 데이터가 없습니다.</div>;
   }
 
   const totalTasks = evaluationData.tasks.length;
@@ -164,14 +128,7 @@ export const EvaluateeDashboard: React.FC = () => {
   const inProgressTasks = totalTasks - completedTasks;
 
   // Calculate performance metrics for summary
-  const totalWeightedScore = evaluationData.tasks.reduce((sum, task) => {
-    if (task.score) {
-      return sum + (task.score * task.weight / 100);
-    }
-    return sum;
-  }, 0);
-  const flooredScore = Math.floor(totalWeightedScore);
-  const isAchieved = flooredScore >= evaluationData.growthLevel;
+  const { exactScore, flooredScore } = calculateTotalScore();
 
   const myStats = [
     {
@@ -231,8 +188,8 @@ export const EvaluateeDashboard: React.FC = () => {
       <EvaluationSummary
         evaluationData={evaluationData}
         totalScore={flooredScore}
-        exactScore={totalWeightedScore}
-        isAchieved={isAchieved}
+        exactScore={exactScore}
+        isAchieved={isAchieved()}
       />
 
       <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-4">
@@ -321,6 +278,72 @@ export const EvaluateeDashboard: React.FC = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* 최종 피드백 표시 */}
+                      {(() => {
+                        // 최종 피드백 찾기 (가장 최근 피드백 또는 현재 피드백)
+                        let finalFeedback = null;
+                        let feedbackDate = null;
+                        let evaluatorName = null;
+
+                        if (task.feedbackHistory && task.feedbackHistory.length > 0) {
+                          // 피드백 히스토리가 있으면 가장 최근 것 사용
+                          const sortedHistory = [...task.feedbackHistory].sort((a, b) => 
+                            new Date(b.date).getTime() - new Date(a.date).getTime()
+                          );
+                          finalFeedback = sortedHistory[0].content;
+                          feedbackDate = sortedHistory[0].date;
+                          evaluatorName = sortedHistory[0].evaluatorName;
+                        } else if (task.feedback) {
+                          // 피드백 히스토리가 없지만 현재 피드백이 있으면 그것 사용
+                          finalFeedback = task.feedback;
+                          feedbackDate = task.lastModified;
+                          evaluatorName = task.evaluatorName || '평가자';
+                        }
+
+                        if (finalFeedback) {
+                          return (
+                            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <MessageSquare className="w-4 h-4 text-yellow-600" />
+                                  <span className="text-sm font-medium text-yellow-800">최종 피드백</span>
+                                </div>
+                                <div className="text-xs text-gray-500 flex items-center gap-2">
+                                  <span>평가자: {evaluatorName}</span>
+                                  {feedbackDate && (
+                                    <span>
+                                      {new Date(feedbackDate).toLocaleDateString('ko-KR', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-700 leading-relaxed break-words">
+                                {finalFeedback}
+                              </p>
+                              {task.feedbackHistory && task.feedbackHistory.length > 1 && (
+                                <div className="mt-2 text-xs text-blue-600">
+                                  총 {task.feedbackHistory.length}개의 피드백 이력이 있습니다.
+                                </div>
+                              )}
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-500">아직 받은 피드백이 없습니다.</span>
+                              </div>
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
                   );
                 })}
@@ -355,7 +378,7 @@ export const EvaluateeDashboard: React.FC = () => {
             <CardContent>
               <div className="space-y-6">
                 {Object.keys(groupedFeedbacks).length === 0 ? (
-                  <p className="text-center text-gray-500 py-8 text-sm">받은 피드백이 없습니다.</p>
+                  <p className="text-center text-gray-500 py-8 text-sm">과업 데이터가 없습니다.</p>
                 ) : (
                   Object.entries(groupedFeedbacks).map(([taskTitle, feedbacks]) => {
                     const isExpanded = expandedTasks[taskTitle];
@@ -363,51 +386,71 @@ export const EvaluateeDashboard: React.FC = () => {
                     
                     return (
                       <div key={taskTitle} className="space-y-3">
-                        <h4 className="font-medium text-sm sm:text-base text-gray-900">{taskTitle}</h4>
-                        
-                        <div className="space-y-3">
-                          {displayedFeedbacks.map((feedback, index) => (
-                            <div key={feedback.id} className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs sm:text-sm font-medium">평가자: {feedback.evaluatorName}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(feedback.date).toLocaleDateString('ko-KR', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                              <p className="text-xs sm:text-sm text-gray-700">
-                                {feedback.content}
-                              </p>
-                            </div>
-                          ))}
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm sm:text-base text-gray-900">{taskTitle}</h4>
+                          {feedbacks.length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {feedbacks.length}개 피드백
+                            </Badge>
+                          )}
                         </div>
                         
-                        {feedbacks.length > 1 && (
-                          <div className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleTaskFeedbacks(taskTitle)}
-                              className="text-sm"
-                            >
-                              {isExpanded ? (
-                                <>
-                                  <ChevronUp className="w-4 h-4 mr-1" />
-                                  접기
-                                </>
-                              ) : (
-                                <>
-                                  <ChevronDown className="w-4 h-4 mr-1" />
-                                  {feedbacks.length - 1}개 더보기
-                                </>
-                              )}
-                            </Button>
+                        {feedbacks.length === 0 ? (
+                          // 피드백이 없는 경우
+                          <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                            <div className="flex items-center gap-2">
+                              <MessageSquare className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm text-gray-500">아직 받은 피드백이 없습니다.</span>
+                            </div>
                           </div>
+                        ) : (
+                          // 피드백이 있는 경우
+                          <>
+                            <div className="space-y-3">
+                              {displayedFeedbacks.map((feedback, index) => (
+                                <div key={feedback.id} className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs sm:text-sm font-medium">평가자: {feedback.evaluatorName}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(feedback.date).toLocaleDateString('ko-KR', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs sm:text-sm text-gray-700">
+                                    {feedback.content}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {feedbacks.length > 1 && (
+                              <div className="text-center">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleTaskFeedbacks(taskTitle)}
+                                  className="text-sm"
+                                >
+                                  {isExpanded ? (
+                                    <>
+                                      <ChevronUp className="w-4 h-4 mr-1" />
+                                      접기
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ChevronDown className="w-4 h-4 mr-1" />
+                                      {feedbacks.length - 1}개 더보기
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     );

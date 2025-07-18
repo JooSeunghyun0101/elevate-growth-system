@@ -55,57 +55,65 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   return (
     <div className={`p-4 border rounded-lg ${getPriorityColor()}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 flex-1 min-w-0">
+      <div className="flex flex-col gap-3">
+        {/* 상단: 아이콘, 제목, 뱃지 */}
+        <div className="flex items-start gap-3">
           {getIcon()}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-medium text-sm truncate">{notification.title}</h4>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h4 className="font-medium text-sm break-words flex-1 min-w-0">{notification.title}</h4>
               {!notification.isRead && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-orange-500 text-white hover:bg-orange-600">new</Badge>
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-orange-500 text-white hover:bg-orange-600 flex-shrink-0">new</Badge>
               )}
-            </div>
-            <div className="text-sm text-gray-700 space-y-1">
-              <div className="whitespace-pre-wrap break-words leading-relaxed">
-                {displayMessage}
-              </div>
-              {shouldTruncate && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="h-auto p-0 text-blue-600 hover:text-blue-800 text-xs"
-                >
-                  {isExpanded ? '접기' : '더보기'}
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-              <span>{notification.senderName}</span>
-              <span>•</span>
-              <span>{format(new Date(notification.createdAt), 'MM/dd HH:mm')}</span>
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-1">
-          {!notification.isRead && (
+        
+        {/* 중간: 메시지 내용 - 아이콘 간격만큼 들여쓰기 */}
+        <div className="text-sm text-gray-700 space-y-1 pl-11">
+          <div className="whitespace-pre-wrap break-words leading-relaxed word-break-break-all">
+            {displayMessage}
+          </div>
+          {shouldTruncate && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onMarkAsRead(notification.id)}
-              className="text-xs px-2 py-1 h-auto"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="h-auto p-0 text-blue-600 hover:text-blue-800 text-xs"
             >
-              읽음
+              {isExpanded ? '접기' : '더보기'}
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(notification.id)}
-            className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-800"
-          >
-            삭제
-          </Button>
+        </div>
+        
+        {/* 하단: 메타정보와 액션 버튼들 */}
+        <div className="flex items-center justify-between gap-2 pl-11 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-gray-500 min-w-0 flex-1">
+            <span className="break-words">{notification.senderName}</span>
+            <span>•</span>
+            <span className="whitespace-nowrap">{format(new Date(notification.createdAt), 'MM/dd HH:mm')}</span>
+          </div>
+          
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {!notification.isRead && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onMarkAsRead(notification.id)}
+                className="text-xs px-2 py-1 h-auto whitespace-nowrap"
+              >
+                읽음
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(notification.id)}
+              className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-800 whitespace-nowrap"
+            >
+              삭제
+            </Button>
+          </div>
         </div>
       </div>
     </div>

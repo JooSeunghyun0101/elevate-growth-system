@@ -1,133 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface User {
-  id: string;
-  employeeId: string;
-  name: string;
-  role: 'hr' | 'evaluator' | 'evaluatee';
-  department: string;
-  position?: string;
-  growthLevel?: number;
-  evaluatorId?: string;
-  availableRoles?: ('hr' | 'evaluator' | 'evaluatee')[];
-}
+import { employeeService } from '@/lib/services';
+import { User, Employee, UserRole, CONSTANTS } from '@/types';
+import { errorHandler } from '@/utils/errorHandler';
 
 interface AuthContextType {
   user: User | null;
   login: (employeeId: string, password: string, role?: string) => Promise<boolean>;
   logout: () => void;
-  switchRole: (role: 'hr' | 'evaluator' | 'evaluatee') => void;
-  getAvailableRoles: (employeeId: string) => ('hr' | 'evaluator' | 'evaluatee')[];
+  switchRole: (role: UserRole) => Promise<void>;
+  getAvailableRoles: (employeeId: string) => Promise<UserRole[]>;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Updated employee data with new positions and growth levels
-const employeeData: Record<string, Omit<User, 'role'> & { availableRoles: ('hr' | 'evaluator' | 'evaluatee')[] }> = {
-  // 이사 - 평가자만 (성장레벨 없음)
-  'H0807021': {
-    id: 'H0807021',
-    employeeId: 'H0807021',
-    name: '박준형',
-    department: '인사부',
-    position: '이사',
-    availableRoles: ['evaluator']
-  },
-  // 차장 - 평가자 겸 피평가자 (성장레벨 3)
-  'H0908033': {
-    id: 'H0908033',
-    employeeId: 'H0908033',
-    name: '박판근',
-    department: '인사기획팀',
-    position: '차장',
-    growthLevel: 3,
-    evaluatorId: 'H0807021',
-    availableRoles: ['evaluator', 'evaluatee']
-  },
-  'H1310159': {
-    id: 'H1310159',
-    employeeId: 'H1310159',
-    name: '김남엽',
-    department: '인사팀',
-    position: '차장',
-    growthLevel: 3,
-    evaluatorId: 'H0807021',
-    availableRoles: ['evaluator', 'evaluatee']
-  },
-  // 차장 - 피평가자만 (성장레벨 3)
-  'H1310172': {
-    id: 'H1310172',
-    employeeId: 'H1310172',
-    name: '이수한',
-    department: '인사기획팀',
-    position: '차장',
-    growthLevel: 3,
-    evaluatorId: 'H0908033',
-    availableRoles: ['evaluatee']
-  },
-  'H1411166': {
-    id: 'H1411166',
-    employeeId: 'H1411166',
-    name: '주승현',
-    department: '인사기획팀',
-    position: '차장',
-    growthLevel: 3,
-    evaluatorId: 'H0908033',
-    availableRoles: ['evaluatee']
-  },
-  'H1411231': {
-    id: 'H1411231',
-    employeeId: 'H1411231',
-    name: '최은송',
-    department: '인사팀',
-    position: '차장',
-    growthLevel: 3,
-    evaluatorId: 'H1310159',
-    availableRoles: ['evaluatee']
-  },
-  // 대리 - 피평가자만 (성장레벨 2)
-  'H1911042': {
-    id: 'H1911042',
-    employeeId: 'H1911042',
-    name: '김민선',
-    department: '인사기획팀',
-    position: '대리',
-    growthLevel: 2,
-    evaluatorId: 'H0908033',
-    availableRoles: ['evaluatee']
-  },
-  'H1205006': {
-    id: 'H1205006',
-    employeeId: 'H1205006',
-    name: '황정원',
-    department: '인사팀',
-    position: '대리',
-    growthLevel: 2,
-    evaluatorId: 'H1310159',
-    availableRoles: ['evaluatee']
-  },
-  'H1501077': {
-    id: 'H1501077',
-    employeeId: 'H1501077',
-    name: '조혜인',
-    department: '인사팀',
-    position: '대리',
-    growthLevel: 2,
-    evaluatorId: 'H1310159',
-    availableRoles: ['evaluatee']
-  },
-  // 사원 - 피평가자만 (성장레벨 1)
-  'H2301040': {
-    id: 'H2301040',
-    employeeId: 'H2301040',
-    name: '김민영',
-    department: '인사팀',
-    position: '사원',
-    growthLevel: 1,
-    evaluatorId: 'H1310159',
-    availableRoles: ['evaluatee']
+// Helper function to convert database employee to available roles
+const getAvailableRolesFromEmployee = (employee: Employee): UserRole[] => {
+  // Temporary HR access for H1411166 (주승현)
+  if (employee.employee_id === 'H1411166') {
+    return ['evaluatee', 'hr'];
   }
+  
+  // HR role is not currently implemented in the database, so we'll use a simple rule:
+  // Only the director (이사) gets evaluator role, others get appropriate roles based on available_roles
+  return employee.available_roles as UserRole[];
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -143,42 +39,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const getAvailableRoles = (employeeId: string): ('hr' | 'evaluator' | 'evaluatee')[] => {
-    const employee = employeeData[employeeId];
-    return employee ? employee.availableRoles : [];
+  const getAvailableRoles = async (employeeId: string): Promise<UserRole[]> => {
+    try {
+      const employee = await employeeService.getEmployeeById(employeeId);
+      return employee ? getAvailableRolesFromEmployee(employee) : [];
+    } catch (error) {
+      console.error('Error fetching employee roles:', error);
+      return [];
+    }
   };
 
   const login = async (employeeId: string, password: string, role?: string): Promise<boolean> => {
-    // Mock authentication with employee ID
-    if (employeeData[employeeId] && password === '1234') {
-      const employee = employeeData[employeeId];
+    try {
+      console.log('🔐 로그인 시도:', { employeeId, password: '***' });
+      
+      // Mock authentication with employee ID
+      if (password !== CONSTANTS.DEFAULT_PASSWORD) {
+        console.log('❌ 비밀번호 불일치');
+        return false;
+      }
+
+      console.log('🔍 데이터베이스에서 직원 정보 조회 중...');
+      const employee = await employeeService.getEmployeeById(employeeId);
+      console.log('👤 조회된 직원 정보:', employee);
+      
+      if (!employee) {
+        console.log('❌ 직원 정보를 찾을 수 없음');
+        return false;
+      }
+
+      const availableRoles = getAvailableRolesFromEmployee(employee);
+      console.log('🎭 사용 가능한 역할:', availableRoles);
       
       // If role is provided, use it; otherwise use the first available role
-      const selectedRole = role as 'hr' | 'evaluator' | 'evaluatee' || employee.availableRoles[0];
+      const selectedRole = role as UserRole || availableRoles[0];
+      console.log('👔 선택된 역할:', selectedRole);
       
       // Check if the selected role is available for this employee
-      if (!employee.availableRoles.includes(selectedRole)) {
+      if (!availableRoles.includes(selectedRole)) {
+        console.log('❌ 선택된 역할이 사용 불가능');
         return false;
       }
       
       const loggedInUser: User = {
-        ...employee,
+        id: employee.id,
+        employeeId: employee.employee_id,
+        name: employee.name,
+        department: employee.department,
+        position: employee.position,
+        growthLevel: employee.growth_level || undefined,
+        evaluatorId: employee.evaluator_id || undefined,
+        availableRoles,
         role: selectedRole
       };
       
+      console.log('✅ 로그인 성공, 사용자 정보:', loggedInUser);
       setUser(loggedInUser);
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    
-    return false;
   };
 
-  const switchRole = (role: 'hr' | 'evaluator' | 'evaluatee') => {
-    if (user && employeeData[user.employeeId]?.availableRoles.includes(role)) {
-      const updatedUser = { ...user, role };
-      setUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+  const switchRole = async (role: UserRole) => {
+    if (!user) return;
+    
+    try {
+      const employee = await employeeService.getEmployeeById(user.employeeId);
+      if (employee && getAvailableRolesFromEmployee(employee).includes(role)) {
+        const updatedUser = { ...user, role };
+        setUser(updatedUser);
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('Role switch error:', error);
     }
   };
 

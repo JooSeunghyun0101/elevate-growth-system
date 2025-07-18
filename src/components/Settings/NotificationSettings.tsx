@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { settingsService } from '@/lib/database';
 import { X, Save, Bell } from 'lucide-react';
 
 interface NotificationSettingsProps {
@@ -24,19 +26,46 @@ interface NotificationConfig {
 
 export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ onClose }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   
-  const [config, setConfig] = useState<NotificationConfig>(() => {
-    const saved = localStorage.getItem('notification-config');
-    return saved ? JSON.parse(saved) : {
-      emailNotifications: true,
-      systemNotifications: true,
-      evaluationDeadline: true,
-      feedbackReminder: true,
-      weeklyReport: false,
-      deadlineWarningDays: 3,
-      reminderFrequency: 7
+  const defaultConfig: NotificationConfig = {
+    emailNotifications: true,
+    systemNotifications: true,
+    evaluationDeadline: true,
+    feedbackReminder: true,
+    weeklyReport: false,
+    deadlineWarningDays: 3,
+    reminderFrequency: 7
+  };
+  
+  const [config, setConfig] = useState<NotificationConfig>(defaultConfig);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 컴포넌트 마운트 시 DB에서 설정 로드
+  useEffect(() => {
+    const loadConfig = async () => {
+      if (!user) return;
+
+      try {
+        console.log('🔍 알림 설정 로딩 시작...');
+        const setting = await settingsService.getUserSetting(user.employeeId, 'notification_config');
+        
+        if (setting && setting.setting_data) {
+          setConfig(setting.setting_data);
+          console.log('✅ 저장된 알림 설정 로드 완료');
+        } else {
+          console.log('📝 기본 알림 설정 사용');
+        }
+      } catch (error) {
+        console.error('❌ 알림 설정 로딩 실패:', error);
+        // 에러 발생 시 기본 설정 사용
+      } finally {
+        setIsLoading(false);
+      }
     };
-  });
+
+    loadConfig();
+  }, [user]);
 
   const handleConfigChange = (key: keyof NotificationConfig, value: boolean | number) => {
     setConfig(prev => ({
@@ -45,13 +74,51 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ onCl
     }));
   };
 
-  const handleSave = () => {
-    localStorage.setItem('notification-config', JSON.stringify(config));
-    toast({
-      title: "알림 설정 저장 완료",
-      description: "알림 설정이 성공적으로 저장되었습니다.",
-    });
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      console.log('💾 알림 설정 저장 시작...');
+      
+      await settingsService.saveSetting(user.employeeId, 'notification_config', config);
+      
+      toast({
+        title: "알림 설정 저장 완료",
+        description: "알림 설정이 성공적으로 저장되었습니다.",
+      });
+      
+      console.log('✅ 알림 설정 저장 완료');
+    } catch (error) {
+      console.error('❌ 알림 설정 저장 실패:', error);
+      toast({
+        title: "저장 실패",
+        description: "알림 설정 저장 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">알림 설정</h2>
+            <p className="text-muted-foreground">데이터를 로딩 중입니다...</p>
+          </div>
+          <Button variant="outline" onClick={onClose}>
+            <X className="mr-2 h-4 w-4" />
+            닫기
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">로딩 중...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

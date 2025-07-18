@@ -19,7 +19,7 @@ const Login = () => {
   const [error, setError] = useState('');
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const getRoleDisplay = (role: string) => {
@@ -44,24 +44,29 @@ const Login = () => {
       return;
     }
 
-    const roles = getAvailableRoles(employeeId);
-    if (roles.length === 0) {
-      setError('사번 또는 비밀번호가 올바르지 않습니다.');
-      return;
-    }
-
-    if (roles.length === 1) {
-      // Single role - login directly
-      setIsLoading(true);
-      const success = await login(employeeId, password, roles[0]);
-      if (!success) {
+    try {
+      const roles = await getAvailableRoles(employeeId);
+      if (roles.length === 0) {
         setError('사번 또는 비밀번호가 올바르지 않습니다.');
+        return;
       }
-      setIsLoading(false);
-    } else {
-      // Multiple roles - show role selection
-      setAvailableRoles(roles);
-      setStep('role');
+
+      if (roles.length === 1) {
+        // Single role - login directly
+        setIsLoading(true);
+        const success = await login(employeeId, password, roles[0]);
+        if (!success) {
+          setError('사번 또는 비밀번호가 올바르지 않습니다.');
+        }
+        setIsLoading(false);
+      } else {
+        // Multiple roles - show role selection
+        setAvailableRoles(roles);
+        setStep('role');
+      }
+    } catch (error) {
+      console.error('역할 조회 오류:', error);
+      setError('사번 또는 비밀번호가 올바르지 않습니다.');
     }
   };
 
@@ -93,7 +98,7 @@ const Login = () => {
             <img src="/느낌표_orange.png" alt="OK Logo" className="w-12 h-12" />
           </div>
           <CardTitle className="text-2xl">Performance Management</CardTitle>
-          <CardDescription>차세대 성과관리 시스템에 로그인하세요</CardDescription>
+          <CardDescription>차세대 성과관리_기여도평가 시스템에 로그인하세요</CardDescription>
         </CardHeader>
         <CardContent>
           {step === 'credentials' ? (

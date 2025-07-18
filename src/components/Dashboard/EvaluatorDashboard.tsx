@@ -10,6 +10,8 @@ import EvaluationGuide from './EvaluationGuide';
 import TaskGanttChart from '@/components/TaskGanttChart';
 import MiniGanttChart from '@/components/MiniGanttChart';
 import { Task } from '@/types/evaluation';
+import { employeeService, evaluationService, taskService, feedbackService } from '@/lib/database';
+import { useNotifications } from '@/contexts/NotificationContextDB';
 
 interface EvaluationData {
   evaluateeId: string;
@@ -92,6 +94,7 @@ const evaluatorMapping: Record<string, Array<{id: string, name: string, position
 export const EvaluatorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { notifications } = useNotifications();
   const [evaluatees, setEvaluatees] = useState<EvaluateeInfo[]>([]);
   const [taskFeedbacks, setTaskFeedbacks] = useState<TaskFeedbacks>({});
   const [showAllFeedbacks, setShowAllFeedbacks] = useState<Record<string, boolean>>({});
@@ -101,18 +104,145 @@ export const EvaluatorDashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('evaluatees');
   const [pendingBadgeRead, setPendingBadgeRead] = useState(false);
 
-  const loadEvaluationData = () => {
+  // 데이터베이스에서 localStorage로 동기화하는 함수
+  const syncDataFromDatabase = async () => {
     if (!user) return;
 
-    // Get evaluatees for current evaluator
-    const myEvaluatees = evaluatorMapping[user.employeeId] || [];
-    const updatedEvaluatees: EvaluateeInfo[] = [];
-    const feedbacksByTask: TaskFeedbacks = {};
-    const combinedTasks: Task[] = [];
-    const tasksByEvaluatee: Record<string, Task[]> = {};
+    try {
+      console.log('🔄 평가자 대시보드 - 데이터베이스에서 localStorage로 동기화 시작...');
 
-    myEvaluatees.forEach(evaluatee => {
-      const savedData = localStorage.getItem(`evaluation-${evaluatee.id}`);
+      // 내가 평가하는 직원들 조회
+      const myEvaluatees = await employeeService.getEvaluateesByEvaluator(user.employeeId);
+      console.log('👥 담당 피평가자 수:', myEvaluatees.length);
+
+      for (const employee of myEvaluatees) {
+        console.log('🔍 피평가자 데이터 동기화:', employee.employee_id, employee.name);
+        
+        // 각 직원의 평가 데이터 조회
+        const evaluation = await evaluationService.getEvaluationByEmployeeId(employee.employee_id);
+        if (!evaluation) {
+          console.log('⚠️ 평가 데이터 없음:', employee.employee_id);
+          continue;
+        }
+
+        // 해당 평가의 과업들 조회
+        const dbTasks = await taskService.getTasksByEvaluationId(evaluation.id);
+        console.log(`📋 ${employee.name}의 과업 수:`, dbTasks.length);
+        
+        // 각 과업의 피드백 히스토리 로드
+        const tasksWithHistory = await Promise.all(
+          dbTasks.map(async (task) => {
+            console.log('📜 피드백 히스토리 조회:', {
+              taskUUID: task.id,
+              taskId: task.task_id,
+              taskTitle: task.title
+            });
+            
+            let feedbackHistory: any[] = [];
+            try {
+              feedbackHistory = await feedbackService.getFeedbackHistoryByTaskId(task.task_id);
+              console.log(`✅ ${task.title} 피드백 히스토리:`, feedbackHistory.length, '개',
+                feedbackHistory.map(fh => ({
+                  id: fh.id,
+                  content: fh.content.substring(0, 30) + '...',
+                  evaluator: fh.evaluator_name,
+                  createdAt: fh.created_at
+                }))
+              );
+            } catch (error) {
+              console.error('❌ 피드백 히스토리 조회 실패:', error);
+              feedbackHistory = [];
+            }
+            
+            return {
+              id: task.task_id, // task_id를 id로 사용 (기존 코드 호환성)
+              title: task.title,
+              description: task.description || '',
+              weight: task.weight,
+              startDate: task.start_date || undefined,
+              endDate: task.end_date || undefined,
+              contributionMethod: task.contribution_method || undefined,
+              contributionScope: task.contribution_scope || undefined,
+              score: task.score || undefined,
+              feedback: task.feedback || undefined,
+              feedbackDate: task.feedback_date || undefined,
+              evaluatorName: task.evaluator_name || undefined,
+              lastModified: (task as any).updated_at || new Date().toISOString(),
+              feedbackHistory: feedbackHistory.map(fh => ({
+                id: fh.id,
+                content: fh.content,
+                date: fh.created_at,
+                evaluatorName: fh.evaluator_name || '평가자',
+                evaluatorId: user.id || 'unknown'
+              }))
+            };
+          })
+        );
+
+        // EvaluationData 형태로 변환
+        const evaluationData = {
+          evaluateeId: evaluation.evaluatee_id,
+          evaluateeName: evaluation.evaluatee_name,
+          evaluateePosition: evaluation.evaluatee_position,
+          evaluateeDepartment: evaluation.evaluatee_department,
+          growthLevel: evaluation.growth_level,
+          evaluationStatus: evaluation.evaluation_status,
+          lastModified: evaluation.last_modified,
+          tasks: tasksWithHistory
+        };
+
+        // 동기화 상세 로그
+        console.log('💾 localStorage에 저장할 데이터 상세:', {
+          employeeId: employee.employee_id,
+          employeeName: evaluation.evaluatee_name,
+          taskCount: tasksWithHistory.length,
+          totalFeedbackHistory: tasksWithHistory.reduce((sum, task) => sum + (task.feedbackHistory?.length || 0), 0),
+          tasksWithFeedback: tasksWithHistory.filter(task => (task.feedbackHistory?.length || 0) > 0).map(task => ({
+            taskId: task.id,
+            title: task.title,
+            historyCount: task.feedbackHistory?.length || 0,
+            latestFeedback: task.feedbackHistory?.[0]?.content.substring(0, 30) + '...' || '없음'
+          }))
+        });
+
+        // localStorage에 저장 (기존 로직과 호환성 유지)
+        localStorage.setItem(`evaluation-${employee.employee_id}`, JSON.stringify(evaluationData));
+        console.log(`✅ ${evaluationData.evaluateeName} 데이터 동기화 완료 (피드백 히스토리 ${tasksWithHistory.reduce((sum, task) => sum + (task.feedbackHistory?.length || 0), 0)}개 포함)`);
+      }
+
+      console.log('✅ 데이터베이스에서 localStorage로 동기화 완료');
+    } catch (error) {
+      console.error('❌ 데이터베이스 동기화 실패:', error);
+    }
+  };
+
+  const loadEvaluationData = async () => {
+    if (!user) return;
+    
+    // 먼저 데이터베이스에서 최신 데이터를 localStorage로 동기화
+    console.log('🔄 평가자 대시보드 데이터 로드: DB 동기화 먼저 실행');
+    await syncDataFromDatabase();
+
+    try {
+      // Get evaluatees for current evaluator from database
+      const myEvaluateesFromDB = await employeeService.getEvaluateesByEvaluator(user.employeeId);
+      
+      // Convert to expected format for compatibility
+      const myEvaluatees = myEvaluateesFromDB.map(emp => ({
+        id: emp.employee_id,
+        name: emp.name,
+        position: emp.position,
+        department: emp.department,
+        growthLevel: emp.growth_level
+      }));
+
+      const updatedEvaluatees: EvaluateeInfo[] = [];
+      const feedbacksByTask: TaskFeedbacks = {};
+      const combinedTasks: Task[] = [];
+      const tasksByEvaluatee: Record<string, Task[]> = {};
+
+      myEvaluatees.forEach(evaluatee => {
+        const savedData = localStorage.getItem(`evaluation-${evaluatee.id}`);
       
       if (savedData) {
         try {
@@ -255,36 +385,57 @@ export const EvaluatorDashboard: React.FC = () => {
       }));
     });
 
-    console.log('Updated evaluatees data:', updatedEvaluatees);
-    console.log('Task feedbacks:', feedbacksByTask);
-    console.log('Combined tasks:', combinedTasks);
-    
-    setEvaluatees(updatedEvaluatees);
-    setTaskFeedbacks(feedbacksByTask);
-    setAllTasks(combinedTasks);
-    setEvaluateeTasks(tasksByEvaluatee);
+      console.log('Updated evaluatees data:', updatedEvaluatees);
+      console.log('Task feedbacks:', feedbacksByTask);
+      console.log('Combined tasks:', combinedTasks);
+      
+      setEvaluatees(updatedEvaluatees);
+      setTaskFeedbacks(feedbacksByTask);
+      setAllTasks(combinedTasks);
+      setEvaluateeTasks(tasksByEvaluatee);
+      
+      console.log('✅ 평가자 대시보드 데이터 로드 완료');
+    } catch (error) {
+      console.error('❌ 평가자 대시보드 데이터 로드 실패:', error);
+    }
   };
 
-  // Load data on mount and set up refresh
+  // Load data on mount - DB 연동 우선
   useEffect(() => {
-    loadEvaluationData();
-    
-    const interval = setInterval(loadEvaluationData, 1000);
-    
-    return () => clearInterval(interval);
-  }, [user]);
-
-  // Also refresh when the component becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        loadEvaluationData();
+    const loadData = async () => {
+      console.log('🔄 평가자 대시보드 데이터 로드 시작');
+      try {
+        // 먼저 DB에서 동기화
+        await syncDataFromDatabase();
+        // 그 다음 localStorage 데이터 로드
+        await loadEvaluationData();
+        console.log('✅ 평가자 대시보드 데이터 로드 완료');
+      } catch (error) {
+        console.error('❌ 평가자 대시보드 데이터 로드 실패:', error);
+        // DB 실패 시 localStorage에서라도 로드
+        await loadEvaluationData();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+    if (user) {
+      loadData();
+    }
+  }, [user]);
+
+  // 자동 새로고침 제거 - 저장/완료 버튼 클릭 시에만 새로고침
+  
+  // 알림 변경 감지하여 데이터 새로고침 (저장/완료 버튼 클릭 시)
+  useEffect(() => {
+    if (user && notifications.length > 0) {
+      const latestNotification = notifications[0];
+      const isRecent = new Date().getTime() - new Date(latestNotification.createdAt).getTime() < 5000; // 5초 이내
+      
+      if (isRecent && (latestNotification.type === 'task_summary' || latestNotification.type === 'task_content_changed')) {
+        console.log('🔄 최신 알림 감지 - 평가자 대시보드 데이터 새로고침');
+        loadEvaluationData();
+      }
+    }
+  }, [notifications, user]);
 
   const totalFeedbackCount = Object.values(taskFeedbacks).reduce((sum, feedbacks) => sum + feedbacks.length, 0);
 
