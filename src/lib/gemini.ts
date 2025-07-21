@@ -1,7 +1,7 @@
 // Gemini API 호출 유틸리티
 // Google의 Gemini AI 모델을 사용한 피드백 어시스턴트
 
-const GEMINI_API_KEY = 'AIzaSyDDbfXTl8rL1P1uS2Sdc8K47Zd6HX3sqiY';
+const GEMINI_API_KEY = 'AIzaSyDvwOigpmSI_PVILeeRUnzCJPbcfaH8ztY';
 const GEMINI_MODEL = 'gemini-1.5-flash'; // 최신 Gemini 모델 사용
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
@@ -16,10 +16,10 @@ export interface FeedbackSuggestion {
   explanation?: string;
 }
 
-// 사용 가능한 Gemini 모델들 (우선순위 순)
+// 사용 가능한 Gemini 모델들 (우선순위 순) - 안정적인 모델로 업데이트
 const GEMINI_MODELS = [
   'gemini-1.5-flash',
-  'gemini-1.5-pro', 
+  'gemini-1.5-pro',
   'gemini-1.0-pro',
   'gemini-pro'
 ];
@@ -509,32 +509,36 @@ export async function chatWithAI(
   return await callGemini(prompt);
 }
 
-// API 연결 테스트 함수
-export async function testGeminiConnection(): Promise<{ success: boolean; model?: string; response?: string; error?: string }> {
-  try {
-    console.log('🧪 Gemini API 연결 테스트 시작...');
-    console.log('🔑 사용 중인 API 키:', GEMINI_API_KEY.substring(0, 10) + '...');
-    console.log('🎯 테스트할 모델들:', GEMINI_MODELS);
-    
-    const testResponse = await callGemini('안녕하세요. 연결 테스트입니다. 간단히 "연결 성공"이라고 답해주세요.');
-    
-    console.log('✅ Gemini API 연결 테스트 성공:', testResponse);
-    return { 
-      success: true, 
-      response: testResponse
-    };
-  } catch (error) {
-    console.error('❌ Gemini API 연결 테스트 실패:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '알 수 없는 오류' 
-    };
-  }
+// Gemini API 키 확인
+export function checkGeminiKey(): boolean {
+  return GEMINI_API_KEY && GEMINI_API_KEY.length > 10;
 }
 
-// API 키 확인 함수
-export function checkGeminiKey(): boolean {
-  const hasKey = !!GEMINI_API_KEY && GEMINI_API_KEY.length > 20;
-  console.log('🔑 Gemini API 키 확인:', hasKey ? '✅ 설정됨' : '❌ 설정되지 않음');
-  return hasKey;
+// Gemini 연결 테스트
+export async function testGeminiConnection(): Promise<{ success: boolean; model?: string; response?: string; error?: string }> {
+  if (!checkGeminiKey()) {
+    return {
+      success: false,
+      error: 'API 키가 설정되지 않았습니다. src/lib/gemini.ts 파일에서 GEMINI_API_KEY를 확인해주세요.'
+    };
+  }
+
+  try {
+    console.log('🔍 Gemini API 연결 테스트 시작...');
+    
+    const testPrompt = '안녕하세요. 간단한 테스트입니다.';
+    const response = await callGemini(testPrompt);
+    
+    console.log('✅ Gemini API 연결 성공!');
+    return {
+      success: true,
+      response: response
+    };
+  } catch (error) {
+    console.error('❌ Gemini API 연결 실패:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+    };
+  }
 } 

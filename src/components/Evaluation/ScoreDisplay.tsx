@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Target, Star } from 'lucide-react';
 
 interface ScoreDisplayProps {
   score: number;
@@ -22,51 +21,42 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   return (
     <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 p-4 sm:p-6 shadow-sm">
       <div className="space-y-3 sm:space-y-4">
-        {/* Main Score Display - Responsive Layout */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
-          {/* Basic Score and Weighted Score */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 sm:gap-2 text-gray-700 text-xs sm:text-sm font-medium mb-1 sm:mb-2">
-                <Target className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">기본 점수</span>
-                <span className="inline sm:hidden">기본</span>
+        {/* Main Score Display - Single Line Layout */}
+        <div className="grid grid-cols-4 gap-8 sm:gap-10 lg:gap-12">
+          {/* Contribution Method */}
+          {contributionMethod && (
+            <div className="text-center flex flex-col justify-center h-20">
+              <div className="text-xs sm:text-sm text-gray-700 font-medium mb-2">기여방식</div>
+              <div className="text-lg sm:text-xl font-bold text-blue-900">
+                {contributionMethod}
               </div>
-              <div className="text-xl sm:text-3xl font-bold text-orange-600">{score}점</div>
             </div>
+          )}
 
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">
-                <Star className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">가중치 적용</span>
-                <span className="inline sm:hidden">가중치</span>
+          {/* Contribution Scope */}
+          {contributionScope && (
+            <div className="text-center flex flex-col justify-center h-20">
+              <div className="text-xs sm:text-sm text-gray-700 font-medium mb-2">기여범위</div>
+              <div className="text-lg sm:text-xl font-bold text-green-900">
+                {contributionScope}
               </div>
-              <div className="text-xl sm:text-3xl font-bold text-orange-700">
-                {calculateWeightedScore(score, weight)}점
-              </div>
+            </div>
+          )}
+
+          {/* Basic Score */}
+          <div className="text-center flex flex-col justify-center h-20">
+            <div className="text-xs sm:text-sm text-gray-700 font-medium mb-2">기본점수</div>
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{score}점</div>
+          </div>
+
+          {/* Weighted Score */}
+          <div className="text-center flex flex-col justify-center h-20">
+            <div className="text-xs sm:text-sm text-gray-700 font-medium mb-2">가중치적용</div>
+            <div className="text-xl sm:text-2xl font-bold text-orange-700">
+              {calculateWeightedScore(score, weight)}점
             </div>
           </div>
         </div>
-
-        {/* Method and Scope Info */}
-        {contributionMethod && contributionScope && (
-          <div className="pt-2 sm:pt-3 border-t border-orange-200/50">
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-              <div className="text-center">
-                <p className="text-gray-600 font-medium mb-1">기여방식</p>
-                <p className="text-gray-800 font-semibold bg-white/60 rounded-lg py-1 px-1 sm:px-2 truncate">
-                  {contributionMethod}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-gray-600 font-medium mb-1">기여범위</p>
-                <p className="text-gray-800 font-semibold bg-white/60 rounded-lg py-1 px-1 sm:px-2 truncate">
-                  {contributionScope}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

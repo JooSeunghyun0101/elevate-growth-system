@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Target, Edit3, Check, X, Calendar, CalendarIcon, Bot, Sparkles } from 'lucide-react';
+import { Target, Edit3, Check, X, Calendar, CalendarIcon, Bot, Sparkles, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -16,6 +16,7 @@ import ScoreDisplay from './ScoreDisplay';
 import AIFeedbackChat from './AIFeedbackChat';
 import { Task } from '@/types/evaluation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskCardProps {
   task: Task;
@@ -37,6 +38,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onTaskUpdate
 }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [tempWeight, setTempWeight] = useState(task.weight);
   const [isEditingTask, setIsEditingTask] = useState(false);
@@ -49,6 +51,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
     task.endDate ? new Date(task.endDate) : undefined
   );
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isAIFeedbackGenerating, setIsAIFeedbackGenerating] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState('');
 
   const handleWeightEdit = () => {
     setTempWeight(task.weight);
@@ -111,6 +115,40 @@ const TaskCard: React.FC<TaskCardProps> = ({
     setTempStartDate(task.startDate ? new Date(task.startDate) : undefined);
     setTempEndDate(task.endDate ? new Date(task.endDate) : undefined);
     setIsEditingTask(false);
+  };
+
+  const handleAIFeedbackGenerate = async () => {
+    if (!task.score || !task.contributionMethod || !task.contributionScope) {
+      toast({
+        title: "AI 피드백 생성 불가",
+        description: "점수, 기여방식, 기여범위가 모두 설정되어야 합니다.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAIFeedbackGenerating(true);
+    try {
+      const { generateFeedbackRecommendation } = await import('@/lib/gemini');
+      const feedback = await generateFeedbackRecommendation(
+        task.title,
+        task.description,
+        task.score,
+        task.contributionMethod,
+        task.contributionScope,
+        task.feedback
+      );
+      setAiFeedback(feedback);
+    } catch (error) {
+      console.error('AI 피드백 생성 오류:', error);
+      toast({
+        title: "AI 피드백 생성 실패",
+        description: "AI 피드백 생성 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAIFeedbackGenerating(false);
+    }
   };
 
   const isNoContribution = task.contributionMethod === '기여없음' && task.contributionScope === '기여없음';
@@ -324,42 +362,44 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </CardHeader>
       <CardContent className="p-4 sm:p-6 pt-0 space-y-4 sm:space-y-6">
+        {/* Score Display Section - Full width above scoring chart */}
+        <div className="w-full">
+          {task.score !== undefined || isNoContribution ? (
+            <ScoreDisplay
+              score={isNoContribution ? 0 : task.score!}
+              weight={task.weight}
+              contributionMethod={task.contributionMethod}
+              contributionScope={task.contributionScope}
+            />
+          ) : (
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 sm:p-6 text-center">
+              <div className="text-gray-500 space-y-2">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6 mx-auto opacity-50" />
+                <p className="text-xs sm:text-sm">기여방식과 범위를 선택하면<br />점수가 표시됩니다</p>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
           {/* Scoring Chart - Adjusted container */}
-          <div className="flex flex-col min-h-[450px] sm:min-h-[500px]">
-                          <div className="flex-1 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <ScoringChart
-                  selectedMethod={task.contributionMethod}
-                  selectedScope={task.contributionScope}
-                  size="medium"
-                  title={`과업 ${index + 1} 스코어링`}
-                  onMethodClick={(method) => onMethodClick(task.id, method)}
-                  onScopeClick={(scope) => onScopeClick(task.id, scope)}
-                />
-              </div>
+          <div className="flex flex-col min-h-[560px] sm:min-h-[610px]">
+            <div className="flex-1 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+              <ScoringChart
+                selectedMethod={task.contributionMethod}
+                selectedScope={task.contributionScope}
+                size="large"
+                title={`과업 ${index + 1} 스코어링`}
+                onMethodClick={(method) => onMethodClick(task.id, method)}
+                onScopeClick={(scope) => onScopeClick(task.id, scope)}
+              />
+            </div>
           </div>
 
-          {/* Score Display and Feedback Input - Adjusted container */}
-          <div className="flex flex-col min-h-[450px] sm:min-h-[500px]">
-            {/* Score Display Section */}
-            {task.score !== undefined || isNoContribution ? (
-              <ScoreDisplay
-                score={isNoContribution ? 0 : task.score!}
-                weight={task.weight}
-                contributionMethod={task.contributionMethod}
-                contributionScope={task.contributionScope}
-              />
-            ) : (
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 sm:p-6 text-center">
-                <div className="text-gray-500 space-y-2">
-                  <Target className="w-5 h-5 sm:w-6 sm:h-6 mx-auto opacity-50" />
-                  <p className="text-xs sm:text-sm">기여방식과 범위를 선택하면<br />점수가 표시됩니다</p>
-                </div>
-              </div>
-            )}
-
-            {/* Feedback Input - Takes remaining space */}
-            <div className="flex-1 flex flex-col mt-3 sm:mt-4">
+          {/* Feedback Input - Takes remaining space */}
+          <div className="flex flex-col min-h-[560px] sm:min-h-[610px]">
+            {/* Feedback Section */}
+            <div className="flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <Label htmlFor={`feedback-${task.id}`} className="text-sm sm:text-base font-bold block text-amber-800">
                   피드백
@@ -374,7 +414,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                         className="text-xs sm:text-sm bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 hover:text-orange-700 hover:scale-105 hover:shadow-md transition-all duration-150 group"
                       >
                         <Bot className="w-3 h-3 sm:w-4 sm:h-4 mr-1 group-hover:animate-bounce transition-all duration-150" />
-                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 group-hover:animate-spin transition-all duration-150" />
                         <span className="hidden sm:inline">AI와 대화로 피드백 만들기</span>
                         <span className="inline sm:hidden">AI 피드백</span>
                       </Button>
@@ -390,7 +429,43 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 placeholder="이 과업에 대한 구체적인 피드백을 작성해주세요..."
                 value={task.feedback || ''}
                 onChange={(e) => onFeedbackChange(task.id, e.target.value)}
-                className="flex-1 min-h-[150px] sm:min-h-[180px] resize-none text-xs sm:text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all duration-200"
+                className="flex-1 min-h-[50px] resize-none text-xs sm:text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all duration-200"
+              />
+            </div>
+
+            {/* AI Feedback Section */}
+            <div className="flex-1 flex flex-col mt-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <Label className="text-sm sm:text-base font-bold block text-purple-800">
+                  AI피드백
+                </Label>
+                {user?.role === 'evaluator' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAIFeedbackGenerate}
+                    disabled={isAIFeedbackGenerating || !task.score || !task.contributionMethod || !task.contributionScope}
+                    className="text-xs sm:text-sm bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 hover:text-purple-700 hover:scale-105 hover:shadow-md transition-all duration-150 group"
+                  >
+                    {isAIFeedbackGenerating ? (
+                      <>
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-spin rounded-full border-2 border-purple-600 border-t-transparent" />
+                        생성중...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 group-hover:animate-spin transition-all duration-150" />
+                        생성하기
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              <Textarea
+                placeholder="AI 피드백 생성 버튼을 클릭하면 자동으로 피드백이 생성됩니다..."
+                value={aiFeedback}
+                readOnly
+                className="flex-1 min-h-[50px] resize-none text-xs sm:text-sm bg-purple-50 border-purple-200 focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200"
               />
             </div>
           </div>
