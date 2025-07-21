@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getContributionTooltip } from '@/utils/evaluationUtils';
 
 interface ScoringChartProps {
   selectedScope?: string;
@@ -103,17 +105,26 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
           {methods.map((method, methodIndex) => (
             <div key={method} className="flex gap-1">
               {/* Method label */}
-              <div className={`
-                ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border cursor-pointer transition-all text-center leading-tight
-                ${isMethodSelected(methodIndex) 
-                  ? 'bg-orange-500 text-white border-orange-600 border-2 shadow-lg transform scale-105' 
-                  : 'bg-orange-200 text-gray-900 hover:bg-orange-300'
-                }
-              `}
-              onClick={() => handleMethodClick(methodIndex)}
-              >
-                {method}
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={`
+                    ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border cursor-pointer transition-all text-center leading-tight
+                    ${isMethodSelected(methodIndex) 
+                      ? 'bg-orange-500 text-white border-orange-600 border-2 shadow-lg transform scale-105' 
+                      : 'bg-orange-200 text-gray-900 hover:bg-orange-300'
+                    }
+                  `}
+                  onClick={() => handleMethodClick(methodIndex)}
+                  >
+                    {method}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs p-3 bg-orange-50 border-orange-200 shadow-lg">
+                  <p className="text-sm text-orange-900 leading-relaxed">
+                    {getContributionTooltip('method', method)}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
               
               {/* Score cells */}
               {scopes.map((scope, scopeIndex) => {
@@ -155,19 +166,27 @@ const ScoringChart: React.FC<ScoringChartProps> = ({
               기여없음
             </div>
             {scopes.map((scope, index) => (
-              <div 
-                key={scope}
-                className={`
-                  ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
-                  ${isScopeSelected(index) 
-                    ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
-                    : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
-                  }
-                `}
-                onClick={() => handleScopeClick(index)}
-              >
-                {scope}
-              </div>
+              <Tooltip key={scope}>
+                <TooltipTrigger asChild>
+                  <div 
+                    className={`
+                      ${getHeaderSize()} flex items-center justify-center font-bold text-xs rounded border text-center leading-tight cursor-pointer transition-all
+                      ${isScopeSelected(index) 
+                        ? 'bg-amber-500 text-white border-amber-600 border-2 shadow-lg transform scale-105' 
+                        : 'bg-amber-200 text-gray-900 hover:bg-amber-300'
+                      }
+                    `}
+                    onClick={() => handleScopeClick(index)}
+                  >
+                    {scope}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs p-3 bg-amber-50 border-amber-200 shadow-lg">
+                  <p className="text-sm text-amber-900 leading-relaxed">
+                    {getContributionTooltip('scope', scope)}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             ))}
           </div>
         </div>

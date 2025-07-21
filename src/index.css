@@ -18,33 +18,33 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 14 100% 56%; /* OK Orange */
-    --primary-foreground: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 6% 73%; /* OK Bright Gray */
-    --secondary-foreground: 29 25% 32%; /* OK Dark Brown */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
 
-    --muted: 210 6% 73%; /* OK Bright Gray */
-    --muted-foreground: 29 25% 32%; /* OK Dark Brown */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 43 100% 65%; /* OK Yellow */
-    --accent-foreground: 29 25% 32%; /* OK Dark Brown */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 14 100% 56%; /* Using OK Orange for destructive actions */
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 210 6% 73%; /* OK Bright Gray */
-    --input: 210 6% 73%; /* OK Bright Gray */
-    --ring: 14 100% 56%; /* OK Orange */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* OK Design System Colors based on uploaded palette */
-    --ok-orange: 14 100% 56%; /* #FF5500 */
-    --ok-dark-brown: 29 25% 32%; /* #55474A */
-    --ok-yellow: 43 100% 65%; /* #FFAA00 */
-    --ok-bright-gray: 210 6% 73%; /* #E3DFDA */
-    --ok-gold: 38 33% 45%; /* #875C Pantone */
+    /* OK 컬러 팔레트 */
+    --ok-orange: 25 95% 53%;
+    --ok-dark-brown: 30 30% 20%;
+    --ok-yellow: 45 93% 47%;
+    --ok-bright-gray: 0 0% 96%;
+    --ok-gold: 45 70% 55%;
 
     /* Performance Management Colors using OK palette */
     --performance-primary: var(--ok-orange);
@@ -73,24 +73,24 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 14 100% 56%; /* OK Orange */
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 29 25% 32%; /* OK Dark Brown */
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 29 25% 32%; /* OK Dark Brown */
-    --muted-foreground: 210 6% 73%; /* OK Bright Gray */
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 43 100% 65%; /* OK Yellow */
-    --accent-foreground: 29 25% 32%; /* OK Dark Brown */
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 14 100% 56%; /* OK Orange */
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 29 25% 32%; /* OK Dark Brown */
-    --input: 29 25% 32%; /* OK Dark Brown */
-    --ring: 14 100% 56%; /* OK Orange */
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -110,6 +110,28 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-ok-orange text-white hover:bg-ok-orange/90 transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-ok-yellow text-ok-dark-brown hover:bg-ok-yellow/90 transition-colors duration-200;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-lg hover:scale-105 transition-all duration-300;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-ok-orange to-ok-yellow bg-clip-text text-transparent;
+  }
+  
+  .border-gradient {
+    @apply border-2 border-transparent bg-gradient-to-r from-ok-orange to-ok-yellow bg-clip-border;
   }
 }
 
@@ -212,5 +234,84 @@ All colors MUST be HSL.
   100% {
     transform: translateY(50px);
     opacity: 0;
+  }
+}
+
+/* 폭죽 효과 관련 스타일 */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.confetti-particle {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* 호버 효과 개선 */
+.hover-lift {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* 클릭 효과 */
+.click-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.click-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.click-ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* 성취감 애니메이션 */
+.achievement-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.achievement-bounce {
+  animation: bounce-in 0.8s ease-out;
+}
+
+/* 반응형 애니메이션 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-on-hover:hover {
+    animation-play-state: running;
+  }
+  
+  .animate-on-focus:focus {
+    animation-play-state: running;
   }
 }

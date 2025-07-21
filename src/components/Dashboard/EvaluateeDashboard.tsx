@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Target, CheckCircle, Clock, MessageSquare, TrendingUp, ChevronDown, ChevronUp, Settings, Award, Calendar as CalendarIcon, Star, Trophy, Users } from 'lucide-react';
 import TaskGanttChart from '@/components/TaskGanttChart';
 import TaskManagement from '@/components/Dashboard/TaskManagement';
@@ -12,6 +13,7 @@ import { Task, FeedbackHistoryItem, EvaluationData } from '@/types/evaluation';
 import { useEvaluationDataDB } from '@/hooks/useEvaluationDataDB';
 import EvaluationGuide from '@/components/Dashboard/EvaluationGuide';
 import EvaluationSummary from '@/components/Evaluation/EvaluationSummary';
+import { getContributionTooltip } from '@/utils/evaluationUtils';
 
 export const EvaluateeDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -252,16 +254,34 @@ export const EvaluateeDashboard: React.FC = () => {
                           {/* 우측: 기여방식, 범위 */}
                           <div className="flex items-center gap-2 ml-4 flex-shrink-0">
                             {task.contributionMethod && (
-                              <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-base font-bold px-3 py-1 flex items-center gap-1">
-                                <TrendingUp className="inline-block w-5 h-5 align-text-bottom" />
-                                {task.contributionMethod}
-                              </Badge>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-transparent cursor-help">
+                                    <TrendingUp className="w-5 h-5" style={{ color: '#F55000' }} />
+                                    <span className="text-2xl sm:text-3xl font-extrabold" style={{ color: '#F55000' }}>{task.contributionMethod}</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs p-3 bg-orange-50 border-orange-200 shadow-lg">
+                                  <p className="text-sm text-orange-900 leading-relaxed">
+                                    {getContributionTooltip('method', task.contributionMethod)}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                             {task.contributionScope && (
-                              <Badge className="bg-green-100 text-green-700 border-green-200 text-base font-bold px-3 py-1 flex items-center gap-1">
-                                <Users className="inline-block w-5 h-5 align-text-bottom" />
-                                {task.contributionScope}
-                              </Badge>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-transparent cursor-help">
+                                    <Users className="w-5 h-5" style={{ color: '#55474A' }} />
+                                    <span className="text-2xl sm:text-3xl font-extrabold" style={{ color: '#55474A' }}>{task.contributionScope}</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs p-3 bg-amber-50 border-amber-200 shadow-lg">
+                                  <p className="text-sm text-amber-900 leading-relaxed">
+                                    {getContributionTooltip('scope', task.contributionScope)}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                           </div>
                       </div>

@@ -68,9 +68,8 @@ export const Header: React.FC<HeaderProps> = ({ userRole, userName }) => {
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <NotificationBell />
           <div className="flex items-center space-x-2">
-            <User className="h-4 w-4 text-gray-500" />
+            <NotificationBell />
             <span className="text-sm font-medium text-gray-700 hidden sm:inline">{userName}</span>
             <Badge className={getRoleBadgeClass(userRole)}>
               <span className="hidden sm:inline">{roleDisplay.full}</span>

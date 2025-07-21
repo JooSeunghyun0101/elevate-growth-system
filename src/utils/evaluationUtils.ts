@@ -186,3 +186,27 @@ export const getOverallStats = () => {
     inProgressEvaluations: evaluations.filter(e => e.evaluationStatus === 'in-progress').length
   };
 };
+
+// 기여방식과 기여범위 상세 설명
+export const contributionMethodDescriptions = {
+  '총괄': '업무 전체를 책임지고 관리하며, 프로젝트의 전체적인 방향을 설정하고 조율합니다. 모든 관련 업무를 포괄적으로 관리하고 최종 결과물에 대한 책임을 집니다.',
+  '리딩': '특정 영역을 주도적으로 담당하며, 해당 영역의 성과에 직접적인 책임을 집니다. 팀이나 그룹을 이끌며 방향성을 제시하고 성과를 창출합니다.',
+  '실무': '핵심 업무를 직접 수행하며, 업무의 질적 완성도에 기여합니다. 구체적인 업무 실행과 결과물 생성을 담당합니다.',
+  '지원': '다른 구성원을 보조하고 지원하며, 주 담당자를 보조하는 역할을 수행합니다. 업무의 원활한 진행을 돕는 보조적 역할을 담당합니다.'
+};
+
+export const contributionScopeDescriptions = {
+  '전략적': '조직 전체에 영향을 미치는 전략적 수준입니다. 부서를 넘어 조직 전체의 방향성이나 성과에 영향을 미치는 범위로, 조직의 미래 방향을 결정하는 중요한 역할을 합니다.',
+  '상호적': '팀 단위 협업을 통해 공동 목표를 달성하는 범위입니다. 팀 내 다른 구성원들과 긴밀히 협력하여 상호 보완적인 역할을 수행하며, 팀의 성과 향상에 기여합니다.',
+  '독립적': '개인의 판단과 책임 하에 독립적으로 업무를 기획하고 실행하는 범위입니다. 자율적으로 업무를 수행하며, 개인의 전문성과 역량을 발휘하여 성과를 창출합니다.',
+  '의존적': '상급자나 동료의 지시나 가이드라인에 따라 업무를 수행하는 범위입니다. 다른 사람의 도움이나 지시가 필요한 수준으로, 주어진 지침에 따라 업무를 완수합니다.'
+};
+
+// 툴팁 표시를 위한 유틸리티 함수
+export const getContributionTooltip = (type: 'method' | 'scope', value: string): string => {
+  if (type === 'method') {
+    return contributionMethodDescriptions[value as keyof typeof contributionMethodDescriptions] || '';
+  } else {
+    return contributionScopeDescriptions[value as keyof typeof contributionScopeDescriptions] || '';
+  }
+};
