@@ -424,7 +424,8 @@ export const useEvaluationDataDB = (employeeId: string) => {
       for (const taskId of Object.keys(tempFeedbacks)) {
         const currentFeedback = tempFeedbacks[taskId];
         if (!currentFeedback || !currentFeedback.trim()) {
-          console.log(`⏭️ ${taskId}: 피드백이 비어있어 검사 건너뜀`);
+          console.log(`⚠️ ${taskId}: 피드백이 비어있음 - 저장 불가`);
+          duplicateWarnings.push(`피드백을 입력해주세요. 모든 과업에 대한 피드백이 필요합니다.`);
           continue;
         }
 
@@ -466,6 +467,18 @@ export const useEvaluationDataDB = (employeeId: string) => {
           console.log(`⚠️ ${taskTitle}: 일반적인 표현만 사용`);
           continue;
         }
+      }
+
+      // 모든 과업에 피드백이 있는지 확인
+      const tasksWithoutFeedback = evaluationData.tasks.filter(task => {
+        const feedback = tempFeedbacks[task.id] || task.feedback || '';
+        return !feedback.trim();
+      });
+
+      if (tasksWithoutFeedback.length > 0) {
+        const missingTasks = tasksWithoutFeedback.map(task => task.title).join(', ');
+        duplicateWarnings.push(`다음 과업에 대한 피드백이 누락되었습니다: ${missingTasks}`);
+        console.log(`⚠️ 피드백 누락 과업들:`, tasksWithoutFeedback.map(t => t.title));
       }
 
       // AI 기반 중복 검사 (다른 피평가자들과 비교)
