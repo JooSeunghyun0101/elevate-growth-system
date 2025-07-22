@@ -5,6 +5,7 @@ import { useNotifications } from '@/contexts/NotificationContextDB';
 import { EvaluationData, Task, FeedbackHistoryItem } from '@/types/evaluation';
 import { employeeService, evaluationService, taskService, feedbackService, notificationService } from '@/lib/database';
 import { checkSimilarFeedback } from '@/lib/gemini';
+import { feedbackValidation } from '@/utils/validation';
 
 export const useEvaluationDataDB = (employeeId: string) => {
   const { user } = useAuth();
@@ -423,47 +424,30 @@ export const useEvaluationDataDB = (employeeId: string) => {
       // 먼저 현재 피드백들 검사 (단순한 검사부터)
       for (const taskId of Object.keys(tempFeedbacks)) {
         const currentFeedback = tempFeedbacks[taskId];
+        
+        const task = evaluationData.tasks.find(t => t.id === taskId);
+        const taskTitle = task?.title || `과업 ${taskId}`;
+        
         if (!currentFeedback || !currentFeedback.trim()) {
-          console.log(`⏭️ ${taskId}: 피드백이 비어있어 검사 건너뜀`);
+          duplicateWarnings.push(`"${taskTitle}": 피드백이 입력되지 않았습니다. 모든 과업에 대한 피드백을 작성해주세요.`);
+          console.log(`⚠️ ${taskId}: 빈 피드백 감지`);
           continue;
         }
 
-        const task = evaluationData.tasks.find(t => t.id === taskId);
-        const taskTitle = task?.title || `과업 ${taskId}`;
-
-        // 기본 검사: 길이와 문장 수
-        const feedbackLength = currentFeedback.trim().length;
-        const sentenceCount = currentFeedback.split(/[.!?다요습니다]\s*/).filter(s => s.trim().length > 0).length;
+        // validation.ts를 사용한 고도화된 피드백 검증
+        const validationResult = feedbackValidation.validateFeedback(currentFeedback);
         
-        console.log(`🔍 ${taskTitle} 기본 검사:`, {
-          length: feedbackLength,
-          sentences: sentenceCount,
+        console.log(`🔍 ${taskTitle} 고도화된 검증:`, {
+          isValid: validationResult.isValid,
+          errors: validationResult.errors,
           preview: currentFeedback.substring(0, 50) + '...'
         });
 
-        // 너무 짧은 피드백 검사
-        if (feedbackLength < 30) {
-          duplicateWarnings.push(`"${taskTitle}": 너무 짧은 피드백입니다 (${feedbackLength}자). 최소 30자 이상의 구체적인 피드백을 작성해주세요.`);
-          console.log(`⚠️ ${taskTitle}: 너무 짧은 피드백 감지 (${feedbackLength}자)`);
-          continue;
-        }
-
-        // 너무 단순한 피드백 검사
-        if (sentenceCount <= 1 && feedbackLength < 50) {
-          duplicateWarnings.push(`"${taskTitle}": 너무 단순한 피드백입니다 (${sentenceCount}문장). 더 구체적이고 상세한 피드백을 작성해주세요.`);
-          console.log(`⚠️ ${taskTitle}: 너무 단순한 피드백 감지 (${sentenceCount}문장, ${feedbackLength}자)`);
-          continue;
-        }
-
-        // 일반적인 표현만 사용하는지 검사
-        const genericPhrases = ['좋았습니다', '잘했습니다', '수고했습니다', '노력하세요', '화이팅', '좋아요', '굿'];
-        const hasOnlyGeneric = genericPhrases.some(phrase => 
-          currentFeedback.includes(phrase) && currentFeedback.length < 80
-        );
-        
-        if (hasOnlyGeneric) {
-          duplicateWarnings.push(`"${taskTitle}": 너무 일반적인 표현만 사용되었습니다. 구체적인 피드백을 작성해주세요.`);
-          console.log(`⚠️ ${taskTitle}: 일반적인 표현만 사용`);
+        if (!validationResult.isValid) {
+          // 모든 오류를 하나의 경고 메시지로 합치기
+          const errorMessage = validationResult.errors.join(' ');
+          duplicateWarnings.push(`"${taskTitle}": ${errorMessage}`);
+          console.log(`⚠️ ${taskTitle}: 피드백 검증 실패 - ${errorMessage}`);
           continue;
         }
       }

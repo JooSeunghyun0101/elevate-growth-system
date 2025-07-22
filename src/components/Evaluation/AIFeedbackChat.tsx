@@ -198,7 +198,7 @@ const AIFeedbackChat: React.FC<AIFeedbackChatProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+      <DialogContent className="max-w-2xl h-[80vh] flex flex-col animate-in slide-in-from-bottom-4 duration-300">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="w-5 h-5 text-orange-500" />
@@ -222,9 +222,9 @@ const AIFeedbackChat: React.FC<AIFeedbackChatProps> = ({
           </div>
 
           {/* 채팅 메시지 영역 - 스크롤 개선 */}
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea ref={scrollAreaRef} className="h-full pr-4">
-              <div className="space-y-4">
+          <div className="flex-1 overflow-hidden min-h-0">
+            <ScrollArea ref={scrollAreaRef} className="h-[300px] pr-4">
+              <div className="space-y-4 p-1">
                 {messages.map((message) => (
                   <div key={message.id} className="flex gap-3">
                     <div className="flex-shrink-0">
@@ -292,7 +292,7 @@ const AIFeedbackChat: React.FC<AIFeedbackChatProps> = ({
           </div>
 
           {/* 입력 영역 */}
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-3">
             <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
@@ -312,7 +312,7 @@ const AIFeedbackChat: React.FC<AIFeedbackChatProps> = ({
           </div>
 
           {/* 안내 메시지 */}
-          <div className="mt-2 text-xs text-gray-500 text-center">
+          <div className="mt-1 text-xs text-gray-500 text-center">
             💡 팁: '문장교정'을 입력하거나 위의 버튼을 클릭하세요
           </div>
         </div>
