@@ -487,6 +487,7 @@ export const EvaluateeDashboard: React.FC = () => {
           evaluationData={evaluationData}
           onClose={() => setShowTaskManagement(false)}
           onSave={handleTaskManagementSave}
+          onDataReload={reloadData}
         />
       )}
     </div>

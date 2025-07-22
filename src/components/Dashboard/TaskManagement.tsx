@@ -22,6 +22,7 @@ interface TaskManagementProps {
   evaluationData: EvaluationData;
   onClose: () => void;
   onSave: (updatedData: EvaluationData) => void;
+  onDataReload?: () => Promise<void>;
 }
 
 // Employee mapping - evaluator to evaluatees
@@ -46,7 +47,8 @@ const evaluatorMapping: Record<string, Array<{id: string, name: string, position
 const TaskManagement: React.FC<TaskManagementProps> = ({
   evaluationData,
   onClose,
-  onSave
+  onSave,
+  onDataReload
 }) => {
   console.log('🎯 TaskManagement 컴포넌트 렌더링됨', { evaluateeName: evaluationData?.evaluateeName, tasksCount: evaluationData?.tasks?.length });
   
@@ -375,6 +377,12 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       }
 
       console.log('✅ 과업 관리 저장 완료');
+      
+      // 데이터 새로고침으로 캐시 문제 해결
+      if (onDataReload) {
+        console.log('🔄 강제 데이터 새로고침 실행');
+        await onDataReload();
+      }
     } catch (error) {
       console.error('❌ 과업 관리 저장 실패:', error);
     }
