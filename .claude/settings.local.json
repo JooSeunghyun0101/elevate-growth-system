@@ -1,8 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:fxpxrtrbvdmhqojjzziz.supabase.co)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)",
+      "Bash(npx supabase:*)",
+      "Bash(find:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx @modelcontextprotocol/cli:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)",
+      "Bash(test:*)",
+      "Bash(node:*)"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

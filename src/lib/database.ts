@@ -116,6 +116,7 @@ export const taskService = {
       .from('tasks')
       .select('*')
       .eq('evaluation_id', evaluationId)
+      .is('deleted_at', null)
       .order('task_id');
     
     if (error) throw error;
@@ -147,7 +148,17 @@ export const taskService = {
     return data;
   },
 
-  // 과업 삭제
+  // 과업 소프트 삭제
+  async softDeleteTask(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  // 과업 하드 삭제 (완전 삭제)
   async deleteTask(id: string): Promise<void> {
     const { error } = await supabase
       .from('tasks')

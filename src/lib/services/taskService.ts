@@ -3,13 +3,14 @@ import { Task } from '@/types';
 import { apiErrorHandler } from '@/utils/errorHandler';
 
 export const taskService = {
-  // 평가 ID로 과업들 조회
+  // 평가 ID로 과업들 조회 (삭제된 과업 제외)
   async getTasksByEvaluationId(evaluationId: string): Promise<Task[]> {
     try {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('evaluation_id', evaluationId)
+        .is('deleted_at', null)
         .order('task_id');
       
       if (error) throw error;
@@ -19,13 +20,14 @@ export const taskService = {
     }
   },
 
-  // task_id로 과업 조회
+  // task_id로 과업 조회 (삭제된 과업 제외)
   async getTaskByTaskId(taskId: string): Promise<Task | null> {
     try {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('task_id', taskId)
+        .is('deleted_at', null)
         .single();
       
       if (error) {
@@ -71,7 +73,21 @@ export const taskService = {
     }
   },
 
-  // 과업 삭제
+  // 과업 소프트 삭제 (deleted_at 설정)
+  async softDeleteTask(id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      throw apiErrorHandler.handleApiError(error);
+    }
+  },
+
+  // 과업 하드 삭제 (완전 삭제 - 관리자용)
   async deleteTask(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -170,6 +186,51 @@ export const taskService = {
       
       if (error) throw error;
       return data;
+    } catch (error) {
+      throw apiErrorHandler.handleApiError(error);
+    }
+  },
+
+  // 삭제된 과업 복원
+  async restoreTask(id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ deleted_at: null })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      throw apiErrorHandler.handleApiError(error);
+    }
+  },
+
+  // 삭제된 과업들 조회 (관리자용)
+  async getDeletedTasks(): Promise<Task[]> {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      throw apiErrorHandler.handleApiError(error);
+    }
+  },
+
+  // 모든 과업 조회 (삭제된 것 포함 - 관리자용)
+  async getAllTasks(): Promise<Task[]> {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     } catch (error) {
       throw apiErrorHandler.handleApiError(error);
     }

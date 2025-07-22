@@ -47,6 +47,7 @@ export interface Task {
   feedback: string | null;
   feedback_date: string | null;
   evaluator_name: string | null;
+  deleted_at: string | null;
   created_at: string;
 }
 

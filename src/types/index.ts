@@ -60,6 +60,7 @@ export interface Task {
   feedback: string | null;
   feedback_date: string | null;
   evaluator_name: string | null;
+  deleted_at: string | null;
   created_at: string;
 }
 
@@ -122,6 +123,7 @@ export interface TaskData {
   contributionScope: string;
   score: number | null;
   feedback: string | null;
+  deletedAt?: string | null;
   feedbackHistory?: FeedbackHistory[];
 }
 
