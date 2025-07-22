@@ -465,95 +465,79 @@ export const useEvaluationDataDB = (employeeId: string) => {
         }
       }
 
-      // AI 기반 중복 검사 (다른 피평가자들과 비교)
+      // AI 기반 중복 검사는 현재 피평가자의 피드백만 검사 (다른 피평가자와의 비교는 제거)
+      console.log('🤖 현재 피평가자의 피드백만 AI 검수 진행:', employeeId);
+      
+      // 현재 피평가자의 기존 피드백만 수집 (자기 자신의 이전 피드백과만 비교)
+      const currentEvaluateeFeedbacks: string[] = [];
       try {
-        const otherEvaluateeFeedbacks: string[] = [];
-        try {
-          console.log('📋 평가자가 담당하는 피평가자들 조회 중...', user.employeeId);
-          const myEvaluatees = await employeeService.getEvaluateesByEvaluator(user.employeeId);
-          console.log('👥 담당 피평가자 수:', myEvaluatees.length);
+        const evaluation = await evaluationService.getEvaluationByEmployeeId(employeeId);
+        if (evaluation) {
+          const currentTasks = await taskService.getTasksByEvaluationId(evaluation.id);
+          console.log(`📝 현재 피평가자(${employeeId})의 과업 수:`, currentTasks.length);
           
-          for (const employee of myEvaluatees) {
-            // 현재 피평가자는 제외
-            if (employee.employee_id === employeeId) {
-              console.log('⏭️ 현재 피평가자 제외:', employee.employee_id);
-              continue;
+          for (const task of currentTasks) {
+            // 현재 과업의 기존 피드백 수집 (현재 입력 중인 피드백 제외)
+            if (task.feedback && task.feedback.trim()) {
+              currentEvaluateeFeedbacks.push(task.feedback.trim());
+              console.log(`✅ 기존 피드백 수집 (${task.title}):`, task.feedback.substring(0, 50) + '...');
             }
             
-            console.log('🔍 피평가자별 피드백 수집 중:', employee.employee_id, employee.name);
-            const evaluation = await evaluationService.getEvaluationByEmployeeId(employee.employee_id);
-            if (evaluation) {
-              const tasks = await taskService.getTasksByEvaluationId(evaluation.id);
-              console.log(`📝 ${employee.name}의 과업 수:`, tasks.length);
-              
-              for (const task of tasks) {
-                // 해당 과업의 피드백 수집
-                if (task.feedback && task.feedback.trim()) {
-                  otherEvaluateeFeedbacks.push(task.feedback.trim());
-                  console.log(`✅ 피드백 수집 (${task.title}):`, task.feedback.substring(0, 50) + '...');
-                }
-                
-                // 피드백 히스토리도 수집
-                try {
-                  const feedbackHistory = await feedbackService.getFeedbackHistoryByTaskId(task.task_id);
-                  console.log(`📚 ${task.title} 히스토리 개수:`, feedbackHistory.length);
-                  for (const fh of feedbackHistory) {
-                    if (fh.content && fh.content.trim()) {
-                      otherEvaluateeFeedbacks.push(fh.content.trim());
-                      console.log(`✅ 히스토리 피드백 수집:`, fh.content.substring(0, 50) + '...');
-                    }
-                  }
-                } catch (historyError) {
-                  console.warn(`⚠️ ${task.title} 히스토리 조회 실패:`, historyError);
-                }
-              }
-            } else {
-              console.log(`⚠️ ${employee.name}의 평가 정보 없음`);
-            }
-          }
-        } catch (error) {
-          console.warn('⚠️ 다른 피평가자 피드백 수집 실패:', error);
-        }
-
-        console.log('📊 중복 검사 대상 피드백 총 개수:', otherEvaluateeFeedbacks.length);
-
-        // AI 기반 중복 검사 (기존 피드백이 있는 경우에만)
-        if (otherEvaluateeFeedbacks.length > 0) {
-          console.log('🤖 AI 기반 중복 검사 시작...');
-          
-          for (const taskId of Object.keys(tempFeedbacks)) {
-            const currentFeedback = tempFeedbacks[taskId];
-            if (!currentFeedback || !currentFeedback.trim()) continue;
-
-            const task = evaluationData.tasks.find(t => t.id === taskId);
-            const taskTitle = task?.title || `과업 ${taskId}`;
-
+            // 현재 과업의 피드백 히스토리도 수집
             try {
-              console.log(`🤖 AI 중복 검사 시작: ${taskTitle}`);
-              const duplicateCheck = await checkSimilarFeedback(
-                currentFeedback, 
-                otherEvaluateeFeedbacks,
-                user.name
-              );
-              
-              console.log(`🔍 ${taskTitle} AI 검사 결과:`, {
-                isDuplicate: duplicateCheck.isDuplicate,
-                summary: duplicateCheck.summary
-              });
-              
-              if (duplicateCheck.isDuplicate) {
-                duplicateWarnings.push(`"${taskTitle}": ${duplicateCheck.summary}`);
-                console.log(`⚠️ AI 중복 피드백 감지: ${taskTitle} - ${duplicateCheck.summary}`);
+              const feedbackHistory = await feedbackService.getFeedbackHistoryByTaskId(task.task_id);
+              console.log(`📚 ${task.title} 히스토리 개수:`, feedbackHistory.length);
+              for (const fh of feedbackHistory) {
+                if (fh.content && fh.content.trim()) {
+                  currentEvaluateeFeedbacks.push(fh.content.trim());
+                  console.log(`✅ 히스토리 피드백 수집:`, fh.content.substring(0, 50) + '...');
+                }
               }
-            } catch (error) {
-              console.warn(`⚠️ AI 중복검사 건너뜀 (API 오류): ${taskTitle}`, error.message);
+            } catch (historyError) {
+              console.warn(`⚠️ ${task.title} 히스토리 조회 실패:`, historyError);
             }
           }
-        } else {
-          console.log('⏭️ 비교할 다른 피평가자 피드백이 없어 AI 검사 건너뜀');
         }
       } catch (error) {
-        console.warn('⚠️ AI 중복 검사 전체 실패:', error);
+        console.warn('⚠️ 현재 피평가자 피드백 수집 실패:', error);
+      }
+
+      console.log('📊 현재 피평가자의 기존 피드백 총 개수:', currentEvaluateeFeedbacks.length);
+
+      // AI 기반 중복 검사 (현재 피평가자의 기존 피드백과만 비교)
+      if (currentEvaluateeFeedbacks.length > 0) {
+        console.log('🤖 AI 기반 중복 검사 시작 (현재 피평가자 내부에서만)...');
+        
+        for (const taskId of Object.keys(tempFeedbacks)) {
+          const currentFeedback = tempFeedbacks[taskId];
+          if (!currentFeedback || !currentFeedback.trim()) continue;
+
+          const task = evaluationData.tasks.find(t => t.id === taskId);
+          const taskTitle = task?.title || `과업 ${taskId}`;
+
+          try {
+            console.log(`🤖 AI 중복 검사 시작: ${taskTitle}`);
+            const duplicateCheck = await checkSimilarFeedback(
+              currentFeedback, 
+              currentEvaluateeFeedbacks,
+              user.name
+            );
+            
+            console.log(`🔍 ${taskTitle} AI 검사 결과:`, {
+              isDuplicate: duplicateCheck.isDuplicate,
+              summary: duplicateCheck.summary
+            });
+            
+            if (duplicateCheck.isDuplicate) {
+              duplicateWarnings.push(`"${taskTitle}": ${duplicateCheck.summary}`);
+              console.log(`⚠️ AI 중복 피드백 감지: ${taskTitle} - ${duplicateCheck.summary}`);
+            }
+          } catch (error) {
+            console.warn(`⚠️ AI 중복검사 건너뜀 (API 오류): ${taskTitle}`, error.message);
+          }
+        }
+      } else {
+        console.log('⏭️ 현재 피평가자의 기존 피드백이 없어 AI 검사 건너뜀');
       }
 
       console.log('📝 최종 중복 경고 개수:', duplicateWarnings.length);
