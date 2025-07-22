@@ -9,6 +9,7 @@ export interface FeedbackHistoryItem {
 
 export interface Task {
   id: string;
+  taskId?: string; // DB의 task_id 필드
   title: string;
   description: string;
   weight: number;

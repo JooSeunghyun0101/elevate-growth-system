@@ -18,6 +18,7 @@ interface TaskManagementDBProps {
 
 interface TaskFormData {
   id: string;
+  taskId?: string; // DB의 task_id 필드
   title: string;
   description: string;
   weight: number;
@@ -35,6 +36,7 @@ const TaskManagementDB: React.FC<TaskManagementDBProps> = ({ evaluationData, onS
   useEffect(() => {
     const initialTasks: TaskFormData[] = evaluationData.tasks.map(task => ({
       id: task.id,
+      taskId: task.taskId, // DB의 task_id 매핑
       title: task.title,
       description: task.description || '',
       weight: task.weight,
@@ -58,8 +60,37 @@ const TaskManagementDB: React.FC<TaskManagementDBProps> = ({ evaluationData, onS
   };
 
   // 과업 삭제
-  const removeTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+  const removeTask = async (taskId: string) => {
+    try {
+      // 기존 과업인지 확인 (new-로 시작하지 않으면 기존 과업)
+      if (!taskId.startsWith('new-')) {
+        // 실제 DB에서 과업 찾기
+        const task = evaluationData.tasks.find(t => t.id === taskId);
+        if (task && task.taskId) {
+          // DB에서 소프트 삭제
+          const existingTask = await taskService.getTaskByTaskId(task.taskId);
+          if (existingTask) {
+            await taskService.softDeleteTask(existingTask.id);
+            console.log(`🗑️ 과업 소프트 삭제: ${task.taskId} - ${task.title}`);
+            
+            toast({
+              title: "과업 삭제 완료",
+              description: `"${task.title}" 과업이 삭제되었습니다.`,
+            });
+          }
+        }
+      }
+      
+      // 프론트엔드 상태에서 제거
+      setTasks(tasks.filter(task => task.id !== taskId));
+    } catch (error) {
+      console.error('과업 삭제 중 오류:', error);
+      toast({
+        title: "삭제 실패",
+        description: "과업 삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   // 과업 수정
@@ -131,7 +162,8 @@ const TaskManagementDB: React.FC<TaskManagementDBProps> = ({ evaluationData, onS
       console.log('🆔 다음 과업 번호 시작:', nextTaskNumber);
       
       for (const task of tasks) {
-        const existingTask = existingTasksMap.get(task.id);
+        // taskId가 있고 기존 과업과 매칭되는지 확인
+        const existingTask = task.taskId ? existingTasksMap.get(task.taskId) : null;
         
         if (existingTask) {
           // 기존 과업 업데이트 - task_id 보존
@@ -185,14 +217,9 @@ const TaskManagementDB: React.FC<TaskManagementDBProps> = ({ evaluationData, onS
         }
       }
 
-      // 5. 삭제된 과업들 처리
-      const updatedTaskIds = new Set(tasks.map(task => task.id));
-      const deletedTasks = existingTasks.filter((task: any) => !updatedTaskIds.has(task.task_id));
-      
-      for (const deletedTask of deletedTasks) {
-        await taskService.deleteTask(deletedTask.id);
-        console.log(`🗑️ 과업 삭제: ${deletedTask.task_id} - ${deletedTask.title}`);
-      }
+      // 5. 삭제된 과업들 처리 - 자동 삭제 로직 제거 (안전성을 위해)
+      // 삭제는 명시적으로 삭제 버튼을 통해서만 수행
+      console.log('ℹ️ 자동 삭제 로직이 비활성화되었습니다. 명시적 삭제만 허용합니다.');
 
       // 6. 알림 생성 (평가자가 있는 경우)
       if (user?.role === 'evaluatee' && evaluationData.evaluateeId) {
@@ -269,7 +296,7 @@ const TaskManagementDB: React.FC<TaskManagementDBProps> = ({ evaluationData, onS
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeTask(task.id)}
+                    onClick={async () => await removeTask(task.id)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />

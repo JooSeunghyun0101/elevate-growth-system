@@ -58,11 +58,23 @@ export const useEvaluationDataDB = (employeeId: string) => {
       // 3. 과업들 조회
       let tasks = await taskService.getTasksByEvaluationId(evaluation.id);
       
-      // 4. 과업이 없으면 기본 과업들 생성 (최초 1회만)
+      // 4. 과업이 없는지 확인 (삭제된 과업도 포함하여 체크)
       if (tasks.length === 0) {
-        console.log('📋 과업이 없습니다. 기본 과업들을 생성합니다.');
-        tasks = await taskService.createDefaultTasks(evaluation.id, evaluation.evaluatee_id);
-        console.log('✅ 기본 과업 생성 완료:', tasks.length, '개');
+        // 삭제된 과업까지 포함해서 확인
+        const allTasks = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('evaluation_id', evaluation.id);
+        
+        // 삭제된 과업도 없다면 (완전히 처음) 기본 과업 생성
+        // 사용자가 의도적으로 모든 과업을 삭제했다면 자동 생성하지 않음
+        if (allTasks.data && allTasks.data.length === 0) {
+          console.log('📋 완전히 새로운 평가입니다. 기본 과업들을 생성합니다.');
+          tasks = await taskService.createDefaultTasks(evaluation.id, evaluation.evaluatee_id);
+          console.log('✅ 기본 과업 생성 완료:', tasks.length, '개');
+        } else {
+          console.log('ℹ️ 사용자가 모든 과업을 삭제했습니다. 자동 생성하지 않습니다.');
+        }
       }
 
       // 5. 각 과업의 피드백 히스토리 로드
@@ -127,6 +139,7 @@ export const useEvaluationDataDB = (employeeId: string) => {
           
           return {
             id: task.task_id, // 기존 코드와 호환성을 위해 task_id를 id로 사용
+            taskId: task.task_id, // DB 삭제를 위한 taskId 필드 추가
             title: task.title,
             description: task.description || '',
             weight: task.weight,

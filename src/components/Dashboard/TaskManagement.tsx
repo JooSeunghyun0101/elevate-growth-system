@@ -12,9 +12,11 @@ import { X, Plus, Trash2, Save, Calendar as CalendarIcon } from 'lucide-react';
 import { EvaluationData, Task } from '@/types/evaluation';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/contexts/NotificationContextDB';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { taskService, evaluationService, notificationService } from '@/lib/services';
+import { supabase } from '@/lib/supabase';
 
 interface TaskManagementProps {
   evaluationData: EvaluationData;
@@ -46,10 +48,13 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   onClose,
   onSave
 }) => {
+  console.log('🎯 TaskManagement 컴포넌트 렌더링됨', { evaluateeName: evaluationData?.evaluateeName, tasksCount: evaluationData?.tasks?.length });
+  
   const [tasks, setTasks] = useState<Task[]>(evaluationData.tasks);
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const { user } = useAuth();
   const { addNotification } = useNotifications();
+  const { toast } = useToast();
 
   const totalWeight = tasks.reduce((sum, task) => sum + task.weight, 0);
 
@@ -76,8 +81,17 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   };
 
   const deleteTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+    console.log('🚀 deleteTask 함수 시작 (로컬만):', { taskId });
+    
+    // 로컬 상태에서만 제거 (DB는 저장 시에 처리)
+    setTasks(prev => {
+      const filtered = prev.filter(task => task.id !== taskId);
+      console.log('🔄 로컬 상태 업데이트:', { 이전개수: prev.length, 이후개수: filtered.length });
+      return filtered;
+    });
     setEditingTask(null);
+    
+    console.log('✅ deleteTask 함수 완료 (로컬만)');
   };
 
   const updateTask = (taskId: string, updates: Partial<Task>) => {
@@ -188,7 +202,17 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 
       // 2. 기존 과업들 조회
       const existingTasks = await taskService.getTasksByEvaluationId(evaluation.id);
+      console.log(`🔍 저장 시 기존 과업 조회:`, {
+        count: existingTasks.length,
+        tasks: existingTasks.map((t: any) => ({ task_id: t.task_id, title: t.title, deleted_at: t.deleted_at }))
+      });
+      
       const existingTasksMap = new Map(existingTasks.map((task: any) => [task.task_id, task]));
+      
+      console.log(`📋 저장할 과업들:`, {
+        count: updatedTasks.length,
+        tasks: updatedTasks.map(t => ({ id: t.id, title: t.title }))
+      });
 
       // 3. 과업별로 업데이트 또는 생성
       // 이번 저장 과정에서 생성될 새 과업들의 task_id를 미리 계산
@@ -258,13 +282,18 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         }
       }
 
-      // 4. 삭제된 과업들 처리
+      // 4. 삭제된 과업들 처리 - 저장 시 DB에 반영
       const updatedTaskIds = new Set(updatedTasks.map(task => task.id));
-      const deletedTasks = existingTasks.filter(task => !updatedTaskIds.has(task.id));
+      const deletedTasks = existingTasks.filter(task => !updatedTaskIds.has(task.task_id));
+      
+      console.log('🗑️ 삭제할 과업들:', {
+        count: deletedTasks.length,
+        tasks: deletedTasks.map(t => ({ task_id: t.task_id, title: t.title }))
+      });
       
       for (const deletedTask of deletedTasks) {
-        await taskService.deleteTask(deletedTask.id);
-        console.log(`🗑️ 과업 삭제: ${deletedTask.task_id} - ${deletedTask.title}`);
+        await taskService.softDeleteTask(deletedTask.id);
+        console.log(`🗑️ 과업 소프트 삭제: ${deletedTask.task_id} - ${deletedTask.title}`);
       }
 
       // 4. 평가 상태 업데이트
@@ -398,7 +427,10 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => deleteTask(task.id)}
+                    onClick={() => {
+                      console.log('🖱️ 삭제 버튼 클릭됨:', task.id);
+                      deleteTask(task.id);
+                    }}
                     className="px-2 sm:px-3"
                   >
                     <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
