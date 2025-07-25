@@ -16,7 +16,8 @@
       "Bash(npm run typecheck:*)",
       "Bash(npm run build:*)",
       "Bash(test:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git config:*)"
     ],
     "deny": []
   },

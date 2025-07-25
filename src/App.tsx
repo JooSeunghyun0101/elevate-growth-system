@@ -9,7 +9,8 @@ import { NotificationProviderDB } from "@/contexts/NotificationContextDB";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import FullScreenConfetti from "@/components/Evaluation/FullScreenConfetti";
 import RainAnimation from "@/components/Evaluation/RainAnimation";
-import { useState, useCallback, useEffect } from "react";
+import ThumbsUpEffect from "@/components/Evaluation/ThumbsUpEffect";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Evaluation from "./pages/Evaluation";
@@ -23,9 +24,16 @@ const App = () => {
   const [isNotAchieved, setIsNotAchieved] = useState(false);
   const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
   const [rainPosition, setRainPosition] = useState({ x: 0, y: 0 });
+  const [thumbsUpEffects, setThumbsUpEffects] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const thumbsUpIdRef = useRef(0);
 
   const handleConfettiComplete = useCallback(() => {
     setShowFullScreenConfetti(false);
+  }, []);
+
+  // 왕따봉 효과 제거 함수
+  const removeThumbsUpEffect = useCallback((id: number) => {
+    setThumbsUpEffects(prev => prev.filter(effect => effect.id !== id));
   }, []);
 
   const handleGlobalClick = useCallback((e: React.MouseEvent) => {
@@ -35,9 +43,20 @@ const App = () => {
     const notAchievedTrigger = target.closest('[data-not-achieved]');
     
     if (confettiTrigger) {
-      // 달성 카드 클릭 시 폭죽 효과
+      // 달성 카드 클릭 시 폭죽 효과와 왕따봉 효과
       setConfettiPosition({ x: e.clientX, y: e.clientY });
       setShowFullScreenConfetti(true);
+      
+      // 새로운 왕따봉 효과 추가
+      const newId = thumbsUpIdRef.current++;
+      const newEffect = { id: newId, x: e.clientX, y: e.clientY };
+      
+      setThumbsUpEffects(prev => [...prev, newEffect]);
+      
+      // 2초 후 해당 왕따봉 효과 제거
+      setTimeout(() => {
+        removeThumbsUpEffect(newId);
+      }, 2000);
     } else if (notAchievedTrigger) {
       // 미달성 카드 클릭 시 비 애니메이션 강화
       setRainPosition({ x: e.clientX, y: e.clientY });
@@ -53,7 +72,7 @@ const App = () => {
         setShowRainAnimation(false);
       }, 5000);
     }
-  }, []);
+  }, [removeThumbsUpEffect]);
 
   // 미달성 상태 감지 (비 애니메이션은 클릭 시에만 활성화)
   useEffect(() => {
@@ -129,6 +148,15 @@ const App = () => {
                 isActive={showRainAnimation}
                 clickPosition={rainPosition}
               />
+              
+              {/* 왕따봉 효과들 (달성 시) */}
+              {thumbsUpEffects.map(effect => (
+                <ThumbsUpEffect 
+                  key={effect.id}
+                  isActive={true}
+                  clickPosition={{ x: effect.x, y: effect.y }}
+                />
+              ))}
             </div>
           </NotificationProviderDB>
         </AuthProvider>
