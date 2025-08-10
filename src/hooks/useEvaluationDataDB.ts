@@ -504,38 +504,51 @@ export const useEvaluationDataDB = (employeeId: string) => {
 
       console.log('📊 현재 피평가자의 기존 피드백 총 개수:', currentEvaluateeFeedbacks.length);
 
-      // AI 기반 중복 검사 (현재 피평가자의 기존 피드백과만 비교)
+      // AI 기반 중복 검사 (현재 피평가자의 기존 피드백과만 비교) - 병렬 처리
       if (currentEvaluateeFeedbacks.length > 0) {
-        console.log('🤖 AI 기반 중복 검사 시작 (현재 피평가자 내부에서만)...');
+        console.log('🤖 AI 기반 중복 검사 시작 (병렬 처리)...');
         
-        for (const taskId of Object.keys(tempFeedbacks)) {
-          const currentFeedback = tempFeedbacks[taskId];
-          if (!currentFeedback || !currentFeedback.trim()) continue;
+        // 모든 AI 검사를 병렬로 실행
+        const aiCheckPromises = Object.keys(tempFeedbacks)
+          .filter(taskId => tempFeedbacks[taskId] && tempFeedbacks[taskId].trim())
+          .map(async (taskId) => {
+            const currentFeedback = tempFeedbacks[taskId];
+            const task = evaluationData.tasks.find(t => t.id === taskId);
+            const taskTitle = task?.title || `과업 ${taskId}`;
 
-          const task = evaluationData.tasks.find(t => t.id === taskId);
-          const taskTitle = task?.title || `과업 ${taskId}`;
-
-          try {
-            console.log(`🤖 AI 중복 검사 시작: ${taskTitle}`);
-            const duplicateCheck = await checkSimilarFeedback(
-              currentFeedback, 
-              currentEvaluateeFeedbacks,
-              user.name
-            );
-            
-            console.log(`🔍 ${taskTitle} AI 검사 결과:`, {
-              isDuplicate: duplicateCheck.isDuplicate,
-              summary: duplicateCheck.summary
-            });
-            
-            if (duplicateCheck.isDuplicate) {
-              duplicateWarnings.push(`"${taskTitle}": ${duplicateCheck.summary}`);
-              console.log(`⚠️ AI 중복 피드백 감지: ${taskTitle} - ${duplicateCheck.summary}`);
+            try {
+              console.log(`🤖 AI 중복 검사 시작: ${taskTitle}`);
+              const duplicateCheck = await checkSimilarFeedback(
+                currentFeedback, 
+                currentEvaluateeFeedbacks,
+                user.name
+              );
+              
+              console.log(`🔍 ${taskTitle} AI 검사 결과:`, {
+                isDuplicate: duplicateCheck.isDuplicate,
+                summary: duplicateCheck.summary
+              });
+              
+              if (duplicateCheck.isDuplicate) {
+                console.log(`⚠️ AI 중복 피드백 감지: ${taskTitle} - ${duplicateCheck.summary}`);
+                return { taskTitle, warning: `"${taskTitle}": ${duplicateCheck.summary}` };
+              }
+              return null;
+            } catch (error) {
+              console.warn(`⚠️ AI 중복검사 건너뜀 (API 오류): ${taskTitle}`, error.message);
+              return null;
             }
-          } catch (error) {
-            console.warn(`⚠️ AI 중복검사 건너뜀 (API 오류): ${taskTitle}`, error.message);
+          });
+
+        // 모든 AI 검사 완료 대기
+        const aiCheckResults = await Promise.all(aiCheckPromises);
+        
+        // 경고 수집
+        aiCheckResults.forEach(result => {
+          if (result && result.warning) {
+            duplicateWarnings.push(result.warning);
           }
-        }
+        });
       } else {
         console.log('⏭️ 현재 피평가자의 기존 피드백이 없어 AI 검사 건너뜀');
       }

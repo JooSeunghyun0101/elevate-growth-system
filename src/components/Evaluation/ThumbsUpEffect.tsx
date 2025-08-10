@@ -18,7 +18,7 @@ const ThumbsUpEffect: React.FC<ThumbsUpEffectProps> = ({ isActive, clickPosition
       }}
     >
       <div
-        className="text-[12.6rem] leading-none"
+        className="text-[6.3rem] leading-none"
         style={{
           animation: 'thumbsUpFade 2s ease-out forwards'
         }}
